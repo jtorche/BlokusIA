@@ -54,11 +54,50 @@ void pieceTest()
 		piece.getCorners(1, corners);
 		TIM_ASSERT(corners[0] == 0 && corners[1] == 0 && corners[2] == 1 && corners[3] == 1);
 	}
+	{
+		Piece piece1(Piece::build(0, 0), Piece::build(1, 0));
+		Piece piece2(Piece::build(1, 0), Piece::build(0, 0));
+		piece1.sort();
+		piece2.sort();
+
+		TIM_ASSERT(piece1 == piece2);
+	}
+	
+}
+
+void pieceTest2()
+{
+	auto cmp = [](Piece p1, Piece p2)
+	{
+		p1.sort();
+		p2.sort();
+		TIM_ASSERT(p1 == p2);
+	};
+
+	{
+		Piece piece1(Piece::build(0, 0), Piece::build(1, 0));
+		Piece piece2(Piece::build(0, 0), Piece::build(0, 1));
+
+		cmp(piece1.rotate(Rotation::Rot_90), piece2);
+		cmp(piece1.rotate(Rotation::Rot_180), piece1);
+		cmp(piece1.rotate(Rotation::Rot_270), piece2);
+	}
+	{
+		Piece piece(Piece::build(0, 0), Piece::build(1, 0), Piece::build(0, 1));
+		cmp(piece.rotate(Rotation::Rot_180)
+			     .rotate(Rotation::Rot_180), piece);
+		cmp(piece.rotate(Rotation::Rot_90)
+				 .rotate(Rotation::Rot_90)
+			     .rotate(Rotation::Rot_180), piece);
+		cmp(piece.rotate(Rotation::Rot_90)
+			     .rotate(Rotation::Rot_270), piece);
+	}
 }
 
 void runTest()
 {
 	cornerTest();
 	pieceTest();
+	pieceTest2();
 	std::cout << "Unit tests succeeded\n\n";
 }
