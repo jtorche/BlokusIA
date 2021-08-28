@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <array>
+#include <vector>
+
 #include "timCore/type.h"
 #include "timCore/Common.h"
+
 
 namespace BlokusIA
 {
@@ -19,6 +22,7 @@ namespace BlokusIA
 		Rot_90,
 		Rot_180,
 		Rot_270,
+		Flip_X
 	};
 
 	// Encode valid corners for a piece
@@ -59,6 +63,8 @@ namespace BlokusIA
 			return _x + ubyte(_y << 3) + 64;
 		}
 
+		static std::vector<Piece> getAllPieces();
+
 		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0) 
 			: m_layout{ _t0, _t1, _t2, _t3, _t4 } 
 		{
@@ -98,6 +104,7 @@ namespace BlokusIA
 		Slot getSlotSafe(i32 _x, i32 _y) const;
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
+		void addPiece(Slot _player, const Piece& _piece, uvec2 _pos);
 
 		void print() const;
 

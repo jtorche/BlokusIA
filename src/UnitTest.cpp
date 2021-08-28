@@ -92,6 +92,13 @@ void pieceTest2()
 		cmp(piece.rotate(Rotation::Rot_90)
 			     .rotate(Rotation::Rot_270), piece);
 	}
+
+	{
+		Piece piece(Piece::build(0, 0), Piece::build(1, 0), Piece::build(0, 1));
+		Piece pieceFlipped(Piece::build(0, 0), Piece::build(1, 0), Piece::build(1, 1));
+		cmp(piece.rotate(Rotation::Flip_X), pieceFlipped);
+		cmp(pieceFlipped.rotate(Rotation::Rot_270), piece);
+	}
 }
 
 void runTest()

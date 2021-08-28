@@ -118,12 +118,105 @@ namespace BlokusIA
 				piece.m_layout[i] = build(y, maxX - x);
 				piece.m_corners.setCorners(i, corners[1], corners[2], corners[3], corners[0]);
 				break;
+
+			case  Rotation::Flip_X:
+				piece.m_layout[i] = build(maxX - x, y);
+				piece.m_corners.setCorners(i, corners[1], corners[0], corners[3], corners[2]);
+				break;
 			}
-
-
 		}
 
 		return piece;
+	}
+
+
+	//-------------------------------------------------------------------------------------------------
+	std::vector<Piece> Piece::getAllPieces()
+	{
+		std::vector<Piece> pieces;
+
+		// x
+		pieces.push_back({ Piece::build(0,0) });
+
+		// xx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0) });
+
+		// xx
+		// x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1) });
+
+		// xxx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0) });
+
+		// xx
+		// xx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1), Piece::build(1,1) });
+
+		// xxx
+		//  x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,1), Piece::build(1,1) });
+
+		// xxxx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0) });
+
+		// xxx
+		// x  
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1) });
+
+		// xx
+		//  xx  
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(1,2) });
+
+		// xxxxx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(4,0) });
+
+		// xxxx
+		// x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(0,1) });
+
+		// xxx
+		// x
+		// x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(0,2) });
+
+		// xxx
+		//   xx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(2,1), Piece::build(3,1) });
+
+		// x
+		// xxx
+		//   x
+		pieces.push_back({ Piece::build(0,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
+
+		// x
+		// xx
+		// xx
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,0), Piece::build(1,1) });
+
+		// xx
+		//  xx
+		//   x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
+
+		// xxx
+		// x x 
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(2,1) });
+
+		//  x 
+		// xxx
+		//  x
+		pieces.push_back({ Piece::build(1,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
+
+		// xxxx
+		//  x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(1,1) });
+
+		// xx
+		//  xx
+		//  x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
+
+		return pieces;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -196,5 +289,20 @@ namespace BlokusIA
 		}
 
 		return true;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	void Board::addPiece(Slot _player, const Piece& _piece, uvec2 _pos)
+	{
+		for (u32 i = 0; i < Piece::MaxTile; ++i)
+		{
+			if (_piece.getTile(i) == 0)
+				break;
+
+			u32 tileX = Piece::getTileX(_piece.getTile(i)) + _pos.x;
+			u32 tileY = Piece::getTileY(_piece.getTile(i)) + _pos.y;
+
+			m_board[flatten(tileX, tileY)] = _player;
+		}
 	}
 }
