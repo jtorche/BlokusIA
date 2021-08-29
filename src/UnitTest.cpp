@@ -1,4 +1,5 @@
 #include "BlokusGame.h"
+#include "BlokusGameHelpers.h"
 
 using namespace BlokusIA;
 

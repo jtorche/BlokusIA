@@ -4,6 +4,7 @@
 #include "timCore/Common.h"
 
 #include "BlokusGame.h"
+#include "BlokusGameHelpers.h"
 
 void runTest();
 
@@ -14,22 +15,30 @@ int main()
 	// run some unit test
 	runTest();
 
-	Board b;
-	auto pieces = Piece::getAllPieces();
-	for (const Piece& p : pieces)
-	{
-		while (1)
-		{
-			u32 x = rand() % Board::BoardSize;
-			u32 y = rand() % Board::BoardSize;
+	Board board;
+	auto pieces = Helpers::getAllPieces();
 
-			if (b.canAddPiece(Slot::P0, p, { x,y }))
+	bool first = true;
+	for (const auto& p : pieces)
+	{
+		Board::PlayableSlots playableSlots;
+		u32 playableSlotsCount = board.computeValidSlotsForPlayer(Slot::P0, playableSlots);
+
+		for (u32 i = 0; i < playableSlotsCount; ++i)
+		{
+			std::array<ubyte2, Piece::MaxPlayableCorners> positions;
+			u32 numPosition = board.getPiecePlayablePositions(Slot::P0, p, playableSlots[i], positions, first);
+			
+			if (numPosition > 0)
 			{
-				b.addPiece(Slot::P0, p, { x,y });
+				board.addPiece(Slot::P0, p, positions[0]);
 				break;
 			}
 		}
+		board.print();
+		system("pause");
+		first = false;
 	}
-	b.print();
+
 	return 0;
 }

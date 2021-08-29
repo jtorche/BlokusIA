@@ -6,7 +6,7 @@
 
 #include "timCore/type.h"
 #include "timCore/Common.h"
-
+#include "timCore/hash.h"
 
 namespace BlokusIA
 {
@@ -15,6 +15,16 @@ namespace BlokusIA
 		Empty,
 		P0, P1, P2, P3
 	};
+
+	struct PackedSlot
+	{
+		Slot p1 :	2;
+		Slot p2 :	2;
+		Slot p3 :	2;
+		ubyte pad : 2;
+	};
+
+	static_assert(sizeof(PackedSlot) == 1);
 
 	enum class Rotation // clock wise rotation of a piece
 	{
@@ -56,6 +66,7 @@ namespace BlokusIA
 		// Tile definition
 		using Tile = ubyte;
 		static constexpr u32 MaxTile = 5;
+		static constexpr u32 MaxPlayableCorners = 8;
 
 		static Tile build(u32 _x, u32 _y)
 		{
@@ -63,13 +74,14 @@ namespace BlokusIA
 			return _x + ubyte(_y << 3) + 64;
 		}
 
-		static std::vector<Piece> getAllPieces();
-
 		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0) 
 			: m_layout{ _t0, _t1, _t2, _t3, _t4 } 
 		{
 			generateCorners();
 		}
+
+		Piece(const Piece&) = default;
+		Piece& operator=(const Piece&) = default;
 
 		bool operator==(const Piece& _other) const;
 
@@ -96,6 +108,7 @@ namespace BlokusIA
 	{
 	public:
 		static constexpr u32 BoardSize = 20;
+		static constexpr u32 MaxPlayableCorners = 128; // arbitrary value, probably too high
 
 		Board() = default;
 		Board(const Board&) = default;
@@ -104,7 +117,14 @@ namespace BlokusIA
 		Slot getSlotSafe(i32 _x, i32 _y) const;
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
-		void addPiece(Slot _player, const Piece& _piece, uvec2 _pos);
+		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
+
+		using PlayableSlots = std::array<ubyte2, MaxPlayableCorners>;
+		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result);
+
+		// Assuming _boardPos is a valid position from "computeValidSlotsForPlayer"
+		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>&, bool _isFirstMove) const;
+
 
 		void print() const;
 
@@ -113,5 +133,28 @@ namespace BlokusIA
 
 	private:
 		static u32 flatten(u32 i, u32 j) { return j * BoardSize + i; }
+	};
+
+	//-------------------------------------------------------------------------------------------------
+	// For each piece, all possibles symetries to play the piece
+	using PieceSymetries = std::vector<tim::flat_hash_set<Piece>>;
+}
+
+//-------------------------------------------------------------------------------------------------
+namespace std
+{
+	template<> struct hash<BlokusIA::Piece>
+	{
+		size_t operator()(const BlokusIA::Piece& key) const
+		{
+			size_t h = 0;
+			for (u32 i = 0; i < BlokusIA::Piece::MaxTile; ++i)
+			{
+				tim::hash_combine(h, key.getTile(i));
+				if (key.getTile(i) == 0)
+					break;
+			}
+			return h;
+		}
 	};
 }

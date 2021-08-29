@@ -14,12 +14,14 @@ using ubyte = unsigned char;
 
 using vec4 = linalg::aliases::float4;
 using ivec4 = linalg::aliases::int4;
+using ivec2 = linalg::aliases::int2;
 using vec3 = linalg::aliases::float3;
 using vec2 = linalg::aliases::float2;
 using mat4 = linalg::aliases::float4x4;
 using uvec2 = linalg::aliases::uint2;
 using uvec3 = linalg::aliases::uint3;
 using uvec4 = linalg::aliases::uint4;
+using ubyte2 = linalg::aliases::byte2;
 
 namespace tim
 {

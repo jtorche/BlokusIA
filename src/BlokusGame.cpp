@@ -129,96 +129,6 @@ namespace BlokusIA
 		return piece;
 	}
 
-
-	//-------------------------------------------------------------------------------------------------
-	std::vector<Piece> Piece::getAllPieces()
-	{
-		std::vector<Piece> pieces;
-
-		// x
-		pieces.push_back({ Piece::build(0,0) });
-
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0) });
-
-		// xx
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1) });
-
-		// xxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0) });
-
-		// xx
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1), Piece::build(1,1) });
-
-		// xxx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,1), Piece::build(1,1) });
-
-		// xxxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0) });
-
-		// xxx
-		// x  
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1) });
-
-		// xx
-		//  xx  
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(1,2) });
-
-		// xxxxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(4,0) });
-
-		// xxxx
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(0,1) });
-
-		// xxx
-		// x
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(0,2) });
-
-		// xxx
-		//   xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(2,1), Piece::build(3,1) });
-
-		// x
-		// xxx
-		//   x
-		pieces.push_back({ Piece::build(0,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
-
-		// x
-		// xx
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,0), Piece::build(1,1) });
-
-		// xx
-		//  xx
-		//   x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
-
-		// xxx
-		// x x 
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(2,1) });
-
-		//  x 
-		// xxx
-		//  x
-		pieces.push_back({ Piece::build(1,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
-
-		// xxxx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(1,1) });
-
-		// xx
-		//  xx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
-
-		return pieces;
-	}
-
 	//-------------------------------------------------------------------------------------------------
 	void Corners::setCorners(u32 _tileIndex, ubyte _c1, ubyte _c2, ubyte _c3, ubyte _c4)
 	{
@@ -292,7 +202,7 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	void Board::addPiece(Slot _player, const Piece& _piece, uvec2 _pos)
+	void Board::addPiece(Slot _player, const Piece& _piece, ubyte2 _pos)
 	{
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
 		{
@@ -304,5 +214,96 @@ namespace BlokusIA
 
 			m_board[flatten(tileX, tileY)] = _player;
 		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result)
+	{
+		uvec2 sartingPosition;
+		switch (_player)
+		{
+		case Slot::P0:
+			sartingPosition = { 0,0 }; break;
+		case Slot::P1:
+			sartingPosition = { 0, BoardSize - 1 }; break;
+		case Slot::P2:
+			sartingPosition = { BoardSize - 1, BoardSize - 1 }; break;
+		case Slot::P3:
+			sartingPosition = { BoardSize - 1, 0 }; break;
+		}
+
+		u32 numCorners = 0;
+		for (i32 j = 0; j < i32(BoardSize); ++j)
+		{
+			for (i32 i = 0; i < i32(BoardSize); ++i)
+			{
+				if (getSlot(u32(i), u32(j)) == Slot::Empty)
+				{
+					if (sartingPosition == uvec2{ u32(i), u32(j) })
+					{
+						_result[numCorners++] = { ubyte(i), ubyte(j) };
+					}
+					else
+					{
+						if (getSlotSafe(i - 1, j) != _player && getSlotSafe(i + 1, j) != _player &&
+							getSlotSafe(i, j - 1) != _player && getSlotSafe(i, j + 1) != _player)
+						{
+							if (getSlotSafe(i - 1, j - 1) == _player || getSlotSafe(i + 1, j - 1) == _player ||
+								getSlotSafe(i - 1, j + 1) == _player || getSlotSafe(i + 1, j + 1) == _player)
+							{
+								_result[numCorners++] = { ubyte(i), ubyte(j) };
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return numCorners;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	u32 Board::getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>& _outPositions, bool _isFirstMove) const
+	{
+		u32 numPosition = 0;
+		ivec2 iBoardPos = { int(_boardPos.x), int(_boardPos.y) };
+
+		bool compatibleCorner[4] = 
+		{ 
+			getSlotSafe(iBoardPos.x - 1, iBoardPos.y - 1) == _player || _isFirstMove,
+			getSlotSafe(iBoardPos.x + 1, iBoardPos.y - 1) == _player || _isFirstMove,
+			getSlotSafe(iBoardPos.x + 1, iBoardPos.y + 1) == _player || _isFirstMove,
+			getSlotSafe(iBoardPos.x - 1, iBoardPos.y + 1) == _player || _isFirstMove
+		};
+
+		for (u32 i = 0; i < Piece::MaxTile; ++i)
+		{
+			if (_piece.getTile(i) == 0)
+				break;
+
+			ivec2 tilePos = { int(Piece::getTileX(_piece.getTile(i))), int(Piece::getTileY(_piece.getTile(i))) };
+			
+			ubyte corners[4];
+			_piece.getCorners(i, corners);
+
+			for (u32 i=0 ; i<4 ; ++i)
+			{
+				ivec2 cornerOffset;
+				if (corners[i] && compatibleCorner[i])
+				{
+					ivec2 finalPos = iBoardPos - tilePos;
+					if (finalPos.x >= 0 && finalPos.y >= 0)
+					{
+						if (canAddPiece(_player, _piece, uvec2(u32(finalPos.x), u32(finalPos.y))))
+						{
+							_outPositions[numPosition++] = { ubyte(finalPos.x), ubyte(finalPos.y) };
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return numPosition;
 	}
 }
