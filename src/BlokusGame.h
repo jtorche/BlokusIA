@@ -74,11 +74,7 @@ namespace BlokusIA
 			return _x + ubyte(_y << 3) + 64;
 		}
 
-		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0) 
-			: m_layout{ _t0, _t1, _t2, _t3, _t4 } 
-		{
-			generateCorners();
-		}
+		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0);
 
 		Piece(const Piece&) = default;
 		Piece& operator=(const Piece&) = default;
@@ -87,6 +83,8 @@ namespace BlokusIA
 
 		void getCorners(u32 _index, ubyte(&_c)[4]) const { return m_corners.getCorners(_index, _c); }
 		Tile getTile(u32 _index) const { return m_layout[_index]; }
+		ubyte getNumTiles() const { return m_numTiles; }
+		ubyte getNumCorners() const { return m_numCorners; }
 
 		Piece rotate(Rotation _rot) const;
 		void sort(); // use sort when comparing pieces for identicality
@@ -100,8 +98,11 @@ namespace BlokusIA
 		Tile m_layout[MaxTile] = { {0} };
 		Corners m_corners;
 
+		ubyte m_numTiles = 0;
+		ubyte m_numCorners = 0;
+
 	};
-	static_assert(sizeof(Piece) == 8);
+	static_assert(sizeof(Piece) == 10);
 
 	//-------------------------------------------------------------------------------------------------
 	class Board
@@ -118,6 +119,8 @@ namespace BlokusIA
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
+
+		uvec2 getStartingPosition(Slot _player) const;
 
 		using PlayableSlots = std::array<ubyte2, MaxPlayableCorners>;
 		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result);

@@ -3,7 +3,7 @@
 #include "timCore/type.h"
 #include "timCore/Common.h"
 
-#include "BlokusGame.h"
+#include "BlokusIA.h"
 #include "BlokusGameHelpers.h"
 
 void runTest();
@@ -14,6 +14,11 @@ int main()
 {
 	// run some unit test
 	runTest();
+
+	initBlokusIA();
+
+	GameState gameState;
+	auto moves = gameState.enumerateMoves();
 
 	Board board;
 	auto pieces = Helpers::getAllPieces();

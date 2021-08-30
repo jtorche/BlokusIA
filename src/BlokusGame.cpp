@@ -1,7 +1,31 @@
 #include "BlokusGame.h"
+#include <numeric>
 
 namespace BlokusIA
 {
+	//-------------------------------------------------------------------------------------------------
+	Piece::Piece(Tile _t0, Tile _t1, Tile _t2, Tile _t3, Tile _t4)
+		: m_layout{ _t0, _t1, _t2, _t3, _t4 }
+	{
+		generateCorners();
+		
+		m_numCorners = 0;
+		m_numTiles = 0;
+		for (u32 i = 0; i < MaxTile; ++i)
+		{
+			if (m_layout[i] != 0)
+			{
+				m_numTiles++;
+
+				ubyte corners[4];
+				getCorners(i, corners);
+				m_numCorners += std::accumulate(std::begin(corners), std::end(corners), 0);
+			}
+			else break;
+		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
 	bool Piece::operator==(const Piece& _other) const
 	{
 		for (u32 i = 0; i < MaxTile; ++i)
@@ -219,19 +243,6 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result)
 	{
-		uvec2 sartingPosition;
-		switch (_player)
-		{
-		case Slot::P0:
-			sartingPosition = { 0,0 }; break;
-		case Slot::P1:
-			sartingPosition = { 0, BoardSize - 1 }; break;
-		case Slot::P2:
-			sartingPosition = { BoardSize - 1, BoardSize - 1 }; break;
-		case Slot::P3:
-			sartingPosition = { BoardSize - 1, 0 }; break;
-		}
-
 		u32 numCorners = 0;
 		for (i32 j = 0; j < i32(BoardSize); ++j)
 		{
@@ -239,7 +250,7 @@ namespace BlokusIA
 			{
 				if (getSlot(u32(i), u32(j)) == Slot::Empty)
 				{
-					if (sartingPosition == uvec2{ u32(i), u32(j) })
+					if (getStartingPosition(_player) == uvec2{ u32(i), u32(j) })
 					{
 						_result[numCorners++] = { ubyte(i), ubyte(j) };
 					}
@@ -260,6 +271,24 @@ namespace BlokusIA
 		}
 
 		return numCorners;
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	uvec2 Board::getStartingPosition(Slot _player) const
+	{
+		switch (_player)
+		{
+		case Slot::P0:
+			return { 0,0 };;
+		case Slot::P1:
+			return { 0, BoardSize - 1 };
+		case Slot::P2:
+			return { BoardSize - 1, BoardSize - 1 };
+		case Slot::P3:
+			return { BoardSize - 1, 0 };
+		}
+
+		return {};
 	}
 
 	//-------------------------------------------------------------------------------------------------
