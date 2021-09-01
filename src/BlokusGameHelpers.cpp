@@ -108,6 +108,12 @@ namespace BlokusIA
 		//  x
 		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
 
+		// 21
+		// xxx
+		//  x
+		//  x
+		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,1), Piece::build(1,2) });
+
 		return pieces;
 	}
 

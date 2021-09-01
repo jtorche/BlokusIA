@@ -36,7 +36,7 @@ namespace BlokusIA
 
 	private:
 		Board m_board;
-		std::bitset<20> m_remainingPieces[4];
+		std::bitset<21> m_remainingPieces[4];
 		u32 m_turn = 0;
 	};
 
