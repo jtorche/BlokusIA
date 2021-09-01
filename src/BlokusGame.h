@@ -85,23 +85,22 @@ namespace BlokusIA
 		Tile getTile(u32 _index) const { return m_layout[_index]; }
 		ubyte getNumTiles() const { return m_numTiles; }
 		ubyte getNumCorners() const { return m_numCorners; }
-		ubyte2 getCenter() const { return m_center; }
 
 		Piece rotate(Rotation _rot) const;
-		void sort(); // use sort when comparing pieces for identicality
 
 		static u32 getTileX(Tile _tile) { return _tile & 0x7; }
 		static u32 getTileY(Tile _tile) { return (_tile >> 3) & 0x7; }
 
 	private:
-		void generateCorners();
+		void sort();
+		void flush();
 
 		Tile m_layout[MaxTile] = { {0} };
 		Corners m_corners;
 
-		ubyte2 m_center = { 0,0 };
 		ubyte m_numTiles = 0;
 		ubyte m_numCorners = 0;
+		ubyte2 m_pad;
 
 	};
 	static_assert(sizeof(Piece) == 12);
@@ -125,7 +124,7 @@ namespace BlokusIA
 		uvec2 getStartingPosition(Slot _player) const;
 
 		using PlayableSlots = std::array<ubyte2, MaxPlayableCorners>;
-		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result);
+		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result) const;
 
 		// Assuming _boardPos is a valid position from "computeValidSlotsForPlayer"
 		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>&, bool _isFirstMove) const;

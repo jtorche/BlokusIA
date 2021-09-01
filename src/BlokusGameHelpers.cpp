@@ -108,10 +108,6 @@ namespace BlokusIA
 		//  x
 		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
 
-
-		for (Piece& piece : pieces)
-			piece.sort();
-
 		return pieces;
 	}
 
@@ -129,7 +125,6 @@ namespace BlokusIA
 				for (Rotation rot : { Rotation::Rot_0, Rotation::Rot_90, Rotation::Rot_180, Rotation::Rot_270 })
 				{
 					Piece rotatedP = p.rotate(flip ? Rotation::Flip_X : Rotation::Rot_0).rotate(rot);
-					rotatedP.sort();
 					symetries[i].insert(rotatedP);
 				}
 			}

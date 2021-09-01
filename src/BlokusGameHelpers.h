@@ -13,7 +13,5 @@ namespace BlokusIA
 	{
 		static std::vector<Piece> getAllPieces();
 		static PieceSymetries getAllPieceSymetries();
-
-		static uvec2 getRelativePosFromCorner(const Piece&, u32 _cornerIndex, ubyte2 _boardPos);
 	};
 }

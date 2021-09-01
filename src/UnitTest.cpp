@@ -58,8 +58,6 @@ void pieceTest()
 	{
 		Piece piece1(Piece::build(0, 0), Piece::build(1, 0));
 		Piece piece2(Piece::build(1, 0), Piece::build(0, 0));
-		piece1.sort();
-		piece2.sort();
 
 		TIM_ASSERT(piece1 == piece2);
 	}
@@ -70,8 +68,6 @@ void pieceTest2()
 {
 	auto cmp = [](Piece p1, Piece p2)
 	{
-		p1.sort();
-		p2.sort();
 		TIM_ASSERT(p1 == p2);
 	};
 

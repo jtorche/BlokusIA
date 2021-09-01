@@ -7,25 +7,7 @@ namespace BlokusIA
 	Piece::Piece(Tile _t0, Tile _t1, Tile _t2, Tile _t3, Tile _t4)
 		: m_layout{ _t0, _t1, _t2, _t3, _t4 }
 	{
-		generateCorners();
-		
-		m_numCorners = 0;
-		m_numTiles = 0;
-		m_center = { 0,0 };
-		for (u32 i = 0; i < MaxTile; ++i)
-		{
-			if (m_layout[i] != 0)
-			{
-				m_numTiles++;
-
-				ubyte corners[4];
-				getCorners(i, corners);
-				m_numCorners += std::accumulate(std::begin(corners), std::end(corners), 0);
-				m_center.x = std::max(m_center.x, (ubyte)(getTileX(m_layout[i]) / 2));
-				m_center.y = std::max(m_center.y, (ubyte)(getTileY(m_layout[i]) / 2));
-			}
-			else break;
-		}
+		flush();
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -35,16 +17,22 @@ namespace BlokusIA
 			if (m_layout[i] != _other.m_layout[i])
 				return false;
 
-		return m_corners == _other.m_corners;
+		TIM_ASSERT(m_corners == _other.m_corners);
+		return true;
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	void Piece::generateCorners()
+	void Piece::flush()
 	{
+		m_numCorners = 0;
+		m_numTiles = 0;
+
 		for (u32 i = 0; i < MaxTile; ++i)
 		{
 			if (m_layout[i] != 0)
 			{
+				m_numTiles++;
+
 				u32 curX = getTileX(m_layout[i]);
 				u32 curY = getTileY(m_layout[i]);
 				ubyte curCorners[4] = { 1,1,1,1 };
@@ -71,8 +59,11 @@ namespace BlokusIA
 				}
 
 				m_corners.setCorners(i, curCorners[0], curCorners[1], curCorners[2], curCorners[3]);
+				m_numCorners += std::accumulate(std::begin(curCorners), std::end(curCorners), 0);
 			}
 		}
+
+		sort();
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -153,6 +144,7 @@ namespace BlokusIA
 			}
 		}
 
+		piece.flush();
 		return piece;
 	}
 
@@ -244,7 +236,7 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result)
+	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result) const
 	{
 		u32 numCorners = 0;
 		for (i32 j = 0; j < i32(BoardSize); ++j)
