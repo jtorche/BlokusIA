@@ -11,6 +11,7 @@ namespace BlokusIA
 		
 		m_numCorners = 0;
 		m_numTiles = 0;
+		m_center = { 0,0 };
 		for (u32 i = 0; i < MaxTile; ++i)
 		{
 			if (m_layout[i] != 0)
@@ -20,6 +21,8 @@ namespace BlokusIA
 				ubyte corners[4];
 				getCorners(i, corners);
 				m_numCorners += std::accumulate(std::begin(corners), std::end(corners), 0);
+				m_center.x = std::max(m_center.x, (ubyte)(getTileX(m_layout[i]) / 2));
+				m_center.y = std::max(m_center.y, (ubyte)(getTileY(m_layout[i]) / 2));
 			}
 			else break;
 		}

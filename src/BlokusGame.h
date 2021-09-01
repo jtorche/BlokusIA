@@ -85,6 +85,7 @@ namespace BlokusIA
 		Tile getTile(u32 _index) const { return m_layout[_index]; }
 		ubyte getNumTiles() const { return m_numTiles; }
 		ubyte getNumCorners() const { return m_numCorners; }
+		ubyte2 getCenter() const { return m_center; }
 
 		Piece rotate(Rotation _rot) const;
 		void sort(); // use sort when comparing pieces for identicality
@@ -98,11 +99,12 @@ namespace BlokusIA
 		Tile m_layout[MaxTile] = { {0} };
 		Corners m_corners;
 
+		ubyte2 m_center = { 0,0 };
 		ubyte m_numTiles = 0;
 		ubyte m_numCorners = 0;
 
 	};
-	static_assert(sizeof(Piece) == 10);
+	static_assert(sizeof(Piece) == 12);
 
 	//-------------------------------------------------------------------------------------------------
 	class Board
