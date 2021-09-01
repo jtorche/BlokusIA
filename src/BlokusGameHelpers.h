@@ -6,7 +6,6 @@
 
 #include "BlokusGame.h"
 
-
 namespace BlokusIA
 {
 	struct Helpers

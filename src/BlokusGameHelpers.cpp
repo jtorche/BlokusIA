@@ -126,7 +126,7 @@ namespace BlokusIA
 		u32 i = 0;
 		for (const Piece& p : pieces)
 		{
-			for (bool flip : {false, true})
+			for (bool flip : { false, true })
 			{
 				for (Rotation rot : { Rotation::Rot_0, Rotation::Rot_90, Rotation::Rot_180, Rotation::Rot_270 })
 				{

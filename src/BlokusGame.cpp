@@ -31,13 +31,13 @@ namespace BlokusIA
 		{
 			if (m_layout[i] != 0)
 			{
-				m_numTiles++;
+				++m_numTiles;
 
 				u32 curX = getTileX(m_layout[i]);
 				u32 curY = getTileY(m_layout[i]);
 				ubyte curCorners[4] = { 1,1,1,1 };
 
-				for (u32 j = 0; j < 5; ++j)
+				for (u32 j = 0; j < MaxTile; ++j)
 				{
 					if (i != j && m_layout[j] != 0)
 					{
@@ -128,16 +128,18 @@ namespace BlokusIA
 				piece.m_layout[i] = build(maxY - y, x);
 				piece.m_corners.setCorners(i, corners[3], corners[0], corners[1], corners[2]);
 				break;
+
 			case Rotation::Rot_180:
 				piece.m_layout[i] = build(maxX - x, maxY - y);
 				piece.m_corners.setCorners(i, corners[2], corners[3], corners[0], corners[1]);
 				break;
-			case  Rotation::Rot_270:
+
+			case Rotation::Rot_270:
 				piece.m_layout[i] = build(y, maxX - x);
 				piece.m_corners.setCorners(i, corners[1], corners[2], corners[3], corners[0]);
 				break;
 
-			case  Rotation::Flip_X:
+			case Rotation::Flip_X:
 				piece.m_layout[i] = build(maxX - x, y);
 				piece.m_corners.setCorners(i, corners[1], corners[0], corners[3], corners[2]);
 				break;
@@ -151,6 +153,12 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Corners::setCorners(u32 _tileIndex, ubyte _c1, ubyte _c2, ubyte _c3, ubyte _c4)
 	{
+		TIM_ASSERT(_tileIndex < Piece::MaxTile);
+		TIM_ASSERT(_c1 == 0 || _c1 == 1);
+		TIM_ASSERT(_c2 == 0 || _c2 == 1);
+		TIM_ASSERT(_c3 == 0 || _c3 == 1);
+		TIM_ASSERT(_c4 == 0 || _c4 == 1);
+
 		if((_tileIndex % 2) == 0)
 			m_data[_tileIndex / 2] = _c1 + (_c2 << 1) + (_c3 << 2) + (_c4 << 3) + (m_data[_tileIndex / 2] & 0xF0);
 		else
@@ -160,6 +168,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Corners::getCorners(u32 _tileIndex, ubyte(&_c)[4]) const
 	{
+		TIM_ASSERT(_tileIndex < Piece::MaxTile);
+
 		for (u32 i = 0; i < 4; ++i)
 			_c[i] = (m_data[_tileIndex / 2] >> (i + ((_tileIndex % 2)*4))) & 0x1;
 	}
@@ -177,6 +187,7 @@ namespace BlokusIA
 		}
 	}
 
+	//-------------------------------------------------------------------------------------------------
 	Slot Board::getSlotSafe(i32 _x, i32 _y) const
 	{
 		if (_x < 0 || _x >= i32(BoardSize) || _y < 0 || _y >= i32(BoardSize))
@@ -223,6 +234,9 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Board::addPiece(Slot _player, const Piece& _piece, ubyte2 _pos)
 	{
+		TIM_ASSERT(_player != Slot::Empty);
+		TIM_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
+
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
 		{
 			if (_piece.getTile(i) == 0)
@@ -238,6 +252,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result) const
 	{
+		TIM_ASSERT(_player != Slot::Empty);
+
 		u32 numCorners = 0;
 		for (i32 j = 0; j < i32(BoardSize); ++j)
 		{
@@ -274,7 +290,7 @@ namespace BlokusIA
 		switch (_player)
 		{
 		case Slot::P0:
-			return { 0,0 };;
+			return { 0,0 };
 		case Slot::P1:
 			return { 0, BoardSize - 1 };
 		case Slot::P2:
@@ -289,6 +305,9 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>& _outPositions, bool _isFirstMove) const
 	{
+		TIM_ASSERT(_player != Slot::Empty);
+		TIM_ASSERT(_boardPos.x < BoardSize&& _boardPos.y < BoardSize);
+
 		u32 numPosition = 0;
 		ivec2 iBoardPos = { int(_boardPos.x), int(_boardPos.y) };
 
@@ -310,7 +329,7 @@ namespace BlokusIA
 			ubyte corners[4];
 			_piece.getCorners(i, corners);
 
-			for (u32 i=0 ; i<4 ; ++i)
+			for (u32 i=0 ; i < 4 ; ++i)
 			{
 				if (corners[i] && compatibleCorner[i])
 				{

@@ -40,7 +40,7 @@ namespace BlokusIA
 	{
 		// we need 4 x 5 bits to encode the corners of a piece (at most 5 tiles)
 		// A corner is used to connect the piece to another one. 
-		ubyte m_data[3] = { 0,0,0 };
+		ubyte m_data[3] = { {0} };
 
 		// nth bit representing a nth corner in the following order:
 		// 1    2
@@ -70,8 +70,8 @@ namespace BlokusIA
 
 		static Tile build(u32 _x, u32 _y)
 		{
-			TIM_ASSERT(_x <= 5 && _y <= 5);
-			return _x + ubyte(_y << 3) + 64;
+			TIM_ASSERT(_x < MaxTile && _y < MaxTile);
+			return _x + ubyte(_y << 3) + 64 /* To distinguish Tile in (0, 0) and unused Tile */;
 		}
 
 		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0);
@@ -106,6 +106,10 @@ namespace BlokusIA
 	static_assert(sizeof(Piece) == 12);
 
 	//-------------------------------------------------------------------------------------------------
+	// For each piece, all possibles symetries to play the piece
+	using PieceSymetries = std::vector<tim::flat_hash_set<Piece>>;
+
+	//-------------------------------------------------------------------------------------------------
 	class Board
 	{
 	public:
@@ -138,10 +142,6 @@ namespace BlokusIA
 	private:
 		static u32 flatten(u32 i, u32 j) { return j * BoardSize + i; }
 	};
-
-	//-------------------------------------------------------------------------------------------------
-	// For each piece, all possibles symetries to play the piece
-	using PieceSymetries = std::vector<tim::flat_hash_set<Piece>>;
 }
 
 //-------------------------------------------------------------------------------------------------

@@ -61,7 +61,6 @@ void pieceTest()
 
 		TIM_ASSERT(piece1 == piece2);
 	}
-	
 }
 
 void pieceTest2()
@@ -103,5 +102,5 @@ void runTest()
 	cornerTest();
 	pieceTest();
 	pieceTest2();
-	std::cout << "Unit tests succeeded\n\n";
+	std::cout << "Unit tests succeeded" << std::endl << std::endl;
 }
