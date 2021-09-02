@@ -97,10 +97,31 @@ void pieceTest2()
 	}
 }
 
+void boardTest()
+{
+	{
+		Board board;
+		board.setSlot(0, 0, Slot::P0);
+		DEBUG_ASSERT(board.getSlot(0, 0) == Slot::P0);
+	}
+	{
+		Board board;
+		board.setSlot(8, 10, Slot::P0);
+		board.setSlot(9, 10, Slot::P1);
+		board.setSlot(10, 10, Slot::P2);
+		board.setSlot(11, 10, Slot::P3);
+		DEBUG_ASSERT(board.getSlot(8, 10) == Slot::P0);
+		DEBUG_ASSERT(board.getSlot(9, 10) == Slot::P1);
+		DEBUG_ASSERT(board.getSlot(10, 10) == Slot::P2);
+		DEBUG_ASSERT(board.getSlot(11, 10) == Slot::P3);
+	}
+}
+
 void runTest()
 {
 	cornerTest();
 	pieceTest();
 	pieceTest2();
+	boardTest();
 	std::cout << "Unit tests succeeded" << std::endl << std::endl;
 }

@@ -16,16 +16,6 @@ namespace BlokusIA
 		P0, P1, P2, P3
 	};
 
-	struct PackedSlot
-	{
-		Slot p1 :	2;
-		Slot p2 :	2;
-		Slot p3 :	2;
-		ubyte pad : 2;
-	};
-
-	static_assert(sizeof(PackedSlot) == 1);
-
 	enum class Rotation // clock wise rotation of a piece
 	{
 		Rot_0,
@@ -115,8 +105,9 @@ namespace BlokusIA
 		Board() = default;
 		Board(const Board&) = default;
 
-		Slot getSlot(u32 _x, u32 _y) const { return m_board[flatten(_x, _y)]; }
+		Slot getSlot(u32 _x, u32 _y) const;
 		Slot getSlotSafe(i32 _x, i32 _y) const;
+		void setSlot(u32 _x, u32 _y, Slot _slot);
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
@@ -133,10 +124,10 @@ namespace BlokusIA
 		void print() const;
 
 	private:
-		std::array<Slot, BoardSize*BoardSize> m_board = { { Slot::Empty } };
+		static_assert((BoardSize*BoardSize) % 8 == 0);
 
-	private:
-		static u32 flatten(u32 i, u32 j) { return j * BoardSize + i; }
+		// each u32 store a 8x1 sub board, each slot on 4 bits
+		std::array<u32, (BoardSize*BoardSize)/8> m_board = { {0} };
 	};
 
 	//-------------------------------------------------------------------------------------------------

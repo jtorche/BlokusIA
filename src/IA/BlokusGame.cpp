@@ -174,7 +174,7 @@ namespace BlokusIA
 		for (u32 i = 0; i < 4; ++i)
 			_c[i] = (m_data[_tileIndex / 2] >> (i + ((_tileIndex % 2)*4))) & 0x1;
 	}
-
+	
 	//-------------------------------------------------------------------------------------------------
 	void Board::print() const
 	{
@@ -182,10 +182,31 @@ namespace BlokusIA
 		{
 			for (u32 i = 0; i < BoardSize; ++i)
 			{
-				std::cout << (u32)m_board[flatten(i, j)] << " ";
+				std::cout << (u32)getSlot(i, j) << " ";
 			}
 			std::cout << std::endl;
 		}
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	static u32 flatten(u32 i, u32 j) { return (j * Board::BoardSize + i); }
+
+	//-------------------------------------------------------------------------------------------------
+	Slot Board::getSlot(u32 _x, u32 _y) const
+	{
+	    u32 packed = m_board[flatten(_x, _y) >> 3];
+		u32 offset = (flatten(_x, _y) & 0x7) << 2;
+		return Slot((packed >> offset) & 0xF);
+	}
+
+	//-------------------------------------------------------------------------------------------------
+	void Board::setSlot(u32 _x, u32 _y, Slot _slot)
+	{
+		u32 packed = m_board[flatten(_x, _y) >> 3];
+		u32 offset = (flatten(_x, _y) & 0x7) << 2;
+		packed = packed & ~(0xF << offset);
+		packed += u32(_slot) << offset;
+		m_board[flatten(_x, _y) >> 3] = packed;
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -246,7 +267,7 @@ namespace BlokusIA
 			u32 tileX = Piece::getTileX(_piece.getTile(i)) + _pos.x;
 			u32 tileY = Piece::getTileY(_piece.getTile(i)) + _pos.y;
 
-			m_board[flatten(tileX, tileY)] = _player;
+			setSlot(tileX, tileY, _player);
 		}
 	}
 
