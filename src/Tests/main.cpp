@@ -1,11 +1,11 @@
-#include <iostream>
 #include <array>
+#include <iostream>
 
-#include "Core/type.h"
 #include "Core/Common.h"
+#include "Core/type.h"
 
-#include "IA/BlokusIA.h"
 #include "IA/BlokusGameHelpers.h"
+#include "IA/BlokusIA.h"
 
 void runTest();
 

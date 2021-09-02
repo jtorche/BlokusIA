@@ -6,9 +6,9 @@
 
 #include <cstdint>
 #include <cstddef>
-#include <functional>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <functional>
 #include <iterator>
 #include <utility>
 #include <type_traits>
@@ -1493,4 +1493,3 @@ namespace ska
     };
 
 } // end namespace ska
-

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <iostream>
 #include <array>
+#include <iostream>
 #include <vector>
 
-#include "Core/type.h"
 #include "Core/Common.h"
 #include "Core/hash.h"
+#include "Core/type.h"
 
 namespace BlokusIA
 {
@@ -70,7 +70,7 @@ namespace BlokusIA
 
 		static Tile build(u32 _x, u32 _y)
 		{
-			TIM_ASSERT(_x < MaxTile && _y < MaxTile);
+			DEBUG_ASSERT(_x < MaxTile && _y < MaxTile);
 			return _x + ubyte(_y << 3) + 64 /* To distinguish Tile in (0, 0) and unused Tile */;
 		}
 
@@ -156,7 +156,7 @@ namespace std
 			size_t h = 0;
 			for (u32 i = 0; i < BlokusIA::Piece::MaxTile; ++i)
 			{
-				tim::hash_combine(h, key.getTile(i));
+				core::hash_combine(h, key.getTile(i));
 				if (key.getTile(i) == 0)
 					break;
 			}

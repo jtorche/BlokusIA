@@ -41,9 +41,8 @@
 // 
 // For more information, please refer to <http://unlicense.org/>
 
-
-
 #pragma once
+
 #ifndef LINALG_H
 #define LINALG_H
 

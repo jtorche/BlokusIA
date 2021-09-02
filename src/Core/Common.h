@@ -1,18 +1,18 @@
 #pragma once
+
 #include <iostream>
+
 #include "flat_hash_map.h"
 
 #ifdef _DEBUG
-#define TIM_ASSERT(cond) \
-    do { if(!(cond)) { tim::handleAssert(__LINE__, __FILE__, ""); } }while(0) 
+#define DEBUG_ASSERT(cond) \
+    do { if(!(cond)) { core::handleAssert(__LINE__, __FILE__, ""); } }while(0) 
 
 #else
-#define TIM_ASSERT(cond)
+#define DEBUG_ASSERT(cond)
 #endif
 
-#define TIM_FRAME_LATENCY 2
-
-namespace tim
+namespace core
 {
     void handleAssert(int _line, const char* _file, const char* _msg);
 

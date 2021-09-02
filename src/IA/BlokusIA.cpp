@@ -25,11 +25,11 @@ namespace BlokusIA
 		GameState newGameState = *this;
 
 		u32 turn = getPlayerTurn();
-		TIM_ASSERT(m_remainingPieces[turn].test(_move.pieceIndex));
+		DEBUG_ASSERT(m_remainingPieces[turn].test(_move.pieceIndex));
 		newGameState.m_remainingPieces[turn].reset(_move.pieceIndex);
 
 		Slot player = Slot(u32(Slot::P0) + turn);
-		TIM_ASSERT(m_board.canAddPiece(player, _move.piece, { _move.position.x, _move.position.y }));
+		DEBUG_ASSERT(m_board.canAddPiece(player, _move.piece, { _move.position.x, _move.position.y }));
 		newGameState.m_board.addPiece(player, _move.piece, _move.position);
 		newGameState.m_turn = m_turn + 1;
 
@@ -91,7 +91,7 @@ namespace BlokusIA
 			closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
 		}
 
-		TIM_ASSERT(closestDistToCenter <= 1);
+		DEBUG_ASSERT(closestDistToCenter <= 1);
 
 		return _move.piece.getNumTiles() * 10.0f +
 			   _move.piece.getNumCorners() +

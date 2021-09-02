@@ -1,5 +1,7 @@
 #pragma once
+
 #include <inttypes.h>
+
 #include "linalg.h"
 
 using u16 = uint16_t;
@@ -23,7 +25,7 @@ using uvec3 = linalg::aliases::uint3;
 using uvec4 = linalg::aliases::uint4;
 using ubyte2 = linalg::aliases::byte2;
 
-namespace tim
+namespace core
 {
 	struct Color
 	{

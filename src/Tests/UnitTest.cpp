@@ -13,7 +13,7 @@ void cornerTest()
 
 		ubyte gettedCorners[4];
 		corners.getCorners(i, gettedCorners);
-		TIM_ASSERT(gettedCorners[0] == 1 && gettedCorners[1] == 0 && gettedCorners[2] == 0 && gettedCorners[3] == 1);
+		DEBUG_ASSERT(gettedCorners[0] == 1 && gettedCorners[1] == 0 && gettedCorners[2] == 0 && gettedCorners[3] == 1);
 	}
 }
 
@@ -21,45 +21,45 @@ void pieceTest()
 {
 	{
 		Piece::Tile tile1 = Piece::build(0, 0);
-		TIM_ASSERT(Piece::getTileX(tile1) == 0 && Piece::getTileY(tile1) == 0);
+		DEBUG_ASSERT(Piece::getTileX(tile1) == 0 && Piece::getTileY(tile1) == 0);
 
 		Piece::Tile tile2 = Piece::build(1, 0);
-		TIM_ASSERT(Piece::getTileX(tile2) == 1 && Piece::getTileY(tile2) == 0);
+		DEBUG_ASSERT(Piece::getTileX(tile2) == 1 && Piece::getTileY(tile2) == 0);
 
 		Piece::Tile tile3 = Piece::build(0, 1);
-		TIM_ASSERT(Piece::getTileX(tile3) == 0 && Piece::getTileY(tile3) == 1);
+		DEBUG_ASSERT(Piece::getTileX(tile3) == 0 && Piece::getTileY(tile3) == 1);
 	}
 	{
 		Piece piece(Piece::build(0, 0));
 		ubyte corners[4];
 		piece.getCorners(0, corners);
-		TIM_ASSERT(corners[0] == corners[1] == corners[2] == corners[3] == 1);
+		DEBUG_ASSERT(corners[0] == corners[1] == corners[2] == corners[3] == 1);
 	}
 	{
 		Piece piece(Piece::build(0, 0), Piece::build(1, 0));
 		ubyte corners[4];
 
 		piece.getCorners(0, corners);
-		TIM_ASSERT(corners[0] == 1 && corners[3] == 1 && corners[1] == 0 && corners[2] == 0);
+		DEBUG_ASSERT(corners[0] == 1 && corners[3] == 1 && corners[1] == 0 && corners[2] == 0);
 
 		piece.getCorners(1, corners);
-		TIM_ASSERT(corners[0] == 0 && corners[3] == 0 && corners[1] == 1 && corners[2] == 1);
+		DEBUG_ASSERT(corners[0] == 0 && corners[3] == 0 && corners[1] == 1 && corners[2] == 1);
 	}
 	{
 		Piece piece(Piece::build(0, 0), Piece::build(0, 1));
 		ubyte corners[4];
 
 		piece.getCorners(0, corners);
-		TIM_ASSERT(corners[0] == 1 && corners[1] == 1 && corners[2] == 0 && corners[3] == 0);
+		DEBUG_ASSERT(corners[0] == 1 && corners[1] == 1 && corners[2] == 0 && corners[3] == 0);
 
 		piece.getCorners(1, corners);
-		TIM_ASSERT(corners[0] == 0 && corners[1] == 0 && corners[2] == 1 && corners[3] == 1);
+		DEBUG_ASSERT(corners[0] == 0 && corners[1] == 0 && corners[2] == 1 && corners[3] == 1);
 	}
 	{
 		Piece piece1(Piece::build(0, 0), Piece::build(1, 0));
 		Piece piece2(Piece::build(1, 0), Piece::build(0, 0));
 
-		TIM_ASSERT(piece1 == piece2);
+		DEBUG_ASSERT(piece1 == piece2);
 	}
 }
 
@@ -67,7 +67,7 @@ void pieceTest2()
 {
 	auto cmp = [](Piece p1, Piece p2)
 	{
-		TIM_ASSERT(p1 == p2);
+		DEBUG_ASSERT(p1 == p2);
 	};
 
 	{

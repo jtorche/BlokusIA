@@ -1,9 +1,9 @@
 #include "Common.h"
 
 #include <windows.h>
-#include "DebugApi.h"
+#include <DebugApi.h>
 
-namespace tim
+namespace core
 {
     void handleAssert(int _line, const char* _file, const char* _msg)
     {

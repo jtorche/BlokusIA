@@ -1,4 +1,5 @@
 #include "BlokusGame.h"
+
 #include <numeric>
 
 namespace BlokusIA
@@ -17,7 +18,7 @@ namespace BlokusIA
 			if (m_layout[i] != _other.m_layout[i])
 				return false;
 
-		TIM_ASSERT(m_corners == _other.m_corners);
+		DEBUG_ASSERT(m_corners == _other.m_corners);
 		return true;
 	}
 
@@ -153,11 +154,11 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Corners::setCorners(u32 _tileIndex, ubyte _c1, ubyte _c2, ubyte _c3, ubyte _c4)
 	{
-		TIM_ASSERT(_tileIndex < Piece::MaxTile);
-		TIM_ASSERT(_c1 == 0 || _c1 == 1);
-		TIM_ASSERT(_c2 == 0 || _c2 == 1);
-		TIM_ASSERT(_c3 == 0 || _c3 == 1);
-		TIM_ASSERT(_c4 == 0 || _c4 == 1);
+		DEBUG_ASSERT(_tileIndex < Piece::MaxTile);
+		DEBUG_ASSERT(_c1 == 0 || _c1 == 1);
+		DEBUG_ASSERT(_c2 == 0 || _c2 == 1);
+		DEBUG_ASSERT(_c3 == 0 || _c3 == 1);
+		DEBUG_ASSERT(_c4 == 0 || _c4 == 1);
 
 		if((_tileIndex % 2) == 0)
 			m_data[_tileIndex / 2] = _c1 + (_c2 << 1) + (_c3 << 2) + (_c4 << 3) + (m_data[_tileIndex / 2] & 0xF0);
@@ -168,7 +169,7 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Corners::getCorners(u32 _tileIndex, ubyte(&_c)[4]) const
 	{
-		TIM_ASSERT(_tileIndex < Piece::MaxTile);
+		DEBUG_ASSERT(_tileIndex < Piece::MaxTile);
 
 		for (u32 i = 0; i < 4; ++i)
 			_c[i] = (m_data[_tileIndex / 2] >> (i + ((_tileIndex % 2)*4))) & 0x1;
@@ -198,8 +199,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	bool Board::canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const
 	{
-		TIM_ASSERT(_player != Slot::Empty);
-		TIM_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
+		DEBUG_ASSERT(_player != Slot::Empty);
+		DEBUG_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
 
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
 		{
@@ -234,8 +235,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	void Board::addPiece(Slot _player, const Piece& _piece, ubyte2 _pos)
 	{
-		TIM_ASSERT(_player != Slot::Empty);
-		TIM_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
+		DEBUG_ASSERT(_player != Slot::Empty);
+		DEBUG_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
 
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
 		{
@@ -252,7 +253,7 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result) const
 	{
-		TIM_ASSERT(_player != Slot::Empty);
+		DEBUG_ASSERT(_player != Slot::Empty);
 
 		u32 numCorners = 0;
 		for (i32 j = 0; j < i32(BoardSize); ++j)
@@ -305,8 +306,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>& _outPositions, bool _isFirstMove) const
 	{
-		TIM_ASSERT(_player != Slot::Empty);
-		TIM_ASSERT(_boardPos.x < BoardSize&& _boardPos.y < BoardSize);
+		DEBUG_ASSERT(_player != Slot::Empty);
+		DEBUG_ASSERT(_boardPos.x < BoardSize&& _boardPos.y < BoardSize);
 
 		u32 numPosition = 0;
 		ivec2 iBoardPos = { int(_boardPos.x), int(_boardPos.y) };

@@ -1,9 +1,11 @@
 #pragma once
-#include "type.h"
+
 #include <stdint.h>
 #include <functional>
 
-namespace tim
+#include "type.h"
+
+namespace core
 {
     namespace detail
     {
@@ -33,8 +35,8 @@ namespace tim
         }
     }
 
-    #define TIM_HASH32(str) ::tim::detail::hash_32_fnv1a_const(#str)
-    #define TIM_HASH32_STR(str) ::tim::detail::hash_32_fnv1a_const(str)
+    #define HASH32(str) ::core::detail::hash_32_fnv1a_const(#str)
+    #define HASH32_STR(str) ::core::detail::hash_32_fnv1a_const(str)
 
     // Helpers to combine hashes
     inline void hash_combine(std::size_t& seed) { }
