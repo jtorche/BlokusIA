@@ -4,8 +4,8 @@
 #include "Core/type.h"
 #include "Core/Common.h"
 
-#include "BlokusIA.h"
-#include "BlokusGameHelpers.h"
+#include "IA/BlokusIA.h"
+#include "IA/BlokusGameHelpers.h"
 
 void runTest();
 
