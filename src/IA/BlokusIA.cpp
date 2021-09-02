@@ -130,10 +130,13 @@ namespace BlokusIA
 			return {};
 
 		std::vector<float> scores(moves.size());
+		float b = std::numeric_limits<float>::max();
 		std::transform(moves.begin(), moves.end(), scores.begin(),
 			[&](const Move& move) -> float
 			{
-				return evalPositionRec(false, _gameState.play(move), 0, { -std::numeric_limits<float>::max(), std::numeric_limits<float>::max() });
+				float score = evalPositionRec(false, _gameState.play(move), 0, { -std::numeric_limits<float>::max(), b });
+				b = std::min(b, score);
+				return score;
 			});
 		
 		auto best = std::max_element(scores.begin(), scores.end());
