@@ -312,7 +312,6 @@ namespace BlokusIA
 
 			for (u32 i=0 ; i<4 ; ++i)
 			{
-				ivec2 cornerOffset;
 				if (corners[i] && compatibleCorner[i])
 				{
 					ivec2 finalPos = iBoardPos - tilePos;

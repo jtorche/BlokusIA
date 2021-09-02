@@ -27,12 +27,12 @@ namespace BlokusIA
 
 		const Board& getBoard() const { return m_board; }
 		u32 getPlayerTurn() const { return m_turn % 4; }
+		u32 getTurnCount() const { return m_turn; }
 
 		std::vector<Move> enumerateMoves(bool _sortByHeuristic) const;
 
 		float computeHeuristic(const Move& _move) const;
 		float computeBoardScore(Slot _player) const;
-		size_t maxMoveToLookAt() const;
 
 	private:
 		Board m_board;
@@ -52,6 +52,8 @@ namespace BlokusIA
 		{
 			return (_isP0P2_MaxPlayer ? 1 : -1) * _gameState.computeBoardScore(Slot::P0) + _gameState.computeBoardScore(Slot::P2) - _gameState.computeBoardScore(Slot::P1) - _gameState.computeBoardScore(Slot::P3);
 		}
+
+		size_t maxMoveToLookAt(const GameState& _gameState) const;
 
 	private:
 		float evalPositionRec(bool _isMaxPlayerTurn, const GameState& _gameState, u32 _depth, vec2 _a_b);

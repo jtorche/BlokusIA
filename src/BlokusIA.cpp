@@ -112,9 +112,9 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	size_t GameState::maxMoveToLookAt() const
+	size_t TwoPlayerMinMaxIA::maxMoveToLookAt(const GameState& _gameState) const
 	{
-		if (m_turn < 16)
+		if (_gameState.getTurnCount() < 16)
 			return 8;
 		else
 			return 16;
@@ -124,7 +124,7 @@ namespace BlokusIA
 	Move TwoPlayerMinMaxIA::findBestMove(const GameState& _gameState)
 	{
 		auto moves = _gameState.enumerateMoves(true);
-		moves.resize(std::min(moves.size(), _gameState.maxMoveToLookAt()));
+		moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
 
 		if (moves.empty())
 			return {};
@@ -158,7 +158,7 @@ namespace BlokusIA
 			return _isMaxPlayerTurn ? std::min(s1, s2) : std::max(s1, s2);
 		};
 
-		for (size_t i = 0; i < std::min(moves.size(), _gameState.maxMoveToLookAt()); ++i)
+		for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
 		{
 			score = minmax(evalPositionRec(!_isMaxPlayerTurn, _gameState.play(moves[i]), _depth + 1, _a_b), score);
 			if (_isMaxPlayerTurn)
