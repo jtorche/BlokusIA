@@ -1,7 +1,9 @@
 #pragma once
 
-#include "BlokusGame.h"
 #include <bitset>
+
+#include "BlokusGame.h"
+#include "BlokusGameHelpers.h"
 
 namespace BlokusIA
 {
@@ -36,7 +38,7 @@ namespace BlokusIA
 
 	private:
 		Board m_board;
-		std::bitset<21> m_remainingPieces[4];
+		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
 		u32 m_turn = 0;
 	};
 

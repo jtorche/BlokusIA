@@ -8,9 +8,13 @@
 
 namespace BlokusIA
 {
+	//-------------------------------------------------------------------------------------------------
+	// For each piece, all possibles symetries to play the piece
+	using PieceSymetries = std::array<tim::flat_hash_set<Piece>, BlokusGame::PiecesCount>;
+
 	struct Helpers
 	{
-		static std::vector<Piece> getAllPieces();
+		static std::array<Piece, BlokusGame::PiecesCount> getAllPieces();
 		static PieceSymetries getAllPieceSymetries();
 	};
 }

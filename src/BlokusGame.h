@@ -106,10 +106,6 @@ namespace BlokusIA
 	static_assert(sizeof(Piece) == 12);
 
 	//-------------------------------------------------------------------------------------------------
-	// For each piece, all possibles symetries to play the piece
-	using PieceSymetries = std::vector<tim::flat_hash_set<Piece>>;
-
-	//-------------------------------------------------------------------------------------------------
 	class Board
 	{
 	public:
@@ -141,6 +137,12 @@ namespace BlokusIA
 
 	private:
 		static u32 flatten(u32 i, u32 j) { return j * BoardSize + i; }
+	};
+
+	//-------------------------------------------------------------------------------------------------
+	struct BlokusGame
+	{
+		static constexpr u32 PiecesCount = 21;
 	};
 }
 

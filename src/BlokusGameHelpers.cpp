@@ -3,125 +3,124 @@
 namespace BlokusIA
 {
 	//-------------------------------------------------------------------------------------------------
-	std::vector<Piece> Helpers::getAllPieces()
+	std::array<Piece, BlokusGame::PiecesCount> Helpers::getAllPieces()
 	{
-		std::vector<Piece> pieces;
+		return
+		{
+			// 1
+			// x
+			Piece { Piece::build(0,0) },
 
-		// 1
-		// x
-		pieces.push_back({ Piece::build(0,0) });
+			// 2
+			// xx
+			{ Piece::build(0,0), Piece::build(1,0) },
 
-		// 2
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0) });
+			// 3
+			// xx
+			// x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1) },
 
-		// 3
-		// xx
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1) });
+			// 4
+			// xxx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0) },
 
-		// 4
-		// xxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0) });
+			// 5
+			// xx
+			// xx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1), Piece::build(1,1) },
 
-		// 5
-		// xx
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(0,1), Piece::build(1,1) });
+			// 6
+			// xxx
+			//  x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,1), Piece::build(1,1) },
 
-		// 6
-		// xxx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,1), Piece::build(1,1) });
-		
-		// 7
-		// xxxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0) });
+			// 7
+			// xxxx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0) },
 
-		// 8
-		// xxx
-		// x  
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1) });
+			// 8
+			// xxx
+			// x  
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1) },
 
-		// 9
-		// xx
-		//  xx  
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(1,2) });
+			// 9
+			// xx
+			//  xx  
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(1,2) },
 
-		// 10
-		// xxxxx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(4,0) });
+			// 10
+			// xxxxx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(4,0) },
 
-		// 11
-		// xxxx
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(0,1) });
+			// 11
+			// xxxx
+			// x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(0,1) },
 
-		// 12
-		// xxx
-		// x
-		// x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(0,2) });
+			// 12
+			// xxx
+			// x
+			// x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(0,2) },
 
-		// 13
-		// xxx
-		//   xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(2,1), Piece::build(3,1) });
+			// 13
+			// xxx
+			//   xx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(2,1), Piece::build(3,1) },
 
-		// 14
-		// x
-		// xxx
-		//   x
-		pieces.push_back({ Piece::build(0,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
+			// 14
+			// x
+			// xxx
+			//   x
+			{ Piece::build(0,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) },
 
-		// 15
-		// x
-		// xx
-		// xx
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,0), Piece::build(1,1) });
+			// 15
+			// x
+			// xx
+			// xx
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,0), Piece::build(1,1) },
 
-		// 16
-		// xx
-		//  xx
-		//   x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) });
+			// 16
+			// xx
+			//  xx
+			//   x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(2,2) },
 
-		// 17
-		// xxx
-		// x x 
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(2,1) });
+			// 17
+			// xxx
+			// x x 
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(0,1), Piece::build(2,1) },
 
-		// 18
-		//  x 
-		// xxx
-		//  x
-		pieces.push_back({ Piece::build(1,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
+			// 18
+			//  x 
+			// xxx
+			//  x
+			{ Piece::build(1,0), Piece::build(0,1), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) },
 
-		// 19
-		// xxxx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(1,1) });
+			// 19
+			// xxxx
+			//  x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(3,0), Piece::build(1,1) },
 
-		// 20
-		// xx
-		//  xx
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) });
+			// 20
+			// xx
+			//  xx
+			//  x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1), Piece::build(1,2) },
 
-		// 21
-		// xxx
-		//  x
-		//  x
-		pieces.push_back({ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,1), Piece::build(1,2) });
-
-		return pieces;
+			// 21
+			// xxx
+			//  x
+			//  x
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,1), Piece::build(1,2) }
+		};
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	PieceSymetries Helpers::getAllPieceSymetries()
 	{
-		std::vector<Piece> pieces = getAllPieces();
-		PieceSymetries symetries(pieces.size());
+		std::array<Piece, BlokusGame::PiecesCount> pieces = getAllPieces();
+		PieceSymetries symetries;
 
 		u32 i = 0;
 		for (const Piece& p : pieces)
