@@ -4,9 +4,9 @@
 #include <array>
 #include <vector>
 
-#include "timCore/type.h"
-#include "timCore/Common.h"
-#include "timCore/hash.h"
+#include "Core/type.h"
+#include "Core/Common.h"
+#include "Core/hash.h"
 
 namespace BlokusIA
 {

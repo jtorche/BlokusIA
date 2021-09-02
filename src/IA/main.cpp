@@ -1,7 +1,8 @@
 #include <iostream>
 #include <array>
-#include "timCore/type.h"
-#include "timCore/Common.h"
+
+#include "Core/type.h"
+#include "Core/Common.h"
 
 #include "BlokusIA.h"
 #include "BlokusGameHelpers.h"
