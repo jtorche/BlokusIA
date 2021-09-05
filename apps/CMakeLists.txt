@@ -31,6 +31,8 @@ if (BUILD_UI)
             endif()
         endif()
 
+        set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "Generated Files")
+
         # As moc files are generated in the binary dir, tell CMake
         # to always look for includes there
         set(CMAKE_INCLUDE_CURRENT_DIR ON)
