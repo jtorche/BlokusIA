@@ -1,4 +1,4 @@
-#include "BlokusGame.h"
+#include "IA/BlokusGame.h"
 
 #include <numeric>
 

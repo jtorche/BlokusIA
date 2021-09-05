@@ -1,35 +1,26 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8)
 
-project(BlokusIA VERSION 1.0.0 DESCRIPTION "Blokus Artificial Intelligence" LANGUAGES CXX)
+project(BlokusIA DESCRIPTION "Blokus Artificial Intelligence project" LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# Only do these if this is the main project, and not if it is included through
+# add_subdirectory
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # C++ Standard
+    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_definitions(-DNOMINMAX)
+    # Ensure -std=c++xx instead of -std=g++xx
+    set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Core
-file(GLOB_RECURSE CORE_HDRS src/Core/*.h)
-file(GLOB_RECURSE CORE_SRCS src/Core/*.cpp)
+    # Nicely support folders in IDE's
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+endif()
 
-add_library(Core ${CORE_HDRS} ${CORE_SRCS})
+# Libraries code
+add_subdirectory(src)
 
+# Executables code
+add_subdirectory(apps)
 
-# IA Lib
-file(GLOB_RECURSE IA_HDRS src/IA/*.h)
-file(GLOB_RECURSE IA_SRCS src/IA/*.cpp)
-
-add_library(IA ${IA_HDRS} ${IA_SRCS})
-target_include_directories(IA PUBLIC "src/")
-target_link_libraries(IA PRIVATE Core)
-
-
-# IA Tests exe
-file(GLOB_RECURSE Test_IA_HDRS src/Tests/*.h)
-file(GLOB_RECURSE Test_IA_SRCS src/Tests/*.cpp)
-
-add_executable(Tests_IA ${Test_IA_HDRS} ${Test_IA_SRCS})
-target_link_libraries(Tests_IA PRIVATE Core IA)
-
-
-# UI exe
-add_subdirectory(src/UI)
+# Tests code
+add_subdirectory(tests)

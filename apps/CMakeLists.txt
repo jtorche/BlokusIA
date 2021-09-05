@@ -1,11 +1,9 @@
-cmake_minimum_required(VERSION 3.0)
-project(Blokus_UI VERSION 1.0.0 DESCRIPTION "Blokus Game UI" LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.8)
+
+project(Blokus_UI DESCRIPTION "Blokus Game UI" LANGUAGES CXX)
 
 option(BUILD_UI "Check it to generate the Blokus UI project." OFF)
 if (BUILD_UI)
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
     set(QT_MAJOR_VERSION 5 CACHE STRING "Qt major version to use.")
     option(USE_QT_CREATOR "Check it if you use QtCreator as IDE." OFF)
 
@@ -43,11 +41,10 @@ if (BUILD_UI)
 
         # Sources
         file(GLOB_RECURSE ui_headers *.h)
-        file(GLOB_RECURSE ui_srcs *.cpp)
+        file(GLOB_RECURSE ui_sources *.cpp)
         file(GLOB_RECURSE ui_uis *.ui)
-        set(PROJECT_SOURCES ${ui_headers} ${ui_srcs} ${ui_uis})
 
-        add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis})
         # To avoid having a console when running GUI application
         if (WIN32)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
@@ -65,6 +62,22 @@ if (BUILD_UI)
         if (QT_MAJOR_VERSION EQUAL 6)
             qt_finalize_executable(${PROJECT_NAME})
         endif()
+
+        # For nicer IDE views
+        source_group(
+          TREE ${CMAKE_CURRENT_SOURCE_DIR}
+          PREFIX "Header Files"
+          FILES ${ui_headers})
+
+        source_group(
+          TREE ${CMAKE_CURRENT_SOURCE_DIR}
+          PREFIX "Source Files"
+          FILES ${ui_sources})
+
+        source_group(
+          TREE ${CMAKE_CURRENT_SOURCE_DIR}
+          PREFIX "View Files"
+          FILES ${ui_uis})
     else()
         message("Could not find Qt${QT_MAJOR_VERSION}. ${PROJECT_NAME} project won't be generated.")
         message("Qt${QT_MAJOR_VERSION}_DIR must be set to path like: <QTDIR>/lib/cmake/Qt${QT_MAJOR_VERSION}.")
