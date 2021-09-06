@@ -29,6 +29,13 @@ if (BUILD_UI)
 
                 set_target_properties(Qt${QT_MAJOR_VERSION}::windeployqt PROPERTIES IMPORTED_LOCATION ${imported_win_deploy_qt_location})
             endif()
+
+            # Check VCINSTALLDIR environment variable is present
+            IF(DEFINED ENV{VCINSTALLDIR})
+                set(VC_INSTALL_DIR $ENV{VCINSTALLDIR})
+            else()
+                set(VC_INSTALL_DIR "" CACHE PATH "Visual Studio VC installation path (example: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC")
+            endif()
         endif()
 
         set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "Generated Files")
@@ -58,6 +65,7 @@ if (BUILD_UI)
         # Post build step to deploy needed stuff in output directory under Windows
         if (TARGET Qt${QT_MAJOR_VERSION}::windeployqt)
             add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND set VCINSTALLDIR=${VC_INSTALL_DIR}
                 COMMAND Qt${QT_MAJOR_VERSION}::windeployqt $<TARGET_FILE:${PROJECT_NAME}>)
         endif()
 
