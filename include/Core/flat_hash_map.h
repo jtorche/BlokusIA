@@ -31,19 +31,19 @@ namespace ska
         struct functor_storage : Functor
         {
             functor_storage() = default;
-            functor_storage(const Functor& functor)
-                : Functor(functor)
+            functor_storage(const Functor& _functor)
+                : Functor(_functor)
             {
             }
             template<typename... Args>
-            Result operator()(Args&&... args)
+            Result operator()(Args&&... _args)
             {
-                return static_cast<Functor&>(*this)(std::forward<Args>(args)...);
+                return static_cast<Functor&>(*this)(std::forward<Args>(_args)...);
             }
             template<typename... Args>
-            Result operator()(Args&&... args) const
+            Result operator()(Args&&... _args) const
             {
-                return static_cast<const Functor&>(*this)(std::forward<Args>(args)...);
+                return static_cast<const Functor&>(*this)(std::forward<Args>(_args)...);
             }
         };
         template<typename Result, typename... Args>
@@ -51,13 +51,13 @@ namespace ska
         {
             typedef Result(*function_ptr)(Args...);
             function_ptr function;
-            functor_storage(function_ptr function)
-                : function(function)
+            functor_storage(function_ptr _function)
+                : function(_function)
             {
             }
-            Result operator()(Args... args) const
+            Result operator()(Args... _args) const
             {
-                return function(std::forward<Args>(args)...);
+                return function(std::forward<Args>(_args)...);
             }
             operator function_ptr& ()
             {
@@ -73,35 +73,35 @@ namespace ska
         {
             typedef functor_storage<size_t, hasher> hasher_storage;
             KeyOrValueHasher() = default;
-            KeyOrValueHasher(const hasher& hash)
-                : hasher_storage(hash)
+            KeyOrValueHasher(const hasher& _hash)
+                : hasher_storage(_hash)
             {
             }
-            size_t operator()(const key_type& key)
+            size_t operator()(const key_type& _key)
             {
-                return static_cast<hasher_storage&>(*this)(key);
+                return static_cast<hasher_storage&>(*this)(_key);
             }
-            size_t operator()(const key_type& key) const
+            size_t operator()(const key_type& _key) const
             {
-                return static_cast<const hasher_storage&>(*this)(key);
+                return static_cast<const hasher_storage&>(*this)(_key);
             }
-            size_t operator()(const value_type& value)
+            size_t operator()(const value_type& _value)
             {
-                return static_cast<hasher_storage&>(*this)(value.first);
+                return static_cast<hasher_storage&>(*this)(_value.first);
             }
-            size_t operator()(const value_type& value) const
+            size_t operator()(const value_type& _value) const
             {
-                return static_cast<const hasher_storage&>(*this)(value.first);
-            }
-            template<typename F, typename S>
-            size_t operator()(const std::pair<F, S>& value)
-            {
-                return static_cast<hasher_storage&>(*this)(value.first);
+                return static_cast<const hasher_storage&>(*this)(_value.first);
             }
             template<typename F, typename S>
-            size_t operator()(const std::pair<F, S>& value) const
+            size_t operator()(const std::pair<F, S>& _value)
             {
-                return static_cast<const hasher_storage&>(*this)(value.first);
+                return static_cast<hasher_storage&>(*this)(_value.first);
+            }
+            template<typename F, typename S>
+            size_t operator()(const std::pair<F, S>& _value) const
+            {
+                return static_cast<const hasher_storage&>(*this)(_value.first);
             }
         };
         template<typename key_type, typename value_type, typename key_equal>
@@ -109,50 +109,50 @@ namespace ska
         {
             typedef functor_storage<bool, key_equal> equality_storage;
             KeyOrValueEquality() = default;
-            KeyOrValueEquality(const key_equal& equality)
-                : equality_storage(equality)
+            KeyOrValueEquality(const key_equal& _equality)
+                : equality_storage(_equality)
             {
             }
-            bool operator()(const key_type& lhs, const key_type& rhs)
+            bool operator()(const key_type& _lhs, const key_type& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs, rhs);
+                return static_cast<equality_storage&>(*this)(_lhs, _rhs);
             }
-            bool operator()(const key_type& lhs, const value_type& rhs)
+            bool operator()(const key_type& _lhs, const value_type& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs, rhs.first);
+                return static_cast<equality_storage&>(*this)(_lhs, _rhs.first);
             }
-            bool operator()(const value_type& lhs, const key_type& rhs)
+            bool operator()(const value_type& _lhs, const key_type& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs);
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs);
             }
-            bool operator()(const value_type& lhs, const value_type& rhs)
+            bool operator()(const value_type& _lhs, const value_type& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs.first);
-            }
-            template<typename F, typename S>
-            bool operator()(const key_type& lhs, const std::pair<F, S>& rhs)
-            {
-                return static_cast<equality_storage&>(*this)(lhs, rhs.first);
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs.first);
             }
             template<typename F, typename S>
-            bool operator()(const std::pair<F, S>& lhs, const key_type& rhs)
+            bool operator()(const key_type& _lhs, const std::pair<F, S>& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs);
+                return static_cast<equality_storage&>(*this)(_lhs, _rhs.first);
             }
             template<typename F, typename S>
-            bool operator()(const value_type& lhs, const std::pair<F, S>& rhs)
+            bool operator()(const std::pair<F, S>& _lhs, const key_type& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs.first);
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs);
             }
             template<typename F, typename S>
-            bool operator()(const std::pair<F, S>& lhs, const value_type& rhs)
+            bool operator()(const value_type& _lhs, const std::pair<F, S>& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs.first);
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs.first);
+            }
+            template<typename F, typename S>
+            bool operator()(const std::pair<F, S>& _lhs, const value_type& _rhs)
+            {
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs.first);
             }
             template<typename FL, typename SL, typename FR, typename SR>
-            bool operator()(const std::pair<FL, SL>& lhs, const std::pair<FR, SR>& rhs)
+            bool operator()(const std::pair<FL, SL>& _lhs, const std::pair<FR, SR>& _rhs)
             {
-                return static_cast<equality_storage&>(*this)(lhs.first, rhs.first);
+                return static_cast<equality_storage&>(*this)(_lhs.first, _rhs.first);
             }
         };
         static constexpr int8_t min_lookups = 4;
@@ -162,8 +162,8 @@ namespace ska
             sherwood_v3_entry()
             {
             }
-            sherwood_v3_entry(int8_t distance_from_desired)
-                : distance_from_desired(distance_from_desired)
+            sherwood_v3_entry(int8_t _distance_from_desired)
+                : distance_from_desired(_distance_from_desired)
             {
             }
             ~sherwood_v3_entry()
@@ -188,10 +188,10 @@ namespace ska
                 return distance_from_desired <= 0;
             }
             template<typename... Args>
-            void emplace(int8_t distance, Args&&... args)
+            void emplace(int8_t _distance, Args&&... _args)
             {
-                new (std::addressof(value)) T(std::forward<Args>(args)...);
-                distance_from_desired = distance;
+                new (std::addressof(value)) T(std::forward<Args>(_args)...);
+                distance_from_desired = _distance;
             }
 
             void destroy_value()
@@ -205,7 +205,7 @@ namespace ska
             union { T value = {}; };
         };
 
-        inline int8_t log2(size_t value)
+        inline int8_t log2(size_t _value)
         {
             static constexpr int8_t table[64] =
             {
@@ -218,25 +218,25 @@ namespace ska
                 56, 45, 25, 31, 35, 16,  9, 12,
                 44, 24, 15,  8, 23,  7,  6,  5
             };
-            value |= value >> 1;
-            value |= value >> 2;
-            value |= value >> 4;
-            value |= value >> 8;
-            value |= value >> 16;
-            value |= value >> 32;
-            return table[((value - (value >> 1)) * 0x07EDD5E59A4E28C2) >> 58];
+            _value |= _value >> 1;
+            _value |= _value >> 2;
+            _value |= _value >> 4;
+            _value |= _value >> 8;
+            _value |= _value >> 16;
+            _value |= _value >> 32;
+            return table[((_value - (_value >> 1)) * 0x07EDD5E59A4E28C2) >> 58];
         }
 
         template<typename T, bool>
         struct AssignIfTrue
         {
-            void operator()(T& lhs, const T& rhs)
+            void operator()(T& _lhs, const T& _rhs)
             {
-                lhs = rhs;
+                _lhs = _rhs;
             }
-            void operator()(T& lhs, T&& rhs)
+            void operator()(T& _lhs, T&& _rhs)
             {
-                lhs = std::move(rhs);
+                _lhs = std::move(_rhs);
             }
         };
         template<typename T>
@@ -250,17 +250,17 @@ namespace ska
             }
         };
 
-        inline size_t next_power_of_two(size_t i)
+        inline size_t next_power_of_two(size_t _i)
         {
-            --i;
-            i |= i >> 1;
-            i |= i >> 2;
-            i |= i >> 4;
-            i |= i >> 8;
-            i |= i >> 16;
-            i |= i >> 32;
-            ++i;
-            return i;
+            --_i;
+            _i |= _i >> 1;
+            _i |= _i >> 2;
+            _i |= _i >> 4;
+            _i |= _i >> 8;
+            _i |= _i >> 16;
+            _i |= _i >> 32;
+            ++_i;
+            return _i;
         }
 
         template<typename...> using void_t = void;
@@ -300,136 +300,136 @@ namespace ska
             sherwood_v3_table()
             {
             }
-            explicit sherwood_v3_table(size_type bucket_count, const ArgumentHash& hash = ArgumentHash(), const ArgumentEqual& equal = ArgumentEqual(), const ArgumentAlloc& alloc = ArgumentAlloc())
-                : EntryAlloc(alloc), Hasher(hash), Equal(equal)
+            explicit sherwood_v3_table(size_type _bucket_count, const ArgumentHash& _hash = ArgumentHash(), const ArgumentEqual& _equal = ArgumentEqual(), const ArgumentAlloc& _alloc = ArgumentAlloc())
+                : EntryAlloc(_alloc), Hasher(_hash), Equal(_equal)
             {
-                rehash(bucket_count);
+                rehash(_bucket_count);
             }
-            sherwood_v3_table(size_type bucket_count, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
-            {
-            }
-            sherwood_v3_table(size_type bucket_count, const ArgumentHash& hash, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(bucket_count, hash, ArgumentEqual(), alloc)
+            sherwood_v3_table(size_type _bucket_count, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_bucket_count, ArgumentHash(), ArgumentEqual(), _alloc)
             {
             }
-            explicit sherwood_v3_table(const ArgumentAlloc& alloc)
-                : EntryAlloc(alloc)
+            sherwood_v3_table(size_type _bucket_count, const ArgumentHash& _hash, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_bucket_count, _hash, ArgumentEqual(), _alloc)
             {
             }
-            template<typename It>
-            sherwood_v3_table(It first, It last, size_type bucket_count = 0, const ArgumentHash& hash = ArgumentHash(), const ArgumentEqual& equal = ArgumentEqual(), const ArgumentAlloc& alloc = ArgumentAlloc())
-                : sherwood_v3_table(bucket_count, hash, equal, alloc)
-            {
-                insert(first, last);
-            }
-            template<typename It>
-            sherwood_v3_table(It first, It last, size_type bucket_count, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(first, last, bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
+            explicit sherwood_v3_table(const ArgumentAlloc& _alloc)
+                : EntryAlloc(_alloc)
             {
             }
             template<typename It>
-            sherwood_v3_table(It first, It last, size_type bucket_count, const ArgumentHash& hash, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(first, last, bucket_count, hash, ArgumentEqual(), alloc)
+            sherwood_v3_table(It _first, It _last, size_type _bucket_count = 0, const ArgumentHash& _hash = ArgumentHash(), const ArgumentEqual& _equal = ArgumentEqual(), const ArgumentAlloc& _alloc = ArgumentAlloc())
+                : sherwood_v3_table(_bucket_count, _hash, _equal, _alloc)
+            {
+                insert(_first, _last);
+            }
+            template<typename It>
+            sherwood_v3_table(It _first, It _last, size_type _bucket_count, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_first, _last, _bucket_count, ArgumentHash(), ArgumentEqual(), _alloc)
             {
             }
-            sherwood_v3_table(std::initializer_list<T> il, size_type bucket_count = 0, const ArgumentHash& hash = ArgumentHash(), const ArgumentEqual& equal = ArgumentEqual(), const ArgumentAlloc& alloc = ArgumentAlloc())
-                : sherwood_v3_table(bucket_count, hash, equal, alloc)
-            {
-                if (bucket_count == 0)
-                    rehash(il.size());
-                insert(il.begin(), il.end());
-            }
-            sherwood_v3_table(std::initializer_list<T> il, size_type bucket_count, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(il, bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
+            template<typename It>
+            sherwood_v3_table(It _first, It _last, size_type _bucket_count, const ArgumentHash& _hash, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_first, _last, _bucket_count, _hash, ArgumentEqual(), _alloc)
             {
             }
-            sherwood_v3_table(std::initializer_list<T> il, size_type bucket_count, const ArgumentHash& hash, const ArgumentAlloc& alloc)
-                : sherwood_v3_table(il, bucket_count, hash, ArgumentEqual(), alloc)
+            sherwood_v3_table(std::initializer_list<T> _il, size_type _bucket_count = 0, const ArgumentHash& _hash = ArgumentHash(), const ArgumentEqual& _equal = ArgumentEqual(), const ArgumentAlloc& _alloc = ArgumentAlloc())
+                : sherwood_v3_table(_bucket_count, _hash, _equal, _alloc)
+            {
+                if (_bucket_count == 0)
+                    rehash(_il.size());
+                insert(_il.begin(), _il.end());
+            }
+            sherwood_v3_table(std::initializer_list<T> _il, size_type _bucket_count, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_il, _bucket_count, ArgumentHash(), ArgumentEqual(), _alloc)
             {
             }
-            sherwood_v3_table(const sherwood_v3_table& other)
-                : sherwood_v3_table(other, AllocatorTraits::select_on_container_copy_construction(other.get_allocator()))
+            sherwood_v3_table(std::initializer_list<T> _il, size_type _bucket_count, const ArgumentHash& _hash, const ArgumentAlloc& _alloc)
+                : sherwood_v3_table(_il, _bucket_count, _hash, ArgumentEqual(), _alloc)
             {
             }
-            sherwood_v3_table(const sherwood_v3_table& other, const ArgumentAlloc& alloc)
-                : EntryAlloc(alloc), Hasher(other), Equal(other), _max_load_factor(other._max_load_factor)
+            sherwood_v3_table(const sherwood_v3_table& _other)
+                : sherwood_v3_table(_other, AllocatorTraits::select_on_container_copy_construction(_other.get_allocator()))
             {
-                rehash_for_other_container(other);
+            }
+            sherwood_v3_table(const sherwood_v3_table& _other, const ArgumentAlloc& _alloc)
+                : EntryAlloc(_alloc), Hasher(_other), Equal(_other), _max_load_factor(_other._max_load_factor)
+            {
+                rehash_for_other_container(_other);
                 try
                 {
-                    insert(other.begin(), other.end());
+                    insert(_other.begin(), _other.end());
                 }
                 catch (...)
                 {
                     clear();
-                    deallocate_data(entries, num_slots_minus_one, max_lookups);
+                    deallocate_data(m_entries, m_num_slots_minus_one, max_lookups);
                     throw;
                 }
             }
-            sherwood_v3_table(sherwood_v3_table&& other) noexcept
-                : EntryAlloc(std::move(other)), Hasher(std::move(other)), Equal(std::move(other))
+            sherwood_v3_table(sherwood_v3_table&& _other) noexcept
+                : EntryAlloc(std::move(_other)), Hasher(std::move(_other)), Equal(std::move(_other))
             {
-                swap_pointers(other);
+                swap_pointers(_other);
             }
-            sherwood_v3_table(sherwood_v3_table&& other, const ArgumentAlloc& alloc) noexcept
-                : EntryAlloc(alloc), Hasher(std::move(other)), Equal(std::move(other))
+            sherwood_v3_table(sherwood_v3_table&& _other, const ArgumentAlloc& _alloc) noexcept
+                : EntryAlloc(_alloc), Hasher(std::move(_other)), Equal(std::move(_other))
             {
-                swap_pointers(other);
+                swap_pointers(_other);
             }
-            sherwood_v3_table& operator=(const sherwood_v3_table& other)
+            sherwood_v3_table& operator=(const sherwood_v3_table& _other)
             {
-                if (this == std::addressof(other))
+                if (this == std::addressof(_other))
                     return *this;
 
                 clear();
                 if (AllocatorTraits::propagate_on_container_copy_assignment::value)
                 {
-                    if (static_cast<EntryAlloc&>(*this) != static_cast<const EntryAlloc&>(other))
+                    if (static_cast<EntryAlloc&>(*this) != static_cast<const EntryAlloc&>(_other))
                     {
                         reset_to_empty_state();
                     }
-                    AssignIfTrue<EntryAlloc, AllocatorTraits::propagate_on_container_copy_assignment::value>()(*this, other);
+                    AssignIfTrue<EntryAlloc, AllocatorTraits::propagate_on_container_copy_assignment::value>()(*this, _other);
                 }
-                _max_load_factor = other._max_load_factor;
-                static_cast<Hasher&>(*this) = other;
-                static_cast<Equal&>(*this) = other;
-                rehash_for_other_container(other);
-                insert(other.begin(), other.end());
+                _max_load_factor = _other._max_load_factor;
+                static_cast<Hasher&>(*this) = _other;
+                static_cast<Equal&>(*this) = _other;
+                rehash_for_other_container(_other);
+                insert(_other.begin(), _other.end());
                 return *this;
             }
-            sherwood_v3_table& operator=(sherwood_v3_table&& other) noexcept
+            sherwood_v3_table& operator=(sherwood_v3_table&& _other) noexcept
             {
-                if (this == std::addressof(other))
+                if (this == std::addressof(_other))
                     return *this;
                 else if (AllocatorTraits::propagate_on_container_move_assignment::value)
                 {
                     clear();
                     reset_to_empty_state();
-                    AssignIfTrue<EntryAlloc, AllocatorTraits::propagate_on_container_move_assignment::value>()(*this, std::move(other));
-                    swap_pointers(other);
+                    AssignIfTrue<EntryAlloc, AllocatorTraits::propagate_on_container_move_assignment::value>()(*this, std::move(_other));
+                    swap_pointers(_other);
                 }
-                else if (static_cast<EntryAlloc&>(*this) == static_cast<EntryAlloc&>(other))
+                else if (static_cast<EntryAlloc&>(*this) == static_cast<EntryAlloc&>(_other))
                 {
-                    swap_pointers(other);
+                    swap_pointers(_other);
                 }
                 else
                 {
                     clear();
-                    _max_load_factor = other._max_load_factor;
-                    rehash_for_other_container(other);
-                    for (T& elem : other)
+                    m_max_load_factor = _other.m_max_load_factor;
+                    rehash_for_other_container(_other);
+                    for (T& elem : _other)
                         emplace(std::move(elem));
-                    other.clear();
+                    _other.clear();
                 }
-                static_cast<Hasher&>(*this) = std::move(other);
-                static_cast<Equal&>(*this) = std::move(other);
+                static_cast<Hasher&>(*this) = std::move(_other);
+                static_cast<Equal&>(*this) = std::move(_other);
                 return *this;
             }
             ~sherwood_v3_table()
             {
                 clear();
-                deallocate_data(entries, num_slots_minus_one, max_lookups);
+                deallocate_data(m_entries, m_num_slots_minus_one, m_max_lookups);
             }
 
             const allocator_type& get_allocator() const
@@ -449,8 +449,8 @@ namespace ska
             struct templated_iterator
             {
                 templated_iterator() = default;
-                templated_iterator(EntryPointer current)
-                    : current(current)
+                templated_iterator(EntryPointer _current)
+                    : current(_current)
                 {
                 }
                 EntryPointer current = EntryPointer();
@@ -461,13 +461,13 @@ namespace ska
                 using pointer = ValueType*;
                 using reference = ValueType&;
 
-                friend bool operator==(const templated_iterator& lhs, const templated_iterator& rhs)
+                friend bool operator==(const templated_iterator& _lhs, const templated_iterator& _rhs)
                 {
-                    return lhs.current == rhs.current;
+                    return _lhs.current == _rhs.current;
                 }
-                friend bool operator!=(const templated_iterator& lhs, const templated_iterator& rhs)
+                friend bool operator!=(const templated_iterator& _lhs, const templated_iterator& _rhs)
                 {
-                    return !(lhs == rhs);
+                    return !(_lhs == _rhs);
                 }
 
                 templated_iterator& operator++()
@@ -504,7 +504,7 @@ namespace ska
 
             iterator begin()
             {
-                for (EntryPointer it = entries;; ++it)
+                for (EntryPointer it = m_entries;; ++it)
                 {
                     if (it->has_value())
                         return { it };
@@ -512,7 +512,7 @@ namespace ska
             }
             const_iterator begin() const
             {
-                for (EntryPointer it = entries;; ++it)
+                for (EntryPointer it = m_entries;; ++it)
                 {
                     if (it->has_value())
                         return { it };
@@ -524,47 +524,47 @@ namespace ska
             }
             iterator end()
             {
-                return { entries + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups) };
+                return { m_entries + static_cast<ptrdiff_t>(m_num_slots_minus_one + m_max_lookups) };
             }
             const_iterator end() const
             {
-                return { entries + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups) };
+                return { m_entries + static_cast<ptrdiff_t>(m_num_slots_minus_one + m_max_lookups) };
             }
             const_iterator cend() const
             {
                 return end();
             }
 
-            iterator find(const FindKey& key)
+            iterator find(const FindKey& _key)
             {
-                size_t index = hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
-                EntryPointer it = entries + ptrdiff_t(index);
+                size_t index = m_hash_policy.index_for_hash(hash_object(_key), num_slots_minus_one);
+                EntryPointer it = m_entries + ptrdiff_t(index);
                 for (int8_t distance = 0; it->distance_from_desired >= distance; ++distance, ++it)
                 {
-                    if (compares_equal(key, it->value))
+                    if (compares_equal(_key, it->value))
                         return { it };
                 }
                 return end();
             }
-            const_iterator find(const FindKey& key) const
+            const_iterator find(const FindKey& _key) const
             {
-                return const_cast<sherwood_v3_table*>(this)->find(key);
+                return const_cast<sherwood_v3_table*>(this)->find(_key);
             }
-            size_t count(const FindKey& key) const
+            size_t count(const FindKey& _key) const
             {
-                return find(key) == end() ? 0 : 1;
+                return find(_key) == end() ? 0 : 1;
             }
-            std::pair<iterator, iterator> equal_range(const FindKey& key)
+            std::pair<iterator, iterator> equal_range(const FindKey& _key)
             {
-                iterator found = find(key);
+                iterator found = find(_key);
                 if (found == end())
                     return { found, found };
                 else
                     return { found, std::next(found) };
             }
-            std::pair<const_iterator, const_iterator> equal_range(const FindKey& key) const
+            std::pair<const_iterator, const_iterator> equal_range(const FindKey& _key) const
             {
-                const_iterator found = find(key);
+                const_iterator found = find(_key);
                 if (found == end())
                     return { found, found };
                 else
@@ -572,79 +572,79 @@ namespace ska
             }
 
             template<typename Key, typename... Args>
-            std::pair<iterator, bool> emplace(Key&& key, Args&&... args)
+            std::pair<iterator, bool> emplace(Key&& _key, Args&&... _args)
             {
-                size_t index = hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
-                EntryPointer current_entry = entries + ptrdiff_t(index);
+                size_t index = m_hash_policy.index_for_hash(hash_object(_key), m_num_slots_minus_one);
+                EntryPointer current_entry = m_entries + ptrdiff_t(index);
                 int8_t distance_from_desired = 0;
                 for (; current_entry->distance_from_desired >= distance_from_desired; ++current_entry, ++distance_from_desired)
                 {
-                    if (compares_equal(key, current_entry->value))
+                    if (compares_equal(_key, current_entry->value))
                         return { { current_entry }, false };
                 }
-                return emplace_new_key(distance_from_desired, current_entry, std::forward<Key>(key), std::forward<Args>(args)...);
+                return emplace_new_key(distance_from_desired, current_entry, std::forward<Key>(_key), std::forward<Args>(_args)...);
             }
 
-            std::pair<iterator, bool> insert(const value_type& value)
+            std::pair<iterator, bool> insert(const value_type& _value)
             {
-                return emplace(value);
+                return emplace(_value);
             }
-            std::pair<iterator, bool> insert(value_type&& value)
+            std::pair<iterator, bool> insert(value_type&& _value)
             {
-                return emplace(std::move(value));
+                return emplace(std::move(_value));
             }
             template<typename... Args>
-            iterator emplace_hint(const_iterator, Args&&... args)
+            iterator emplace_hint(const_iterator, Args&&... _args)
             {
-                return emplace(std::forward<Args>(args)...).first;
+                return emplace(std::forward<Args>(_args)...).first;
             }
-            iterator insert(const_iterator, const value_type& value)
+            iterator insert(const_iterator, const value_type& _value)
             {
-                return emplace(value).first;
+                return emplace(_value).first;
             }
-            iterator insert(const_iterator, value_type&& value)
+            iterator insert(const_iterator, value_type&& _value)
             {
-                return emplace(std::move(value)).first;
+                return emplace(std::move(_value)).first;
             }
 
             template<typename It>
-            void insert(It begin, It end)
+            void insert(It _begin, It _end)
             {
-                for (; begin != end; ++begin)
+                for (; _begin != _end; ++_begin)
                 {
-                    emplace(*begin);
+                    emplace(*_begin);
                 }
             }
-            void insert(std::initializer_list<value_type> il)
+            void insert(std::initializer_list<value_type> _il)
             {
-                insert(il.begin(), il.end());
+                insert(_il.begin(), _il.end());
             }
 
-            void rehash(size_t num_buckets)
+            void rehash(size_t _num_buckets)
             {
-                num_buckets = std::max(num_buckets, static_cast<size_t>(std::ceil(num_elements / static_cast<double>(_max_load_factor))));
-                if (num_buckets == 0)
+                _num_buckets = std::max(_num_buckets, static_cast<size_t>(std::ceil(m_num_elements / static_cast<double>(m_max_load_factor))));
+                if (_num_buckets == 0)
                 {
                     reset_to_empty_state();
                     return;
                 }
-                auto new_prime_index = hash_policy.next_size_over(num_buckets);
-                if (num_buckets == bucket_count())
+                auto new_prime_index = m_hash_policy.next_size_over(_num_buckets);
+                if (_num_buckets == bucket_count())
                     return;
-                int8_t new_max_lookups = compute_max_lookups(num_buckets);
-                EntryPointer new_buckets(AllocatorTraits::allocate(*this, num_buckets + new_max_lookups));
-                EntryPointer special_end_item = new_buckets + static_cast<ptrdiff_t>(num_buckets + new_max_lookups - 1);
+                int8_t new_max_lookups = compute_max_lookups(_num_buckets);
+                EntryPointer new_buckets(AllocatorTraits::allocate(*this, _num_buckets + new_max_lookups));
+                EntryPointer special_end_item = new_buckets + static_cast<ptrdiff_t>(_num_buckets + new_max_lookups - 1);
                 for (EntryPointer it = new_buckets; it != special_end_item; ++it)
                     it->distance_from_desired = -1;
                 special_end_item->distance_from_desired = Entry::special_end_value;
-                std::swap(entries, new_buckets);
-                std::swap(num_slots_minus_one, num_buckets);
-                --num_slots_minus_one;
-                hash_policy.commit(new_prime_index);
-                int8_t old_max_lookups = max_lookups;
-                max_lookups = new_max_lookups;
-                num_elements = 0;
-                for (EntryPointer it = new_buckets, end = it + static_cast<ptrdiff_t>(num_buckets + old_max_lookups); it != end; ++it)
+                std::swap(m_entries, new_buckets);
+                std::swap(m_num_slots_minus_one, _num_buckets);
+                --m_num_slots_minus_one;
+                m_hash_policy.commit(new_prime_index);
+                int8_t old_max_lookups = m_max_lookups;
+                m_max_lookups = new_max_lookups;
+                m_num_elements = 0;
+                for (EntryPointer it = new_buckets, end = it + static_cast<ptrdiff_t>(_num_buckets + old_max_lookups); it != end; ++it)
                 {
                     if (it->has_value())
                     {
@@ -652,12 +652,12 @@ namespace ska
                         it->destroy_value();
                     }
                 }
-                deallocate_data(new_buckets, num_buckets, old_max_lookups);
+                deallocate_data(new_buckets, _num_buckets, old_max_lookups);
             }
 
-            void reserve(size_t num_elements)
+            void reserve(size_t _num_elements)
             {
-                size_t required_buckets = num_buckets_for_reserve(num_elements);
+                size_t required_buckets = num_buckets_for_reserve(_num_elements);
                 if (required_buckets > bucket_count())
                     rehash(required_buckets);
             }
@@ -666,36 +666,36 @@ namespace ska
             // the reason for doing this is that it's not free to find the
             // iterator pointing at the next element. if you care about the
             // next iterator, turn the return value into an iterator
-            convertible_to_iterator erase(const_iterator to_erase)
+            convertible_to_iterator erase(const_iterator _to_erase)
             {
-                EntryPointer current = to_erase.current;
+                EntryPointer current = _to_erase.current;
                 current->destroy_value();
-                --num_elements;
+                --m_num_elements;
                 for (EntryPointer next = current + ptrdiff_t(1); !next->is_at_desired_position(); ++current, ++next)
                 {
                     current->emplace(next->distance_from_desired - 1, std::move(next->value));
                     next->destroy_value();
                 }
-                return { to_erase.current };
+                return { _to_erase.current };
             }
 
-            iterator erase(const_iterator begin_it, const_iterator end_it)
+            iterator erase(const_iterator _begin_it, const_iterator _end_it)
             {
-                if (begin_it == end_it)
-                    return { begin_it.current };
-                for (EntryPointer it = begin_it.current, end = end_it.current; it != end; ++it)
+                if (_begin_it == _end_it)
+                    return { _begin_it.current };
+                for (EntryPointer it = _begin_it.current, end = _end_it.current; it != end; ++it)
                 {
                     if (it->has_value())
                     {
                         it->destroy_value();
-                        --num_elements;
+                        --m_num_elements;
                     }
                 }
-                if (end_it == this->end())
+                if (_end_it == this->end())
                     return this->end();
-                ptrdiff_t num_to_move = std::min(static_cast<ptrdiff_t>(end_it.current->distance_from_desired), end_it.current - begin_it.current);
-                EntryPointer to_return = end_it.current - num_to_move;
-                for (EntryPointer it = end_it.current; !it->is_at_desired_position();)
+                ptrdiff_t num_to_move = std::min(static_cast<ptrdiff_t>(_end_it.current->distance_from_desired), _end_it.current - _begin_it.current);
+                EntryPointer to_return = _end_it.current - num_to_move;
+                for (EntryPointer it = _end_it.current; !it->is_at_desired_position();)
                 {
                     EntryPointer target = it - num_to_move;
                     target->emplace(it->distance_from_desired - num_to_move, std::move(it->value));
@@ -706,9 +706,9 @@ namespace ska
                 return { to_return };
             }
 
-            size_t erase(const FindKey& key)
+            size_t erase(const FindKey& _key)
             {
-                auto found = find(key);
+                auto found = find(_key);
                 if (found == end())
                     return 0;
                 else
@@ -720,12 +720,12 @@ namespace ska
 
             void clear()
             {
-                for (EntryPointer it = entries, end = it + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups); it != end; ++it)
+                for (EntryPointer it = m_entries, end = it + static_cast<ptrdiff_t>(m_num_slots_minus_one + m_max_lookups); it != end; ++it)
                 {
                     if (it->has_value())
                         it->destroy_value();
                 }
-                num_elements = 0;
+                m_num_elements = 0;
             }
 
             void shrink_to_fit()
@@ -733,19 +733,19 @@ namespace ska
                 rehash_for_other_container(*this);
             }
 
-            void swap(sherwood_v3_table& other)
+            void swap(sherwood_v3_table& _other)
             {
                 using std::swap;
-                swap_pointers(other);
-                swap(static_cast<ArgumentHash&>(*this), static_cast<ArgumentHash&>(other));
-                swap(static_cast<ArgumentEqual&>(*this), static_cast<ArgumentEqual&>(other));
+                swap_pointers(_other);
+                swap(static_cast<ArgumentHash&>(*this), static_cast<ArgumentHash&>(_other));
+                swap(static_cast<ArgumentEqual&>(*this), static_cast<ArgumentEqual&>(_other));
                 if (AllocatorTraits::propagate_on_container_swap::value)
-                    swap(static_cast<EntryAlloc&>(*this), static_cast<EntryAlloc&>(other));
+                    swap(static_cast<EntryAlloc&>(*this), static_cast<EntryAlloc&>(_other));
             }
 
             size_t size() const
             {
-                return num_elements;
+                return m_num_elements;
             }
             size_t max_size() const
             {
@@ -753,109 +753,109 @@ namespace ska
             }
             size_t bucket_count() const
             {
-                return num_slots_minus_one ? num_slots_minus_one + 1 : 0;
+                return m_num_slots_minus_one ? m_num_slots_minus_one + 1 : 0;
             }
             size_type max_bucket_count() const
             {
                 return (AllocatorTraits::max_size(*this) - min_lookups) / sizeof(Entry);
             }
-            size_t bucket(const FindKey& key) const
+            size_t bucket(const FindKey& _key) const
             {
-                return hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
+                return hash_policy.index_for_hash(hash_object(_key), m_num_slots_minus_one);
             }
             float load_factor() const
             {
                 size_t buckets = bucket_count();
                 if (buckets)
-                    return static_cast<float>(num_elements) / bucket_count();
+                    return static_cast<float>(m_num_elements) / bucket_count();
                 else
                     return 0;
             }
-            void max_load_factor(float value)
+            void max_load_factor(float _value)
             {
-                _max_load_factor = value;
+                m_max_load_factor = _value;
             }
             float max_load_factor() const
             {
-                return _max_load_factor;
+                return m_max_load_factor;
             }
 
             bool empty() const
             {
-                return num_elements == 0;
+                return m_num_elements == 0;
             }
 
         private:
-            EntryPointer entries = Entry::empty_default_table();
-            size_t num_slots_minus_one = 0;
-            typename HashPolicySelector<ArgumentHash>::type hash_policy;
-            int8_t max_lookups = detailv3::min_lookups - 1;
-            float _max_load_factor = 0.5f;
-            size_t num_elements = 0;
+            EntryPointer m_entries = Entry::empty_default_table();
+            size_t m_num_slots_minus_one = 0;
+            typename HashPolicySelector<ArgumentHash>::type m_hash_policy;
+            int8_t m_max_lookups = detailv3::min_lookups - 1;
+            float m_max_load_factor = 0.5f;
+            size_t m_num_elements = 0;
 
-            static int8_t compute_max_lookups(size_t num_buckets)
+            static int8_t compute_max_lookups(size_t _num_buckets)
             {
-                int8_t desired = detailv3::log2(num_buckets);
+                int8_t desired = detailv3::log2(_num_buckets);
                 return std::max(detailv3::min_lookups, desired);
             }
 
-            size_t num_buckets_for_reserve(size_t num_elements) const
+            size_t num_buckets_for_reserve(size_t _num_elements) const
             {
-                return static_cast<size_t>(std::ceil(num_elements / std::min(0.5, static_cast<double>(_max_load_factor))));
+                return static_cast<size_t>(std::ceil(_num_elements / std::min(0.5, static_cast<double>(m_max_load_factor))));
             }
-            void rehash_for_other_container(const sherwood_v3_table& other)
+            void rehash_for_other_container(const sherwood_v3_table& _other)
             {
-                rehash(std::min(num_buckets_for_reserve(other.size()), other.bucket_count()));
+                rehash(std::min(num_buckets_for_reserve(_other.size()), _other.bucket_count()));
             }
 
-            void swap_pointers(sherwood_v3_table& other)
+            void swap_pointers(sherwood_v3_table& _other)
             {
                 using std::swap;
-                swap(hash_policy, other.hash_policy);
-                swap(entries, other.entries);
-                swap(num_slots_minus_one, other.num_slots_minus_one);
-                swap(num_elements, other.num_elements);
-                swap(max_lookups, other.max_lookups);
-                swap(_max_load_factor, other._max_load_factor);
+                swap(m_hash_policy, _other.m_hash_policy);
+                swap(m_entries, _other.m_entries);
+                swap(m_num_slots_minus_one, _other.m_num_slots_minus_one);
+                swap(m_num_elements, _other.m_num_elements);
+                swap(m_max_lookups, _other.m_max_lookups);
+                swap(m_max_load_factor, _other.m_max_load_factor);
             }
 
             template<typename Key, typename... Args>
-            SKA_NOINLINE(std::pair<iterator, bool>) emplace_new_key(int8_t distance_from_desired, EntryPointer current_entry, Key&& key, Args&&... args)
+            SKA_NOINLINE(std::pair<iterator, bool>) emplace_new_key(int8_t _distance_from_desired, EntryPointer _current_entry, Key&& _key, Args&&... _args)
             {
                 using std::swap;
-                if (num_slots_minus_one == 0 || distance_from_desired == max_lookups || num_elements + 1 > (num_slots_minus_one + 1)* static_cast<double>(_max_load_factor))
+                if (m_num_slots_minus_one == 0 || _distance_from_desired == m_max_lookups || m_num_elements + 1 > (m_num_slots_minus_one + 1)* static_cast<double>(m_max_load_factor))
                 {
                     grow();
-                    return emplace(std::forward<Key>(key), std::forward<Args>(args)...);
+                    return emplace(std::forward<Key>(_key), std::forward<Args>(_args)...);
                 }
-                else if (current_entry->is_empty())
+                else if (_current_entry->is_empty())
                 {
-                    current_entry->emplace(distance_from_desired, std::forward<Key>(key), std::forward<Args>(args)...);
-                    ++num_elements;
-                    return { { current_entry }, true };
+                    _current_entry->emplace(_distance_from_desired, std::forward<Key>(_key), std::forward<Args>(_args)...);
+                    ++m_num_elements;
+                    return { { _current_entry }, true };
                 }
-                value_type to_insert(std::forward<Key>(key), std::forward<Args>(args)...);
-                swap(distance_from_desired, current_entry->distance_from_desired);
-                swap(to_insert, current_entry->value);
-                iterator result = { current_entry };
-                for (++distance_from_desired, ++current_entry;; ++current_entry)
+                value_type to_insert(std::forward<Key>(_key), std::forward<Args>(_args)...);
+                swap(_distance_from_desired, _current_entry->distance_from_desired);
+                swap(to_insert, _current_entry->value);
+                iterator result = { _current_entry };
+                for (++_distance_from_desired, ++_current_entry;; ++_current_entry)
                 {
-                    if (current_entry->is_empty())
+                    if (_current_entry->is_empty())
                     {
-                        current_entry->emplace(distance_from_desired, std::move(to_insert));
-                        ++num_elements;
+                        _current_entry->emplace(_distance_from_desired, std::move(to_insert));
+                        ++m_num_elements;
                         return { result, true };
                     }
-                    else if (current_entry->distance_from_desired < distance_from_desired)
+                    else if (_current_entry->distance_from_desired < _distance_from_desired)
                     {
-                        swap(distance_from_desired, current_entry->distance_from_desired);
-                        swap(to_insert, current_entry->value);
-                        ++distance_from_desired;
+                        swap(_distance_from_desired, _current_entry->distance_from_desired);
+                        swap(to_insert, _current_entry->value);
+                        ++_distance_from_desired;
                     }
                     else
                     {
-                        ++distance_from_desired;
-                        if (distance_from_desired == max_lookups)
+                        ++_distance_from_desired;
+                        if (_distance_from_desired == m_max_lookups)
                         {
                             swap(to_insert, result.current->value);
                             grow();
@@ -870,37 +870,37 @@ namespace ska
                 rehash(std::max(size_t(4), 2 * bucket_count()));
             }
 
-            void deallocate_data(EntryPointer begin, size_t num_slots_minus_one, int8_t max_lookups)
+            void deallocate_data(EntryPointer _begin, size_t _num_slots_minus_one, int8_t _max_lookups)
             {
-                if (begin != Entry::empty_default_table())
+                if (_begin != Entry::empty_default_table())
                 {
-                    AllocatorTraits::deallocate(*this, begin, num_slots_minus_one + max_lookups + 1);
+                    AllocatorTraits::deallocate(*this, _begin, _num_slots_minus_one + _max_lookups + 1);
                 }
             }
 
             void reset_to_empty_state()
             {
-                deallocate_data(entries, num_slots_minus_one, max_lookups);
-                entries = Entry::empty_default_table();
-                num_slots_minus_one = 0;
-                hash_policy.reset();
-                max_lookups = detailv3::min_lookups - 1;
+                deallocate_data(m_entries, m_num_slots_minus_one, m_max_lookups);
+                m_entries = Entry::empty_default_table();
+                m_num_slots_minus_one = 0;
+                m_hash_policy.reset();
+                m_max_lookups = detailv3::min_lookups - 1;
             }
 
             template<typename U>
-            size_t hash_object(const U& key)
+            size_t hash_object(const U& _key)
             {
-                return static_cast<Hasher&>(*this)(key);
+                return static_cast<Hasher&>(*this)(_key);
             }
             template<typename U>
-            size_t hash_object(const U& key) const
+            size_t hash_object(const U& _key) const
             {
-                return static_cast<const Hasher&>(*this)(key);
+                return static_cast<const Hasher&>(*this)(_key);
             }
             template<typename L, typename R>
-            bool compares_equal(const L& lhs, const R& rhs)
+            bool compares_equal(const L& _lhs, const R& _rhs)
             {
-                return static_cast<Equal&>(*this)(lhs, rhs);
+                return static_cast<Equal&>(*this)(_lhs, _rhs);
             }
 
             struct convertible_to_iterator
@@ -922,203 +922,202 @@ namespace ska
                         return ++const_iterator{ it };
                 }
             };
-
         };
     }
 
     struct prime_number_hash_policy
     {
         static size_t mod0(size_t) { return 0llu; }
-        static size_t mod2(size_t hash) { return hash % 2llu; }
-        static size_t mod3(size_t hash) { return hash % 3llu; }
-        static size_t mod5(size_t hash) { return hash % 5llu; }
-        static size_t mod7(size_t hash) { return hash % 7llu; }
-        static size_t mod11(size_t hash) { return hash % 11llu; }
-        static size_t mod13(size_t hash) { return hash % 13llu; }
-        static size_t mod17(size_t hash) { return hash % 17llu; }
-        static size_t mod23(size_t hash) { return hash % 23llu; }
-        static size_t mod29(size_t hash) { return hash % 29llu; }
-        static size_t mod37(size_t hash) { return hash % 37llu; }
-        static size_t mod47(size_t hash) { return hash % 47llu; }
-        static size_t mod59(size_t hash) { return hash % 59llu; }
-        static size_t mod73(size_t hash) { return hash % 73llu; }
-        static size_t mod97(size_t hash) { return hash % 97llu; }
-        static size_t mod127(size_t hash) { return hash % 127llu; }
-        static size_t mod151(size_t hash) { return hash % 151llu; }
-        static size_t mod197(size_t hash) { return hash % 197llu; }
-        static size_t mod251(size_t hash) { return hash % 251llu; }
-        static size_t mod313(size_t hash) { return hash % 313llu; }
-        static size_t mod397(size_t hash) { return hash % 397llu; }
-        static size_t mod499(size_t hash) { return hash % 499llu; }
-        static size_t mod631(size_t hash) { return hash % 631llu; }
-        static size_t mod797(size_t hash) { return hash % 797llu; }
-        static size_t mod1009(size_t hash) { return hash % 1009llu; }
-        static size_t mod1259(size_t hash) { return hash % 1259llu; }
-        static size_t mod1597(size_t hash) { return hash % 1597llu; }
-        static size_t mod2011(size_t hash) { return hash % 2011llu; }
-        static size_t mod2539(size_t hash) { return hash % 2539llu; }
-        static size_t mod3203(size_t hash) { return hash % 3203llu; }
-        static size_t mod4027(size_t hash) { return hash % 4027llu; }
-        static size_t mod5087(size_t hash) { return hash % 5087llu; }
-        static size_t mod6421(size_t hash) { return hash % 6421llu; }
-        static size_t mod8089(size_t hash) { return hash % 8089llu; }
-        static size_t mod10193(size_t hash) { return hash % 10193llu; }
-        static size_t mod12853(size_t hash) { return hash % 12853llu; }
-        static size_t mod16193(size_t hash) { return hash % 16193llu; }
-        static size_t mod20399(size_t hash) { return hash % 20399llu; }
-        static size_t mod25717(size_t hash) { return hash % 25717llu; }
-        static size_t mod32401(size_t hash) { return hash % 32401llu; }
-        static size_t mod40823(size_t hash) { return hash % 40823llu; }
-        static size_t mod51437(size_t hash) { return hash % 51437llu; }
-        static size_t mod64811(size_t hash) { return hash % 64811llu; }
-        static size_t mod81649(size_t hash) { return hash % 81649llu; }
-        static size_t mod102877(size_t hash) { return hash % 102877llu; }
-        static size_t mod129607(size_t hash) { return hash % 129607llu; }
-        static size_t mod163307(size_t hash) { return hash % 163307llu; }
-        static size_t mod205759(size_t hash) { return hash % 205759llu; }
-        static size_t mod259229(size_t hash) { return hash % 259229llu; }
-        static size_t mod326617(size_t hash) { return hash % 326617llu; }
-        static size_t mod411527(size_t hash) { return hash % 411527llu; }
-        static size_t mod518509(size_t hash) { return hash % 518509llu; }
-        static size_t mod653267(size_t hash) { return hash % 653267llu; }
-        static size_t mod823117(size_t hash) { return hash % 823117llu; }
-        static size_t mod1037059(size_t hash) { return hash % 1037059llu; }
-        static size_t mod1306601(size_t hash) { return hash % 1306601llu; }
-        static size_t mod1646237(size_t hash) { return hash % 1646237llu; }
-        static size_t mod2074129(size_t hash) { return hash % 2074129llu; }
-        static size_t mod2613229(size_t hash) { return hash % 2613229llu; }
-        static size_t mod3292489(size_t hash) { return hash % 3292489llu; }
-        static size_t mod4148279(size_t hash) { return hash % 4148279llu; }
-        static size_t mod5226491(size_t hash) { return hash % 5226491llu; }
-        static size_t mod6584983(size_t hash) { return hash % 6584983llu; }
-        static size_t mod8296553(size_t hash) { return hash % 8296553llu; }
-        static size_t mod10453007(size_t hash) { return hash % 10453007llu; }
-        static size_t mod13169977(size_t hash) { return hash % 13169977llu; }
-        static size_t mod16593127(size_t hash) { return hash % 16593127llu; }
-        static size_t mod20906033(size_t hash) { return hash % 20906033llu; }
-        static size_t mod26339969(size_t hash) { return hash % 26339969llu; }
-        static size_t mod33186281(size_t hash) { return hash % 33186281llu; }
-        static size_t mod41812097(size_t hash) { return hash % 41812097llu; }
-        static size_t mod52679969(size_t hash) { return hash % 52679969llu; }
-        static size_t mod66372617(size_t hash) { return hash % 66372617llu; }
-        static size_t mod83624237(size_t hash) { return hash % 83624237llu; }
-        static size_t mod105359939(size_t hash) { return hash % 105359939llu; }
-        static size_t mod132745199(size_t hash) { return hash % 132745199llu; }
-        static size_t mod167248483(size_t hash) { return hash % 167248483llu; }
-        static size_t mod210719881(size_t hash) { return hash % 210719881llu; }
-        static size_t mod265490441(size_t hash) { return hash % 265490441llu; }
-        static size_t mod334496971(size_t hash) { return hash % 334496971llu; }
-        static size_t mod421439783(size_t hash) { return hash % 421439783llu; }
-        static size_t mod530980861(size_t hash) { return hash % 530980861llu; }
-        static size_t mod668993977(size_t hash) { return hash % 668993977llu; }
-        static size_t mod842879579(size_t hash) { return hash % 842879579llu; }
-        static size_t mod1061961721(size_t hash) { return hash % 1061961721llu; }
-        static size_t mod1337987929(size_t hash) { return hash % 1337987929llu; }
-        static size_t mod1685759167(size_t hash) { return hash % 1685759167llu; }
-        static size_t mod2123923447(size_t hash) { return hash % 2123923447llu; }
-        static size_t mod2675975881(size_t hash) { return hash % 2675975881llu; }
-        static size_t mod3371518343(size_t hash) { return hash % 3371518343llu; }
-        static size_t mod4247846927(size_t hash) { return hash % 4247846927llu; }
-        static size_t mod5351951779(size_t hash) { return hash % 5351951779llu; }
-        static size_t mod6743036717(size_t hash) { return hash % 6743036717llu; }
-        static size_t mod8495693897(size_t hash) { return hash % 8495693897llu; }
-        static size_t mod10703903591(size_t hash) { return hash % 10703903591llu; }
-        static size_t mod13486073473(size_t hash) { return hash % 13486073473llu; }
-        static size_t mod16991387857(size_t hash) { return hash % 16991387857llu; }
-        static size_t mod21407807219(size_t hash) { return hash % 21407807219llu; }
-        static size_t mod26972146961(size_t hash) { return hash % 26972146961llu; }
-        static size_t mod33982775741(size_t hash) { return hash % 33982775741llu; }
-        static size_t mod42815614441(size_t hash) { return hash % 42815614441llu; }
-        static size_t mod53944293929(size_t hash) { return hash % 53944293929llu; }
-        static size_t mod67965551447(size_t hash) { return hash % 67965551447llu; }
-        static size_t mod85631228929(size_t hash) { return hash % 85631228929llu; }
-        static size_t mod107888587883(size_t hash) { return hash % 107888587883llu; }
-        static size_t mod135931102921(size_t hash) { return hash % 135931102921llu; }
-        static size_t mod171262457903(size_t hash) { return hash % 171262457903llu; }
-        static size_t mod215777175787(size_t hash) { return hash % 215777175787llu; }
-        static size_t mod271862205833(size_t hash) { return hash % 271862205833llu; }
-        static size_t mod342524915839(size_t hash) { return hash % 342524915839llu; }
-        static size_t mod431554351609(size_t hash) { return hash % 431554351609llu; }
-        static size_t mod543724411781(size_t hash) { return hash % 543724411781llu; }
-        static size_t mod685049831731(size_t hash) { return hash % 685049831731llu; }
-        static size_t mod863108703229(size_t hash) { return hash % 863108703229llu; }
-        static size_t mod1087448823553(size_t hash) { return hash % 1087448823553llu; }
-        static size_t mod1370099663459(size_t hash) { return hash % 1370099663459llu; }
-        static size_t mod1726217406467(size_t hash) { return hash % 1726217406467llu; }
-        static size_t mod2174897647073(size_t hash) { return hash % 2174897647073llu; }
-        static size_t mod2740199326961(size_t hash) { return hash % 2740199326961llu; }
-        static size_t mod3452434812973(size_t hash) { return hash % 3452434812973llu; }
-        static size_t mod4349795294267(size_t hash) { return hash % 4349795294267llu; }
-        static size_t mod5480398654009(size_t hash) { return hash % 5480398654009llu; }
-        static size_t mod6904869625999(size_t hash) { return hash % 6904869625999llu; }
-        static size_t mod8699590588571(size_t hash) { return hash % 8699590588571llu; }
-        static size_t mod10960797308051(size_t hash) { return hash % 10960797308051llu; }
-        static size_t mod13809739252051(size_t hash) { return hash % 13809739252051llu; }
-        static size_t mod17399181177241(size_t hash) { return hash % 17399181177241llu; }
-        static size_t mod21921594616111(size_t hash) { return hash % 21921594616111llu; }
-        static size_t mod27619478504183(size_t hash) { return hash % 27619478504183llu; }
-        static size_t mod34798362354533(size_t hash) { return hash % 34798362354533llu; }
-        static size_t mod43843189232363(size_t hash) { return hash % 43843189232363llu; }
-        static size_t mod55238957008387(size_t hash) { return hash % 55238957008387llu; }
-        static size_t mod69596724709081(size_t hash) { return hash % 69596724709081llu; }
-        static size_t mod87686378464759(size_t hash) { return hash % 87686378464759llu; }
-        static size_t mod110477914016779(size_t hash) { return hash % 110477914016779llu; }
-        static size_t mod139193449418173(size_t hash) { return hash % 139193449418173llu; }
-        static size_t mod175372756929481(size_t hash) { return hash % 175372756929481llu; }
-        static size_t mod220955828033581(size_t hash) { return hash % 220955828033581llu; }
-        static size_t mod278386898836457(size_t hash) { return hash % 278386898836457llu; }
-        static size_t mod350745513859007(size_t hash) { return hash % 350745513859007llu; }
-        static size_t mod441911656067171(size_t hash) { return hash % 441911656067171llu; }
-        static size_t mod556773797672909(size_t hash) { return hash % 556773797672909llu; }
-        static size_t mod701491027718027(size_t hash) { return hash % 701491027718027llu; }
-        static size_t mod883823312134381(size_t hash) { return hash % 883823312134381llu; }
-        static size_t mod1113547595345903(size_t hash) { return hash % 1113547595345903llu; }
-        static size_t mod1402982055436147(size_t hash) { return hash % 1402982055436147llu; }
-        static size_t mod1767646624268779(size_t hash) { return hash % 1767646624268779llu; }
-        static size_t mod2227095190691797(size_t hash) { return hash % 2227095190691797llu; }
-        static size_t mod2805964110872297(size_t hash) { return hash % 2805964110872297llu; }
-        static size_t mod3535293248537579(size_t hash) { return hash % 3535293248537579llu; }
-        static size_t mod4454190381383713(size_t hash) { return hash % 4454190381383713llu; }
-        static size_t mod5611928221744609(size_t hash) { return hash % 5611928221744609llu; }
-        static size_t mod7070586497075177(size_t hash) { return hash % 7070586497075177llu; }
-        static size_t mod8908380762767489(size_t hash) { return hash % 8908380762767489llu; }
-        static size_t mod11223856443489329(size_t hash) { return hash % 11223856443489329llu; }
-        static size_t mod14141172994150357(size_t hash) { return hash % 14141172994150357llu; }
-        static size_t mod17816761525534927(size_t hash) { return hash % 17816761525534927llu; }
-        static size_t mod22447712886978529(size_t hash) { return hash % 22447712886978529llu; }
-        static size_t mod28282345988300791(size_t hash) { return hash % 28282345988300791llu; }
-        static size_t mod35633523051069991(size_t hash) { return hash % 35633523051069991llu; }
-        static size_t mod44895425773957261(size_t hash) { return hash % 44895425773957261llu; }
-        static size_t mod56564691976601587(size_t hash) { return hash % 56564691976601587llu; }
-        static size_t mod71267046102139967(size_t hash) { return hash % 71267046102139967llu; }
-        static size_t mod89790851547914507(size_t hash) { return hash % 89790851547914507llu; }
-        static size_t mod113129383953203213(size_t hash) { return hash % 113129383953203213llu; }
-        static size_t mod142534092204280003(size_t hash) { return hash % 142534092204280003llu; }
-        static size_t mod179581703095829107(size_t hash) { return hash % 179581703095829107llu; }
-        static size_t mod226258767906406483(size_t hash) { return hash % 226258767906406483llu; }
-        static size_t mod285068184408560057(size_t hash) { return hash % 285068184408560057llu; }
-        static size_t mod359163406191658253(size_t hash) { return hash % 359163406191658253llu; }
-        static size_t mod452517535812813007(size_t hash) { return hash % 452517535812813007llu; }
-        static size_t mod570136368817120201(size_t hash) { return hash % 570136368817120201llu; }
-        static size_t mod718326812383316683(size_t hash) { return hash % 718326812383316683llu; }
-        static size_t mod905035071625626043(size_t hash) { return hash % 905035071625626043llu; }
-        static size_t mod1140272737634240411(size_t hash) { return hash % 1140272737634240411llu; }
-        static size_t mod1436653624766633509(size_t hash) { return hash % 1436653624766633509llu; }
-        static size_t mod1810070143251252131(size_t hash) { return hash % 1810070143251252131llu; }
-        static size_t mod2280545475268481167(size_t hash) { return hash % 2280545475268481167llu; }
-        static size_t mod2873307249533267101(size_t hash) { return hash % 2873307249533267101llu; }
-        static size_t mod3620140286502504283(size_t hash) { return hash % 3620140286502504283llu; }
-        static size_t mod4561090950536962147(size_t hash) { return hash % 4561090950536962147llu; }
-        static size_t mod5746614499066534157(size_t hash) { return hash % 5746614499066534157llu; }
-        static size_t mod7240280573005008577(size_t hash) { return hash % 7240280573005008577llu; }
-        static size_t mod9122181901073924329(size_t hash) { return hash % 9122181901073924329llu; }
-        static size_t mod11493228998133068689(size_t hash) { return hash % 11493228998133068689llu; }
-        static size_t mod14480561146010017169(size_t hash) { return hash % 14480561146010017169llu; }
-        static size_t mod18446744073709551557(size_t hash) { return hash % 18446744073709551557llu; }
+        static size_t mod2(size_t _hash) { return _hash % 2llu; }
+        static size_t mod3(size_t _hash) { return _hash % 3llu; }
+        static size_t mod5(size_t _hash) { return _hash % 5llu; }
+        static size_t mod7(size_t _hash) { return _hash % 7llu; }
+        static size_t mod11(size_t _hash) { return _hash % 11llu; }
+        static size_t mod13(size_t _hash) { return _hash % 13llu; }
+        static size_t mod17(size_t _hash) { return _hash % 17llu; }
+        static size_t mod23(size_t _hash) { return _hash % 23llu; }
+        static size_t mod29(size_t _hash) { return _hash % 29llu; }
+        static size_t mod37(size_t _hash) { return _hash % 37llu; }
+        static size_t mod47(size_t _hash) { return _hash % 47llu; }
+        static size_t mod59(size_t _hash) { return _hash % 59llu; }
+        static size_t mod73(size_t _hash) { return _hash % 73llu; }
+        static size_t mod97(size_t _hash) { return _hash % 97llu; }
+        static size_t mod127(size_t _hash) { return _hash % 127llu; }
+        static size_t mod151(size_t _hash) { return _hash % 151llu; }
+        static size_t mod197(size_t _hash) { return _hash % 197llu; }
+        static size_t mod251(size_t _hash) { return _hash % 251llu; }
+        static size_t mod313(size_t _hash) { return _hash % 313llu; }
+        static size_t mod397(size_t _hash) { return _hash % 397llu; }
+        static size_t mod499(size_t _hash) { return _hash % 499llu; }
+        static size_t mod631(size_t _hash) { return _hash % 631llu; }
+        static size_t mod797(size_t _hash) { return _hash % 797llu; }
+        static size_t mod1009(size_t _hash) { return _hash % 1009llu; }
+        static size_t mod1259(size_t _hash) { return _hash % 1259llu; }
+        static size_t mod1597(size_t _hash) { return _hash % 1597llu; }
+        static size_t mod2011(size_t _hash) { return _hash % 2011llu; }
+        static size_t mod2539(size_t _hash) { return _hash % 2539llu; }
+        static size_t mod3203(size_t _hash) { return _hash % 3203llu; }
+        static size_t mod4027(size_t _hash) { return _hash % 4027llu; }
+        static size_t mod5087(size_t _hash) { return _hash % 5087llu; }
+        static size_t mod6421(size_t _hash) { return _hash % 6421llu; }
+        static size_t mod8089(size_t _hash) { return _hash % 8089llu; }
+        static size_t mod10193(size_t _hash) { return _hash % 10193llu; }
+        static size_t mod12853(size_t _hash) { return _hash % 12853llu; }
+        static size_t mod16193(size_t _hash) { return _hash % 16193llu; }
+        static size_t mod20399(size_t _hash) { return _hash % 20399llu; }
+        static size_t mod25717(size_t _hash) { return _hash % 25717llu; }
+        static size_t mod32401(size_t _hash) { return _hash % 32401llu; }
+        static size_t mod40823(size_t _hash) { return _hash % 40823llu; }
+        static size_t mod51437(size_t _hash) { return _hash % 51437llu; }
+        static size_t mod64811(size_t _hash) { return _hash % 64811llu; }
+        static size_t mod81649(size_t _hash) { return _hash % 81649llu; }
+        static size_t mod102877(size_t _hash) { return _hash % 102877llu; }
+        static size_t mod129607(size_t _hash) { return _hash % 129607llu; }
+        static size_t mod163307(size_t _hash) { return _hash % 163307llu; }
+        static size_t mod205759(size_t _hash) { return _hash % 205759llu; }
+        static size_t mod259229(size_t _hash) { return _hash % 259229llu; }
+        static size_t mod326617(size_t _hash) { return _hash % 326617llu; }
+        static size_t mod411527(size_t _hash) { return _hash % 411527llu; }
+        static size_t mod518509(size_t _hash) { return _hash % 518509llu; }
+        static size_t mod653267(size_t _hash) { return _hash % 653267llu; }
+        static size_t mod823117(size_t _hash) { return _hash % 823117llu; }
+        static size_t mod1037059(size_t _hash) { return _hash % 1037059llu; }
+        static size_t mod1306601(size_t _hash) { return _hash % 1306601llu; }
+        static size_t mod1646237(size_t _hash) { return _hash % 1646237llu; }
+        static size_t mod2074129(size_t _hash) { return _hash % 2074129llu; }
+        static size_t mod2613229(size_t _hash) { return _hash % 2613229llu; }
+        static size_t mod3292489(size_t _hash) { return _hash % 3292489llu; }
+        static size_t mod4148279(size_t _hash) { return _hash % 4148279llu; }
+        static size_t mod5226491(size_t _hash) { return _hash % 5226491llu; }
+        static size_t mod6584983(size_t _hash) { return _hash % 6584983llu; }
+        static size_t mod8296553(size_t _hash) { return _hash % 8296553llu; }
+        static size_t mod10453007(size_t _hash) { return _hash % 10453007llu; }
+        static size_t mod13169977(size_t _hash) { return _hash % 13169977llu; }
+        static size_t mod16593127(size_t _hash) { return _hash % 16593127llu; }
+        static size_t mod20906033(size_t _hash) { return _hash % 20906033llu; }
+        static size_t mod26339969(size_t _hash) { return _hash % 26339969llu; }
+        static size_t mod33186281(size_t _hash) { return _hash % 33186281llu; }
+        static size_t mod41812097(size_t _hash) { return _hash % 41812097llu; }
+        static size_t mod52679969(size_t _hash) { return _hash % 52679969llu; }
+        static size_t mod66372617(size_t _hash) { return _hash % 66372617llu; }
+        static size_t mod83624237(size_t _hash) { return _hash % 83624237llu; }
+        static size_t mod105359939(size_t _hash) { return _hash % 105359939llu; }
+        static size_t mod132745199(size_t _hash) { return _hash % 132745199llu; }
+        static size_t mod167248483(size_t _hash) { return _hash % 167248483llu; }
+        static size_t mod210719881(size_t _hash) { return _hash % 210719881llu; }
+        static size_t mod265490441(size_t _hash) { return _hash % 265490441llu; }
+        static size_t mod334496971(size_t _hash) { return _hash % 334496971llu; }
+        static size_t mod421439783(size_t _hash) { return _hash % 421439783llu; }
+        static size_t mod530980861(size_t _hash) { return _hash % 530980861llu; }
+        static size_t mod668993977(size_t _hash) { return _hash % 668993977llu; }
+        static size_t mod842879579(size_t _hash) { return _hash % 842879579llu; }
+        static size_t mod1061961721(size_t _hash) { return _hash % 1061961721llu; }
+        static size_t mod1337987929(size_t _hash) { return _hash % 1337987929llu; }
+        static size_t mod1685759167(size_t _hash) { return _hash % 1685759167llu; }
+        static size_t mod2123923447(size_t _hash) { return _hash % 2123923447llu; }
+        static size_t mod2675975881(size_t _hash) { return _hash % 2675975881llu; }
+        static size_t mod3371518343(size_t _hash) { return _hash % 3371518343llu; }
+        static size_t mod4247846927(size_t _hash) { return _hash % 4247846927llu; }
+        static size_t mod5351951779(size_t _hash) { return _hash % 5351951779llu; }
+        static size_t mod6743036717(size_t _hash) { return _hash % 6743036717llu; }
+        static size_t mod8495693897(size_t _hash) { return _hash % 8495693897llu; }
+        static size_t mod10703903591(size_t _hash) { return _hash % 10703903591llu; }
+        static size_t mod13486073473(size_t _hash) { return _hash % 13486073473llu; }
+        static size_t mod16991387857(size_t _hash) { return _hash % 16991387857llu; }
+        static size_t mod21407807219(size_t _hash) { return _hash % 21407807219llu; }
+        static size_t mod26972146961(size_t _hash) { return _hash % 26972146961llu; }
+        static size_t mod33982775741(size_t _hash) { return _hash % 33982775741llu; }
+        static size_t mod42815614441(size_t _hash) { return _hash % 42815614441llu; }
+        static size_t mod53944293929(size_t _hash) { return _hash % 53944293929llu; }
+        static size_t mod67965551447(size_t _hash) { return _hash % 67965551447llu; }
+        static size_t mod85631228929(size_t _hash) { return _hash % 85631228929llu; }
+        static size_t mod107888587883(size_t _hash) { return _hash % 107888587883llu; }
+        static size_t mod135931102921(size_t _hash) { return _hash % 135931102921llu; }
+        static size_t mod171262457903(size_t _hash) { return _hash % 171262457903llu; }
+        static size_t mod215777175787(size_t _hash) { return _hash % 215777175787llu; }
+        static size_t mod271862205833(size_t _hash) { return _hash % 271862205833llu; }
+        static size_t mod342524915839(size_t _hash) { return _hash % 342524915839llu; }
+        static size_t mod431554351609(size_t _hash) { return _hash % 431554351609llu; }
+        static size_t mod543724411781(size_t _hash) { return _hash % 543724411781llu; }
+        static size_t mod685049831731(size_t _hash) { return _hash % 685049831731llu; }
+        static size_t mod863108703229(size_t _hash) { return _hash % 863108703229llu; }
+        static size_t mod1087448823553(size_t _hash) { return _hash % 1087448823553llu; }
+        static size_t mod1370099663459(size_t _hash) { return _hash % 1370099663459llu; }
+        static size_t mod1726217406467(size_t _hash) { return _hash % 1726217406467llu; }
+        static size_t mod2174897647073(size_t _hash) { return _hash % 2174897647073llu; }
+        static size_t mod2740199326961(size_t _hash) { return _hash % 2740199326961llu; }
+        static size_t mod3452434812973(size_t _hash) { return _hash % 3452434812973llu; }
+        static size_t mod4349795294267(size_t _hash) { return _hash % 4349795294267llu; }
+        static size_t mod5480398654009(size_t _hash) { return _hash % 5480398654009llu; }
+        static size_t mod6904869625999(size_t _hash) { return _hash % 6904869625999llu; }
+        static size_t mod8699590588571(size_t _hash) { return _hash % 8699590588571llu; }
+        static size_t mod10960797308051(size_t _hash) { return _hash % 10960797308051llu; }
+        static size_t mod13809739252051(size_t _hash) { return _hash % 13809739252051llu; }
+        static size_t mod17399181177241(size_t _hash) { return _hash % 17399181177241llu; }
+        static size_t mod21921594616111(size_t _hash) { return _hash % 21921594616111llu; }
+        static size_t mod27619478504183(size_t _hash) { return _hash % 27619478504183llu; }
+        static size_t mod34798362354533(size_t _hash) { return _hash % 34798362354533llu; }
+        static size_t mod43843189232363(size_t _hash) { return _hash % 43843189232363llu; }
+        static size_t mod55238957008387(size_t _hash) { return _hash % 55238957008387llu; }
+        static size_t mod69596724709081(size_t _hash) { return _hash % 69596724709081llu; }
+        static size_t mod87686378464759(size_t _hash) { return _hash % 87686378464759llu; }
+        static size_t mod110477914016779(size_t _hash) { return _hash % 110477914016779llu; }
+        static size_t mod139193449418173(size_t _hash) { return _hash % 139193449418173llu; }
+        static size_t mod175372756929481(size_t _hash) { return _hash % 175372756929481llu; }
+        static size_t mod220955828033581(size_t _hash) { return _hash % 220955828033581llu; }
+        static size_t mod278386898836457(size_t _hash) { return _hash % 278386898836457llu; }
+        static size_t mod350745513859007(size_t _hash) { return _hash % 350745513859007llu; }
+        static size_t mod441911656067171(size_t _hash) { return _hash % 441911656067171llu; }
+        static size_t mod556773797672909(size_t _hash) { return _hash % 556773797672909llu; }
+        static size_t mod701491027718027(size_t _hash) { return _hash % 701491027718027llu; }
+        static size_t mod883823312134381(size_t _hash) { return _hash % 883823312134381llu; }
+        static size_t mod1113547595345903(size_t _hash) { return _hash % 1113547595345903llu; }
+        static size_t mod1402982055436147(size_t _hash) { return _hash % 1402982055436147llu; }
+        static size_t mod1767646624268779(size_t _hash) { return _hash % 1767646624268779llu; }
+        static size_t mod2227095190691797(size_t _hash) { return _hash % 2227095190691797llu; }
+        static size_t mod2805964110872297(size_t _hash) { return _hash % 2805964110872297llu; }
+        static size_t mod3535293248537579(size_t _hash) { return _hash % 3535293248537579llu; }
+        static size_t mod4454190381383713(size_t _hash) { return _hash % 4454190381383713llu; }
+        static size_t mod5611928221744609(size_t _hash) { return _hash % 5611928221744609llu; }
+        static size_t mod7070586497075177(size_t _hash) { return _hash % 7070586497075177llu; }
+        static size_t mod8908380762767489(size_t _hash) { return _hash % 8908380762767489llu; }
+        static size_t mod11223856443489329(size_t _hash) { return _hash % 11223856443489329llu; }
+        static size_t mod14141172994150357(size_t _hash) { return _hash % 14141172994150357llu; }
+        static size_t mod17816761525534927(size_t _hash) { return _hash % 17816761525534927llu; }
+        static size_t mod22447712886978529(size_t _hash) { return _hash % 22447712886978529llu; }
+        static size_t mod28282345988300791(size_t _hash) { return _hash % 28282345988300791llu; }
+        static size_t mod35633523051069991(size_t _hash) { return _hash % 35633523051069991llu; }
+        static size_t mod44895425773957261(size_t _hash) { return _hash % 44895425773957261llu; }
+        static size_t mod56564691976601587(size_t _hash) { return _hash % 56564691976601587llu; }
+        static size_t mod71267046102139967(size_t _hash) { return _hash % 71267046102139967llu; }
+        static size_t mod89790851547914507(size_t _hash) { return _hash % 89790851547914507llu; }
+        static size_t mod113129383953203213(size_t _hash) { return _hash % 113129383953203213llu; }
+        static size_t mod142534092204280003(size_t _hash) { return _hash % 142534092204280003llu; }
+        static size_t mod179581703095829107(size_t _hash) { return _hash % 179581703095829107llu; }
+        static size_t mod226258767906406483(size_t _hash) { return _hash % 226258767906406483llu; }
+        static size_t mod285068184408560057(size_t _hash) { return _hash % 285068184408560057llu; }
+        static size_t mod359163406191658253(size_t _hash) { return _hash % 359163406191658253llu; }
+        static size_t mod452517535812813007(size_t _hash) { return _hash % 452517535812813007llu; }
+        static size_t mod570136368817120201(size_t _hash) { return _hash % 570136368817120201llu; }
+        static size_t mod718326812383316683(size_t _hash) { return _hash % 718326812383316683llu; }
+        static size_t mod905035071625626043(size_t _hash) { return _hash % 905035071625626043llu; }
+        static size_t mod1140272737634240411(size_t _hash) { return _hash % 1140272737634240411llu; }
+        static size_t mod1436653624766633509(size_t _hash) { return _hash % 1436653624766633509llu; }
+        static size_t mod1810070143251252131(size_t _hash) { return _hash % 1810070143251252131llu; }
+        static size_t mod2280545475268481167(size_t _hash) { return _hash % 2280545475268481167llu; }
+        static size_t mod2873307249533267101(size_t _hash) { return _hash % 2873307249533267101llu; }
+        static size_t mod3620140286502504283(size_t _hash) { return _hash % 3620140286502504283llu; }
+        static size_t mod4561090950536962147(size_t _hash) { return _hash % 4561090950536962147llu; }
+        static size_t mod5746614499066534157(size_t _hash) { return _hash % 5746614499066534157llu; }
+        static size_t mod7240280573005008577(size_t _hash) { return _hash % 7240280573005008577llu; }
+        static size_t mod9122181901073924329(size_t _hash) { return _hash % 9122181901073924329llu; }
+        static size_t mod11493228998133068689(size_t _hash) { return _hash % 11493228998133068689llu; }
+        static size_t mod14480561146010017169(size_t _hash) { return _hash % 14480561146010017169llu; }
+        static size_t mod18446744073709551557(size_t _hash) { return _hash % 18446744073709551557llu; }
 
         using mod_function = size_t(*)(size_t);
 
-        mod_function next_size_over(size_t& size) const
+        mod_function next_size_over(size_t& _size) const
         {
             // prime numbers generated by the following method:
             // 1. start with a prime p = 2
@@ -1214,45 +1213,45 @@ namespace ska
                 &mod5746614499066534157, &mod7240280573005008577, &mod9122181901073924329,
                 &mod11493228998133068689, &mod14480561146010017169, &mod18446744073709551557
             };
-            const size_t* found = std::lower_bound(std::begin(prime_list), std::end(prime_list) - 1, size);
-            size = *found;
+            const size_t* found = std::lower_bound(std::begin(prime_list), std::end(prime_list) - 1, _size);
+            _size = *found;
             return mod_functions[1 + found - prime_list];
         }
-        void commit(mod_function new_mod_function)
+        void commit(mod_function _new_mod_function)
         {
-            current_mod_function = new_mod_function;
+            m_current_mod_function = _new_mod_function;
         }
         void reset()
         {
-            current_mod_function = &mod0;
+            m_current_mod_function = &mod0;
         }
 
-        size_t index_for_hash(size_t hash, size_t /*num_slots_minus_one*/) const
+        size_t index_for_hash(size_t _hash, size_t /*_num_slots_minus_one*/) const
         {
-            return current_mod_function(hash);
+            return m_current_mod_function(_hash);
         }
-        size_t keep_in_range(size_t index, size_t num_slots_minus_one) const
+        size_t keep_in_range(size_t _index, size_t _num_slots_minus_one) const
         {
-            return index > num_slots_minus_one ? current_mod_function(index) : index;
+            return _index > _num_slots_minus_one ? m_current_mod_function(_index) : _index;
         }
 
     private:
-        mod_function current_mod_function = &mod0;
+        mod_function m_current_mod_function = &mod0;
     };
 
     struct power_of_two_hash_policy
     {
-        size_t index_for_hash(size_t hash, size_t num_slots_minus_one) const
+        size_t index_for_hash(size_t _hash, size_t _num_slots_minus_one) const
         {
-            return hash & num_slots_minus_one;
+            return _hash & _num_slots_minus_one;
         }
-        size_t keep_in_range(size_t index, size_t num_slots_minus_one) const
+        size_t keep_in_range(size_t _index, size_t _num_slots_minus_one) const
         {
-            return index_for_hash(index, num_slots_minus_one);
+            return index_for_hash(_index, _num_slots_minus_one);
         }
-        int8_t next_size_over(size_t& size) const
+        int8_t next_size_over(size_t& _size) const
         {
-            size = detailv3::next_power_of_two(size);
+            _size = detailv3::next_power_of_two(_size);
             return 0;
         }
         void commit(int8_t)
@@ -1261,36 +1260,35 @@ namespace ska
         void reset()
         {
         }
-
     };
 
     struct fibonacci_hash_policy
     {
-        size_t index_for_hash(size_t hash, size_t /*num_slots_minus_one*/) const
+        size_t index_for_hash(size_t _hash, size_t /*num_slots_minus_one*/) const
         {
-            return (11400714819323198485ull * hash) >> shift;
+            return (11400714819323198485ull * _hash) >> m_shift;
         }
-        size_t keep_in_range(size_t index, size_t num_slots_minus_one) const
+        size_t keep_in_range(size_t _index, size_t _num_slots_minus_one) const
         {
-            return index & num_slots_minus_one;
+            return _index & _num_slots_minus_one;
         }
 
-        int8_t next_size_over(size_t& size) const
+        int8_t next_size_over(size_t& _size) const
         {
-            size = std::max<size_t>(size_t(2), detailv3::next_power_of_two(size));
-            return 64 - detailv3::log2(size);
+            _size = std::max<size_t>(size_t(2), detailv3::next_power_of_two(_size));
+            return 64 - detailv3::log2(_size);
         }
-        void commit(int8_t shift)
+        void commit(int8_t _shift)
         {
-            this->shift = shift;
+            m_shift = _shift;
         }
         void reset()
         {
-            shift = 63;
+            m_shift = 63;
         }
 
     private:
-        int8_t shift = 63;
+        int8_t m_shift = 63;
     };
 
     template<typename K, typename V, typename H = std::hash<K>, typename E = std::equal_to<K>, typename A = std::allocator<std::pair<K, V> > >
@@ -1328,24 +1326,24 @@ namespace ska
         {
         }
 
-        inline V& operator[](const K& key)
+        inline V& operator[](const K& _key)
         {
-            return emplace(key, convertible_to_value()).first->second;
+            return emplace(_key, convertible_to_value()).first->second;
         }
-        inline V& operator[](K&& key)
+        inline V& operator[](K&& _key)
         {
-            return emplace(std::move(key), convertible_to_value()).first->second;
+            return emplace(std::move(_key), convertible_to_value()).first->second;
         }
-        V& at(const K& key)
+        V& at(const K& _key)
         {
-            auto found = this->find(key);
+            auto found = this->find(_key);
             if (found == this->end())
                 throw std::out_of_range("Argument passed to at() was not in the map.");
             return found->second;
         }
-        const V& at(const K& key) const
+        const V& at(const K& _key) const
         {
-            auto found = this->find(key);
+            auto found = this->find(_key);
             if (found == this->end())
                 throw std::out_of_range("Argument passed to at() was not in the map.");
             return found->second;
@@ -1357,49 +1355,49 @@ namespace ska
             return emplace(key_type(), convertible_to_value());
         }
         template<typename M>
-        std::pair<typename Table::iterator, bool> insert_or_assign(const key_type& key, M&& m)
+        std::pair<typename Table::iterator, bool> insert_or_assign(const key_type& _key, M&& _m)
         {
-            auto emplace_result = emplace(key, std::forward<M>(m));
+            auto emplace_result = emplace(_key, std::forward<M>(_m));
             if (!emplace_result.second)
-                emplace_result.first->second = std::forward<M>(m);
+                emplace_result.first->second = std::forward<M>(_m);
             return emplace_result;
         }
         template<typename M>
-        std::pair<typename Table::iterator, bool> insert_or_assign(key_type&& key, M&& m)
+        std::pair<typename Table::iterator, bool> insert_or_assign(key_type&& _key, M&& _m)
         {
-            auto emplace_result = emplace(std::move(key), std::forward<M>(m));
+            auto emplace_result = emplace(std::move(_key), std::forward<M>(_m));
             if (!emplace_result.second)
-                emplace_result.first->second = std::forward<M>(m);
+                emplace_result.first->second = std::forward<M>(_m);
             return emplace_result;
         }
         template<typename M>
-        typename Table::iterator insert_or_assign(typename Table::const_iterator, const key_type& key, M&& m)
+        typename Table::iterator insert_or_assign(typename Table::const_iterator, const key_type& _key, M&& _m)
         {
-            return insert_or_assign(key, std::forward<M>(m)).first;
+            return insert_or_assign(_key, std::forward<M>(_m)).first;
         }
         template<typename M>
-        typename Table::iterator insert_or_assign(typename Table::const_iterator, key_type&& key, M&& m)
+        typename Table::iterator insert_or_assign(typename Table::const_iterator, key_type&& _key, M&& _m)
         {
-            return insert_or_assign(std::move(key), std::forward<M>(m)).first;
+            return insert_or_assign(std::move(_key), std::forward<M>(_m)).first;
         }
 
-        friend bool operator==(const flat_hash_map& lhs, const flat_hash_map& rhs)
+        friend bool operator==(const flat_hash_map& _lhs, const flat_hash_map& _rhs)
         {
-            if (lhs.size() != rhs.size())
+            if (_lhs.size() != _rhs.size())
                 return false;
-            for (const typename Table::value_type& value : lhs)
+            for (const typename Table::value_type& value : _lhs)
             {
-                auto found = rhs.find(value.first);
-                if (found == rhs.end())
+                auto found = _rhs.find(value.first);
+                if (found == _rhs.end())
                     return false;
                 else if (value.second != found->second)
                     return false;
             }
             return true;
         }
-        friend bool operator!=(const flat_hash_map& lhs, const flat_hash_map& rhs)
+        friend bool operator!=(const flat_hash_map& _lhs, const flat_hash_map& _rhs)
         {
-            return !(lhs == rhs);
+            return !(_lhs == _rhs);
         }
 
     private:
@@ -1447,41 +1445,41 @@ namespace ska
         }
 
         template<typename... Args>
-        std::pair<typename Table::iterator, bool> emplace(Args&&... args)
+        std::pair<typename Table::iterator, bool> emplace(Args&&... _args)
         {
-            return Table::emplace(T(std::forward<Args>(args)...));
+            return Table::emplace(T(std::forward<Args>(_args)...));
         }
-        std::pair<typename Table::iterator, bool> emplace(const key_type& arg)
+        std::pair<typename Table::iterator, bool> emplace(const key_type& _arg)
         {
-            return Table::emplace(arg);
+            return Table::emplace(_arg);
         }
-        std::pair<typename Table::iterator, bool> emplace(key_type& arg)
+        std::pair<typename Table::iterator, bool> emplace(key_type& _arg)
         {
-            return Table::emplace(arg);
+            return Table::emplace(_arg);
         }
-        std::pair<typename Table::iterator, bool> emplace(const key_type&& arg)
+        std::pair<typename Table::iterator, bool> emplace(const key_type&& _arg)
         {
-            return Table::emplace(std::move(arg));
+            return Table::emplace(std::move(_arg));
         }
-        std::pair<typename Table::iterator, bool> emplace(key_type&& arg)
+        std::pair<typename Table::iterator, bool> emplace(key_type&& _arg)
         {
-            return Table::emplace(std::move(arg));
+            return Table::emplace(std::move(_arg));
         }
 
-        friend bool operator==(const flat_hash_set& lhs, const flat_hash_set& rhs)
+        friend bool operator==(const flat_hash_set& _lhs, const flat_hash_set& _rhs)
         {
-            if (lhs.size() != rhs.size())
+            if (_lhs.size() != _rhs.size())
                 return false;
-            for (const T& value : lhs)
+            for (const T& value : _lhs)
             {
-                if (rhs.find(value) == rhs.end())
+                if (_rhs.find(value) == _rhs.end())
                     return false;
             }
             return true;
         }
-        friend bool operator!=(const flat_hash_set& lhs, const flat_hash_set& rhs)
+        friend bool operator!=(const flat_hash_set& _lhs, const flat_hash_set& _rhs)
         {
-            return !(lhs == rhs);
+            return !(_lhs == _rhs);
         }
     };
 

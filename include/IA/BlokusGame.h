@@ -142,13 +142,13 @@ namespace std
 {
 	template<> struct hash<BlokusIA::Piece>
 	{
-		size_t operator()(const BlokusIA::Piece& key) const
+		size_t operator()(const BlokusIA::Piece& _key) const
 		{
 			size_t h = 0;
 			for (u32 i = 0; i < BlokusIA::Piece::MaxTile; ++i)
 			{
-				core::hash_combine(h, key.getTile(i));
-				if (key.getTile(i) == 0)
+				core::hash_combine(h, _key.getTile(i));
+				if (_key.getTile(i) == 0)
 					break;
 			}
 			return h;

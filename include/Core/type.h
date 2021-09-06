@@ -36,7 +36,7 @@ namespace core
 	{
 		union
 		{
-			struct { ubyte r, g, b, a; };
+			struct Color { ubyte r, g, b, a; };
 			u32 color;
 		};
 	};
@@ -54,22 +54,22 @@ namespace core
     }
 
     template<typename T>
-    constexpr T alignUp(T x, T align)
+    constexpr T alignUp(T _x, T _align)
     {
-        return x + (x % align == 0 ? 0 : align - x % align);
+        return _x + (_x % _align == 0 ? 0 : _align - _x % _align);
     }
 
     template<typename T, typename A>
-    constexpr T * alignUpPtr(T * _ptr, A align)
+    constexpr T * alignUpPtr(T * _ptr, A _align)
     {
         std::uintptr_t ptr = reinterpret_cast<std::uintptr_t>(_ptr);
-        ptr = ptr + (ptr % align == 0 ? 0 : align - ptr % align);
+        ptr = ptr + (ptr % _align == 0 ? 0 : _align - ptr % _align);
         return reinterpret_cast<T*>(ptr);
     }
 
     template<typename T>
-    constexpr T absolute_difference(T a, T b)
+    constexpr T absolute_difference(T _a, T _b)
     {
-        return a < b ? b - a : a - b;
+        return _a < _b ? _b - _a : _a - _b;
     }
 }
