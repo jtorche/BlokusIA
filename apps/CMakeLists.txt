@@ -59,6 +59,11 @@ if (BUILD_UI)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
         endif()
 
+        # Enabled warnings
+        target_compile_options(${PROJECT_NAME} PRIVATE
+            $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+            $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+
         target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_MAJOR_VERSION}::Widgets)
 

@@ -61,7 +61,7 @@ namespace BlokusIA
 		static Tile build(u32 _x, u32 _y)
 		{
 			DEBUG_ASSERT(_x < MaxTile && _y < MaxTile);
-			return _x + ubyte(_y << 3) + 64; // Flag 64 is to distinguish Tile in (0, 0) and unused Tile
+			return ubyte(_x) + ubyte(_y << 3) + ubyte(64); // Flag 64 is to distinguish Tile in (0, 0) and unused Tile
 		}
 
 		Piece(Tile _t0 = 0, Tile _t1 = 0, Tile _t2 = 0, Tile _t3 = 0, Tile _t4 = 0);

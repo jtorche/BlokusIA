@@ -60,7 +60,7 @@ namespace BlokusIA
 				}
 
 				m_corners.setCorners(i, curCorners[0], curCorners[1], curCorners[2], curCorners[3]);
-				m_numCorners += std::accumulate(std::begin(curCorners), std::end(curCorners), 0);
+				m_numCorners += std::accumulate(std::begin(curCorners), std::end(curCorners), ubyte(0), std::plus<ubyte>{});
 			}
 		}
 
@@ -117,8 +117,8 @@ namespace BlokusIA
 			if (m_layout[i] == 0)
 				break;
 
-			ubyte x = getTileX(m_layout[i]);
-			ubyte y = getTileY(m_layout[i]);
+			u32 x = getTileX(m_layout[i]);
+			u32 y = getTileY(m_layout[i]);
 
 			ubyte corners[4];
 			m_corners.getCorners(i, corners);
@@ -351,9 +351,9 @@ namespace BlokusIA
 			ubyte corners[4];
 			_piece.getCorners(i, corners);
 
-			for (u32 i=0 ; i < 4 ; ++i)
+			for (u32 c = 0 ; c < 4 ; ++c)
 			{
-				if (corners[i] && compatibleCorner[i])
+				if (corners[c] && compatibleCorner[c])
 				{
 					ivec2 finalPos = iBoardPos - tilePos;
 					if (finalPos.x >= 0 && finalPos.y >= 0)

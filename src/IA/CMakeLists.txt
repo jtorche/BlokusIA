@@ -12,6 +12,11 @@ add_library(${PROJECT_NAME} ${ia_headers} ${ia_sources})
 # We need this directory, and users of our library will need it too
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
+# Enabled warnings
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
+
 target_link_libraries(IA PRIVATE Core)
 
 # For nicer IDE views
