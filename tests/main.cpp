@@ -19,7 +19,7 @@ int main()
 	runTest();
 
 	GameState gameState;
-	TwoPlayerMinMaxIA IA(3);
+	FourPlayerMaxN_IA IA(3);
 	u32 numTurn = 0;
 	while(numTurn < 20)
 	{
