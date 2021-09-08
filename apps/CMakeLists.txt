@@ -12,6 +12,8 @@ if (BUILD_UI)
 
     # Create the target project only if Qt was found
     if (DEFINED Qt${QT_MAJOR_VERSION}Widgets_FOUND AND Qt${QT_MAJOR_VERSION}Widgets_FOUND)
+        set(QT_INCLUDE_DIR "" CACHE PATH "Qt include directory (example: <QTDIR>/include")
+
         # Determine windeployqt for Windows platform
         if (WIN32 AND TARGET Qt${QT_MAJOR_VERSION}::qmake AND NOT TARGET Qt${QT_MAJOR_VERSION}::windeployqt AND NOT USE_QT_CREATOR)
             get_target_property(qt_qmake_location Qt${QT_MAJOR_VERSION}::qmake IMPORTED_LOCATION)
@@ -38,6 +40,7 @@ if (BUILD_UI)
             endif()
         endif()
 
+        # IDE filter for generated files
         set_property(GLOBAL PROPERTY AUTOGEN_SOURCE_GROUP "Generated Files")
 
         # As moc files are generated in the binary dir, tell CMake
@@ -58,6 +61,11 @@ if (BUILD_UI)
         if (WIN32)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
         endif()
+
+        # Add Qt include but avoid warnings that they may contain (thanks to SYSTEM INTERFACE)
+        target_include_directories(${PROJECT_NAME}
+            PRIVATE ${QT_INCLUDE_DIR}
+            SYSTEM INTERFACE ${QT_INCLUDE_DIR})
 
         # Enabled warnings
         target_compile_options(${PROJECT_NAME} PRIVATE
