@@ -12,10 +12,8 @@ if (BUILD_UI)
 
     # Create the target project only if Qt was found
     if (DEFINED Qt${QT_MAJOR_VERSION}Widgets_FOUND AND Qt${QT_MAJOR_VERSION}Widgets_FOUND)
-        set(QT_INCLUDE_DIR "" CACHE PATH "Qt include directory (example: <QTDIR>/include")
-
-        # Determine windeployqt for Windows platform
-        if (WIN32 AND TARGET Qt${QT_MAJOR_VERSION}::qmake AND NOT TARGET Qt${QT_MAJOR_VERSION}::windeployqt AND NOT USE_QT_CREATOR)
+        # Get Qt installation folder
+        if (TARGET Qt${QT_MAJOR_VERSION}::qmake)
             get_target_property(qt_qmake_location Qt${QT_MAJOR_VERSION}::qmake IMPORTED_LOCATION)
 
             execute_process(
@@ -23,7 +21,10 @@ if (BUILD_UI)
                 RESULT_VARIABLE return_code
                 OUTPUT_VARIABLE qt_installation_prefix
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
+        endif()
 
+        # Determine windeployqt for Windows platform
+        if (WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${QT_MAJOR_VERSION}::windeployqt AND NOT USE_QT_CREATOR)
             set(imported_win_deploy_qt_location "${qt_installation_prefix}/bin/windeployqt.exe")
 
             if (EXISTS ${imported_win_deploy_qt_location})
@@ -62,10 +63,10 @@ if (BUILD_UI)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
         endif()
 
-        # Add Qt include but avoid warnings that they may contain (thanks to SYSTEM INTERFACE)
-        target_include_directories(${PROJECT_NAME}
-            PRIVATE ${QT_INCLUDE_DIR}
-            SYSTEM INTERFACE ${QT_INCLUDE_DIR})
+        # Add CAExcludePath to avoid warnings that comes from Qt external library
+        if (MSVC AND DEFINED qt_installation_prefix)
+            set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_CAExcludePath "${qt_installation_prefix}/include;$(CAExcludePath)")
+        endif()
 
         # Enabled warnings
         target_compile_options(${PROJECT_NAME} PRIVATE
