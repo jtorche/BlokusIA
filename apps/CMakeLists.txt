@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 project(Blokus_UI DESCRIPTION "Blokus Game UI" LANGUAGES CXX)
 
@@ -56,8 +56,9 @@ if (BUILD_UI)
         file(GLOB_RECURSE ui_headers *.h)
         file(GLOB_RECURSE ui_sources *.cpp)
         file(GLOB_RECURSE ui_uis *.ui)
+        set(ui_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ui.h")
 
-        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis})
+        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header})
         # To avoid having a console when running GUI application
         if (WIN32)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
@@ -73,6 +74,10 @@ if (BUILD_UI)
             $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
             $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
 
+        # Precompile headers
+        target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ui_precompile_header}>")
+
+        # Linked libraries
         target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_MAJOR_VERSION}::Widgets)
 
@@ -102,6 +107,10 @@ if (BUILD_UI)
           TREE ${CMAKE_CURRENT_SOURCE_DIR}
           PREFIX "View Files"
           FILES ${ui_uis})
+
+        source_group(
+          "Precompile Header File"
+          FILES ${ui_precompile_header})
     else()
         message("Could not find Qt${QT_MAJOR_VERSION}. ${PROJECT_NAME} project won't be generated.")
         message("Qt${QT_MAJOR_VERSION}_DIR must be set to path like: <QTDIR>/lib/cmake/Qt${QT_MAJOR_VERSION}.")

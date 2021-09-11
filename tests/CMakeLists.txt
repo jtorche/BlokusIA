@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 project(IA_Tests DESCRIPTION "Console application to easily test Blokus IA" LANGUAGES CXX)
 
@@ -6,14 +6,19 @@ option(BUILD_TESTING "Check it to generate the console Blokus test project." ON)
 if (BUILD_TESTING)
     file(GLOB_RECURSE tests_ia_headers *.h)
     file(GLOB_RECURSE tests_ia_sources *.cpp)
+    set(tests_ia_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_tests_ia.h")
 
-    add_executable(${PROJECT_NAME} ${tests_ia_headers} ${tests_ia_sources})
+    add_executable(${PROJECT_NAME} ${tests_ia_headers} ${tests_ia_sources} ${tests_ia_precompile_header})
 
     # Enabled warnings
     target_compile_options(${PROJECT_NAME} PRIVATE
         $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>)
 
+    # Precompile headers
+    target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${tests_ia_precompile_header}>")
+
+    # Linked libraries
     target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
 
     # For nicer IDE views
@@ -26,4 +31,8 @@ if (BUILD_TESTING)
       TREE ${CMAKE_CURRENT_SOURCE_DIR}
       PREFIX "Source Files"
       FILES ${tests_ia_sources})
+
+    source_group(
+      "Precompile Header File"
+      FILES ${tests_ia_precompile_header})
 endif()

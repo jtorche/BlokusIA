@@ -1,9 +1,6 @@
 #include <array>
 #include <iostream>
 
-#include "Core/Common.h"
-#include "Core/type.h"
-
 #include "IA/FourPlayerMaxN_IA.h"
 
 void runTest();
