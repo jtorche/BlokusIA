@@ -4,17 +4,17 @@ project(Blokus_UI DESCRIPTION "Blokus Game UI" LANGUAGES CXX)
 
 option(BUILD_UI "Check it to generate the Blokus UI project." OFF)
 if (BUILD_UI)
-    set(QT_MAJOR_VERSION 5 CACHE STRING "Qt major version to use.")
+    set(qt_major_version 5)
     option(USE_QT_CREATOR "Check it if you use QtCreator as IDE." OFF)
 
     # The QtWidgets module find its own dependencies (QtCore and QtGui)
-    find_package(Qt${QT_MAJOR_VERSION} COMPONENTS Widgets QUIET)
+    find_package(Qt${qt_major_version} COMPONENTS Widgets QUIET)
 
     # Create the target project only if Qt was found
-    if (DEFINED Qt${QT_MAJOR_VERSION}Widgets_FOUND AND Qt${QT_MAJOR_VERSION}Widgets_FOUND)
+    if (DEFINED Qt${qt_major_version}Widgets_FOUND AND Qt${qt_major_version}Widgets_FOUND)
         # Get Qt installation folder
-        if (TARGET Qt${QT_MAJOR_VERSION}::qmake)
-            get_target_property(qt_qmake_location Qt${QT_MAJOR_VERSION}::qmake IMPORTED_LOCATION)
+        if (TARGET Qt${qt_major_version}::qmake)
+            get_target_property(qt_qmake_location Qt${qt_major_version}::qmake IMPORTED_LOCATION)
 
             execute_process(
                 COMMAND "${qt_qmake_location}" -query QT_INSTALL_PREFIX
@@ -24,13 +24,13 @@ if (BUILD_UI)
         endif()
 
         # Determine windeployqt for Windows platform
-        if (WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${QT_MAJOR_VERSION}::windeployqt AND NOT USE_QT_CREATOR)
+        if (WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${qt_major_version}::windeployqt AND NOT USE_QT_CREATOR)
             set(imported_win_deploy_qt_location "${qt_installation_prefix}/bin/windeployqt.exe")
 
             if (EXISTS ${imported_win_deploy_qt_location})
-                add_executable(Qt${QT_MAJOR_VERSION}::windeployqt IMPORTED)
+                add_executable(Qt${qt_major_version}::windeployqt IMPORTED)
 
-                set_target_properties(Qt${QT_MAJOR_VERSION}::windeployqt PROPERTIES IMPORTED_LOCATION ${imported_win_deploy_qt_location})
+                set_target_properties(Qt${qt_major_version}::windeployqt PROPERTIES IMPORTED_LOCATION ${imported_win_deploy_qt_location})
             endif()
 
             # Check VCINSTALLDIR environment variable is present
@@ -80,17 +80,13 @@ if (BUILD_UI)
 
         # Linked libraries
         target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
-        target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_MAJOR_VERSION}::Widgets)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Qt${qt_major_version}::Widgets)
 
         # Post build step to deploy needed stuff in output directory under Windows
-        if (TARGET Qt${QT_MAJOR_VERSION}::windeployqt)
+        if (TARGET Qt${qt_major_version}::windeployqt)
             add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
                 COMMAND set VCINSTALLDIR=${VC_INSTALL_DIR}
-                COMMAND Qt${QT_MAJOR_VERSION}::windeployqt $<TARGET_FILE:${PROJECT_NAME}>)
-        endif()
-
-        if (QT_MAJOR_VERSION EQUAL 6)
-            qt_finalize_executable(${PROJECT_NAME})
+                COMMAND Qt${qt_major_version}::windeployqt $<TARGET_FILE:${PROJECT_NAME}>)
         endif()
 
         # For nicer IDE views
@@ -117,7 +113,7 @@ if (BUILD_UI)
           "Precompile Header File"
           FILES ${ui_precompile_header})
     else()
-        message("Could not find Qt${QT_MAJOR_VERSION}. ${PROJECT_NAME} project won't be generated.")
-        message("Qt${QT_MAJOR_VERSION}_DIR must be set to path like: <QTDIR>/lib/cmake/Qt${QT_MAJOR_VERSION}.")
+        message("Could not find Qt${qt_major_version}. ${PROJECT_NAME} project won't be generated.")
+        message("Qt${qt_major_version}_DIR must be set to path like: <QTDIR>/lib/cmake/Qt${qt_major_version}.")
     endif()
 endif()
