@@ -20,6 +20,14 @@ namespace BlokusIA
 		bool isValid() const { return pieceIndex != u32(-1); }
 	};
 
+    enum class BoardHeuristic
+    {
+        RemainingTiles,
+        NumberOfMoves,
+        ReachableEmptySpace,
+        ReachableEmptySpaceWeighted,
+    };
+
 	//-------------------------------------------------------------------------------------------------
 	class GameState
 	{
@@ -34,11 +42,14 @@ namespace BlokusIA
 		std::vector<Move> enumerateMoves(bool _sortByHeuristic) const;
 
 		float computeHeuristic(const Move& _move) const;
-		float computeBoardScore(Slot _player) const;
+		float computeBoardScore(Slot _player, BoardHeuristic) const;
+
+        float computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const;
 
 	private:
 		Board m_board;
 		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
 		u32 m_turn = 0;
+
 	};
 }

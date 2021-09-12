@@ -18,7 +18,7 @@ int main()
 	runTest();
 
 	GameState gameState;
-	FourPlayerMaxN_IA IA(3);
+	FourPlayerMaxN_IA IA(3, BoardHeuristic::ReachableEmptySpaceWeighted);
 	u32 numTurn = 0;
 	while(numTurn < 20)
 	{
@@ -30,7 +30,7 @@ int main()
 		numTurn++;
 
 		gameState.getBoard().print();
-		system("pause");
+        system("pause");
 	}
 	
 	std::cout << "NumTurn " << numTurn << "\n";

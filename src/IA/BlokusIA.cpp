@@ -99,7 +99,7 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	float GameState::computeBoardScore(Slot _player) const
+	float GameState::computeBoardScore(Slot _player, BoardHeuristic _heuristicType) const
 	{
 		float score = 0;
 
@@ -108,6 +108,126 @@ namespace BlokusIA
 			if (m_remainingPieces[playerIndex].test(i))
 				score += s_allPieces[i].begin()->getNumTiles();
 
+        if (_heuristicType == BoardHeuristic::RemainingTiles)
+            return score;
+
+        if (_heuristicType == BoardHeuristic::NumberOfMoves)
+        {
+            float numMove = float(enumerateMoves(false).size());
+            score += (numMove / (numMove + 1));
+        }
+        else if (_heuristicType == BoardHeuristic::ReachableEmptySpace ||
+                 _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted)
+        {
+            score += computeFreeSpaceHeuristic(_player, _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted);
+        }
+
 		return score;
 	}
+
+    //-------------------------------------------------------------------------------------------------
+    struct ExpandCluster
+    {
+        ExpandCluster(const GameState& _state) : m_state{ _state } {}
+
+        const GameState& m_state;
+        ubyte m_clusters[Board::BoardSize][Board::BoardSize] = { {0} };
+        std::array<ubyte2, Board::BoardSize * Board::BoardSize> m_expandCluster;
+        u32 m_expandClusterSize = 0;
+
+        // track size of clusters
+        u32 m_clusterIndex = 0;
+        u16 m_clusterSize[(Board::BoardSize*Board::BoardSize)/4] = {};
+        ubyte m_numPlayableSlotPerCluster[(Board::BoardSize*Board::BoardSize)/4] = {};
+
+        void remove(u32 _expandedClusterIdx)
+        {
+            DEBUG_ASSERT(_expandedClusterIdx < m_expandClusterSize);
+            std::swap(m_expandCluster[_expandedClusterIdx], m_expandCluster[m_expandClusterSize]);
+            --m_expandClusterSize;
+        }
+
+        void addToClusterList(int x, int y)
+        {
+            if (x < 0 || y < 0 || x >= Board::BoardSize || y >= Board::BoardSize)
+                return;
+
+            if (m_state.getBoard().getSlot(x, y) != Slot::Empty)
+                return;
+
+            if (m_clusters[x][y] != 0)
+                return;
+
+            m_clusters[x][y] = ubyte(-1);
+            m_expandCluster[m_expandClusterSize++] = { ubyte(x), ubyte(y) };
+        };
+
+        void expandTo(int _x, int _y, u32 _clusterIndex)
+        {
+            if (m_clusters[_x][_y] == _clusterIndex)
+                return;
+
+            DEBUG_ASSERT(m_clusters[_x][_y] == 0 || m_clusters[_x][_y] == ubyte(-1));
+            m_clusters[_x][_y] = _clusterIndex;
+            m_clusterSize[_clusterIndex - 1]++;
+
+            addToClusterList(_x - 1, _y);
+            addToClusterList(_x + 1, _y);
+            addToClusterList(_x, _y - 1);
+            addToClusterList(_x, _y + 1);
+        }
+
+        void expandFrom(ubyte2 _pos)
+        {
+            DEBUG_ASSERT(m_clusters[_pos.x][_pos.y] != ubyte(-1));
+
+            if (m_clusters[_pos.x][_pos.y] != 0)
+            {
+                m_numPlayableSlotPerCluster[m_clusters[_pos.x][_pos.y] - 1]++;
+                return;
+            }
+
+            m_clusterIndex++;
+            m_clusterSize[m_clusterIndex - 1] = 0;
+            m_numPlayableSlotPerCluster[m_clusterIndex - 1] = 1;
+
+            // _pos must be a valid playable slot
+            expandTo(_pos.x, _pos.y, m_clusterIndex);
+
+            while (m_expandClusterSize > 0)
+            {
+                ubyte2 pos = m_expandCluster[m_expandClusterSize - 1];
+                remove(m_expandClusterSize - 1);
+
+                int x = pos.x;
+                int y = pos.y;
+                expandTo(x, y, m_clusterIndex);
+            }
+        }
+    };
+
+    //-------------------------------------------------------------------------------------------------
+    float GameState::computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const
+    {
+        Board::PlayableSlots slots;
+        u32 numSlots = m_board.computeValidSlotsForPlayer(_player, slots);
+
+        ExpandCluster clusterExpander(*this);
+        for (u32 i = 0; i < numSlots; ++i)
+            clusterExpander.expandFrom(slots[i]);
+
+        float numReachables = 0;
+        for (u32 i = 0; i < clusterExpander.m_clusterIndex; ++i)
+        {
+            if (clusterExpander.m_clusterSize[i] == 0)
+                break;
+            float weight = 1;
+            if (_weightCluster)
+                weight = float(clusterExpander.m_numPlayableSlotPerCluster[i]) / (clusterExpander.m_numPlayableSlotPerCluster[i] + 1);
+
+            numReachables += clusterExpander.m_clusterSize[i] * weight;
+        }
+
+        return numReachables / (Board::BoardSize * Board::BoardSize);
+    }
 }

@@ -25,10 +25,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     size_t FourPlayerMaxN_IA::maxMoveToLookAt(const GameState& _gameState) const
     {
-        if (_gameState.getTurnCount() < 16)
-            return 8;
-        else
-            return 16;
+        return 16;
     }
 
     //-------------------------------------------------------------------------------------------------
