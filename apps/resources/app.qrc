@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/Blokus">
+        <file>icons/english.png</file>
+        <file>icons/french.png</file>
+        <file>icons/qt.png</file>
+        <file>icons/quit.png</file>
+    </qresource>
+</RCC>

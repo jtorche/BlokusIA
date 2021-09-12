@@ -11,24 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Blokus Game</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>50</y>
-      <width>80</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Test</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
+  <widget class="QWidget" name="m_centralwidget"/>
+  <widget class="QMenuBar" name="m_menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -37,9 +23,94 @@
      <height>20</height>
     </rect>
    </property>
+   <widget class="QMenu" name="m_helpMenu">
+    <property name="title">
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="m_actionAbout"/>
+    <addaction name="m_actionAboutQt"/>
+   </widget>
+   <widget class="QMenu" name="m_languagesMenu">
+    <property name="title">
+     <string>&amp;Language</string>
+    </property>
+    <addaction name="m_actionSystemLocale"/>
+    <addaction name="separator"/>
+    <addaction name="m_actionEnglish"/>
+    <addaction name="m_actionFrench"/>
+   </widget>
+   <widget class="QMenu" name="m_gameMenu">
+    <property name="title">
+     <string>&amp;Game</string>
+    </property>
+    <addaction name="m_actionQuit"/>
+   </widget>
+   <addaction name="m_gameMenu"/>
+   <addaction name="m_languagesMenu"/>
+   <addaction name="m_helpMenu"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QStatusBar" name="m_statusBar"/>
+  <action name="m_actionAbout">
+   <property name="text">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="m_actionAboutQt">
+   <property name="icon">
+    <iconset resource="resources/app.qrc">
+     <normaloff>:/Blokus/icons/qt.png</normaloff>:/Blokus/icons/qt.png</iconset>
+   </property>
+   <property name="text">
+    <string>About &amp;Qt</string>
+   </property>
+  </action>
+  <action name="m_actionSystemLocale">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>System language</string>
+   </property>
+  </action>
+  <action name="m_actionEnglish">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/app.qrc">
+     <normaloff>:/Blokus/icons/english.png</normaloff>:/Blokus/icons/english.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;English</string>
+   </property>
+  </action>
+  <action name="m_actionFrench">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/app.qrc">
+     <normaloff>:/Blokus/icons/french.png</normaloff>:/Blokus/icons/french.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;French</string>
+   </property>
+  </action>
+  <action name="m_actionQuit">
+   <property name="icon">
+    <iconset resource="resources/app.qrc">
+     <normaloff>:/Blokus/icons/quit.png</normaloff>:/Blokus/icons/quit.png</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources/app.qrc"/>
+ </resources>
  <connections/>
 </ui>

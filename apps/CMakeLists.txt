@@ -56,9 +56,10 @@ if (BUILD_UI)
         file(GLOB_RECURSE ui_headers *.h)
         file(GLOB_RECURSE ui_sources *.cpp)
         file(GLOB_RECURSE ui_uis *.ui)
+        set(ui_resources "${CMAKE_CURRENT_SOURCE_DIR}/Resources/app.qrc")
         set(ui_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ui.h")
 
-        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header})
+        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header} ${ui_resources})
         # To avoid having a console when running GUI application
         if (WIN32)
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
@@ -107,6 +108,10 @@ if (BUILD_UI)
           TREE ${CMAKE_CURRENT_SOURCE_DIR}
           PREFIX "View Files"
           FILES ${ui_uis})
+
+        source_group(
+          "Resource Files"
+          FILES ${ui_resources})
 
         source_group(
           "Precompile Header File"

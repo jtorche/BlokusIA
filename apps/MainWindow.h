@@ -14,6 +14,14 @@ public:
     MainWindow(QWidget* _parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void updateLanguage();
+    void about();
+
 private:
-    Ui::MainWindow *ui;
+    void setupActions();
+    void setupConnections();
+
+private:
+    Ui::MainWindow* m_ui;
 };
