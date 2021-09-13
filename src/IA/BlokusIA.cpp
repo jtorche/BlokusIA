@@ -242,4 +242,23 @@ namespace BlokusIA
 
         return numReachables / (Board::BoardSize * Board::BoardSize);
     }
+
+    //-------------------------------------------------------------------------------------------------
+    void IAStats::start()
+    {
+        m_numHeuristicEvaluated = 0;
+        m_numNodesExplored = 0;
+        m_start = std::chrono::steady_clock::now();
+    }
+
+    void IAStats::stop()
+    {
+        std::chrono::duration<float> diff = std::chrono::steady_clock::now() - m_start;
+        m_timeInSecond = diff.count();
+    }
+
+    float IAStats::nodePerSecond() const
+    {
+        return m_numNodesExplored / m_timeInSecond;
+    }
 }

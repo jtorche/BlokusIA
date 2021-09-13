@@ -5,7 +5,7 @@
 namespace BlokusIA
 {
 	//-------------------------------------------------------------------------------------------------
-	class TwoPlayerMinMax_IA
+	class TwoPlayerMinMax_IA : public IAStats
 	{
 	public:
 		TwoPlayerMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles)
@@ -17,6 +17,7 @@ namespace BlokusIA
 
 		float computeScore(bool _isP0P2_MaxPlayer, const GameState& _gameState)
 		{
+            m_numHeuristicEvaluated++;
 			return (_isP0P2_MaxPlayer ? 1 : -1) * (_gameState.computeBoardScore(Slot::P0, m_heuristic) + 
                                                    _gameState.computeBoardScore(Slot::P2, m_heuristic) - 
                                                    _gameState.computeBoardScore(Slot::P1, m_heuristic) - 

@@ -5,6 +5,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     Move FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
     {
+        start();
         auto moves = _gameState.enumerateMoves(true);
         moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
 
@@ -19,6 +20,8 @@ namespace BlokusIA
         });
 
         auto best = std::max_element(scores.begin(), scores.end());
+
+        stop();
         return moves[std::distance(scores.begin(), best)];
     }
 
@@ -31,6 +34,8 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     FourPlayerMaxN_IA::Score FourPlayerMaxN_IA::evalPositionRec(const GameState& _gameState, u32 _depth)
     {
+        m_numNodesExplored++;
+
         if (_depth >= m_maxDepth)
             return computeScore(_gameState);
 

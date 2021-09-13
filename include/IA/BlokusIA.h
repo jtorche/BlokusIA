@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bitset>
+#include <chrono>
 
 #include "BlokusGame.h"
 #include "BlokusGameHelpers.h"
@@ -52,4 +53,19 @@ namespace BlokusIA
 		u32 m_turn = 0;
 
 	};
+
+    //-------------------------------------------------------------------------------------------------
+    struct IAStats
+    {
+        u32 m_numNodesExplored = 0;
+        u32 m_numHeuristicEvaluated = 0;
+
+        std::chrono::steady_clock::time_point m_start;
+        float m_timeInSecond = 0;
+
+        void start();
+        void stop();
+
+        float nodePerSecond() const;
+    };
 }

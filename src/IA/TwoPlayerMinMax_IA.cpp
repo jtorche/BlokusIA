@@ -14,6 +14,8 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	Move TwoPlayerMinMax_IA::findBestMove(const GameState& _gameState)
 	{
+        start();
+
 		auto moves = _gameState.enumerateMoves(true);
 		moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
 
@@ -31,12 +33,16 @@ namespace BlokusIA
 			});
 		
 		auto best = std::max_element(scores.begin(), scores.end());
+
+        stop();
 		return moves[std::distance(scores.begin(), best)];
 	}
 
 	//-------------------------------------------------------------------------------------------------
 	float TwoPlayerMinMax_IA::evalPositionRec(bool _isMaxPlayerTurn, const GameState& _gameState, u32 _depth, vec2 _a_b)
 	{
+        m_numNodesExplored++;
+
 		bool isP0P2_MaxPlayer = _isMaxPlayerTurn == (_gameState.getPlayerTurn() % 2 == 0);
 
 		if (_depth >= m_maxDepth)

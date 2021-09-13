@@ -4,8 +4,9 @@
 
 namespace BlokusIA
 {
+    // TODO: https://www.aaai.org/Papers/AAAI/2000/AAAI00-031.pdf
     //-------------------------------------------------------------------------------------------------
-    class FourPlayerMaxN_IA
+    class FourPlayerMaxN_IA : public IAStats
     {
     public:
         using Score = std::array<float, 4>;
@@ -18,6 +19,7 @@ namespace BlokusIA
 
         Score computeScore(const GameState& _gameState)
         {
+            m_numHeuristicEvaluated++;
             return { _gameState.computeBoardScore(Slot::P0, m_heuristic),
                      _gameState.computeBoardScore(Slot::P1, m_heuristic),
                      _gameState.computeBoardScore(Slot::P2, m_heuristic),
