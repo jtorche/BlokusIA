@@ -56,7 +56,10 @@ if (BUILD_UI)
         file(GLOB_RECURSE ui_headers *.h)
         file(GLOB_RECURSE ui_sources *.cpp)
         file(GLOB_RECURSE ui_uis *.ui)
-        set(ui_resources "${CMAKE_CURRENT_SOURCE_DIR}/Resources/app.qrc" "${CMAKE_CURRENT_SOURCE_DIR}/i18n/translations.qrc")
+        set(ui_resources
+            "${CMAKE_CURRENT_SOURCE_DIR}/resources/app.qrc"
+            "${CMAKE_CURRENT_SOURCE_DIR}/themes/themes.qrc"
+            "${CMAKE_CURRENT_SOURCE_DIR}/i18n/translations.qrc")
         set(ui_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ui.h")
 
         add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header} ${ui_resources})
