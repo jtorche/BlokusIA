@@ -9,7 +9,7 @@
     do { if(!(cond)) { core::handleAssert(__LINE__, __FILE__, ""); } }while(0) 
 
 #else
-#define DEBUG_ASSERT(cond)
+#define DEBUG_ASSERT(cond) ((void)(cond))
 #endif
 
 namespace core

@@ -23,7 +23,7 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    size_t FourPlayerMaxN_IA::maxMoveToLookAt(const GameState& _gameState) const
+    size_t FourPlayerMaxN_IA::maxMoveToLookAt(const GameState&) const
     {
         return 16;
     }

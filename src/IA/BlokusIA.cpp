@@ -71,10 +71,22 @@ namespace BlokusIA
 
 		if (_sortByHeuristic)
 		{
-			std::sort(std::begin(moves), std::end(moves), [this](const Move& m1, const Move& m2)
+            std::vector<std::pair<Move, float>> moves_scores(moves.size());
+            std::transform(moves.begin(), moves.end(), moves_scores.begin(),
+                [&](const Move& move) -> std::pair<Move, float>
+            {
+                return { move, computeHeuristic(move) };
+            });
+
+			std::sort(std::begin(moves_scores), std::end(moves_scores), [this](const auto& m1, const auto& m2)
 			{
-				return computeHeuristic(m1) > computeHeuristic(m2);
+				return m1.second > m2.second;
 			});
+
+            std::transform(moves_scores.begin(), moves_scores.end(), moves.begin(), [](const auto& p)
+            {
+                return p.first;
+            });
 		}
 		return moves;
 	}
@@ -168,7 +180,7 @@ namespace BlokusIA
                 return;
 
             DEBUG_ASSERT(m_clusters[_x][_y] == 0 || m_clusters[_x][_y] == ubyte(-1));
-            m_clusters[_x][_y] = _clusterIndex;
+            m_clusters[_x][_y] = ubyte(_clusterIndex);
             m_clusterSize[_clusterIndex - 1]++;
 
             addToClusterList(_x - 1, _y);
