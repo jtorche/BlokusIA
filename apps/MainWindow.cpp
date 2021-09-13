@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget* _parent)
     : QMainWindow(_parent)
     , m_ui(new Ui::MainWindow)
 {
+    setupTranslator(QLocale{});
+
     m_ui->setupUi(this);
 
     setupActions();
@@ -19,8 +21,12 @@ MainWindow::~MainWindow()
     delete m_ui;
 }
 
-void MainWindow::updateLanguage()
+void MainWindow::changeEvent(QEvent* _event)
 {
+    if (_event->type() == QEvent::LanguageChange)
+    {
+        m_ui->retranslateUi(this);
+    }
 }
 
 void MainWindow::setupActions()
@@ -44,6 +50,30 @@ void MainWindow::setupConnections()
     // About
     connect(m_ui->m_actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(m_ui->m_actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+}
+
+void MainWindow::setupTranslator(const QLocale& locale)
+{
+    m_translator.load(locale, "blokus", "_", ":/translations");
+    qApp->installTranslator(&m_translator);
+}
+
+void MainWindow::updateLanguage()
+{
+    qApp->removeTranslator(&m_translator);
+
+    QLocale locale;
+    if (m_ui->m_actionEnglish->isChecked())
+    {
+        locale = QLocale::Language::English;
+    }
+    else if (m_ui->m_actionFrench->isChecked())
+    {
+        locale = QLocale::Language::French;
+    }
+
+    // Load translation file based on selected language
+    setupTranslator(locale);
 }
 
 void MainWindow::about()

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QTranslator>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -14,14 +15,19 @@ public:
     MainWindow(QWidget* _parent = nullptr);
     ~MainWindow();
 
+protected:
+    virtual void changeEvent(QEvent* _event) override;
+
+private:
+    void setupActions();
+    void setupConnections();
+    void setupTranslator(const QLocale& locale);
+
 private slots:
     void updateLanguage();
     void about();
 
 private:
-    void setupActions();
-    void setupConnections();
-
-private:
     Ui::MainWindow* m_ui;
+    QTranslator m_translator;
 };

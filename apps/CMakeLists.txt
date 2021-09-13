@@ -24,7 +24,7 @@ if (BUILD_UI)
         endif()
 
         # Determine windeployqt for Windows platform
-        if (WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${qt_major_version}::windeployqt AND NOT USE_QT_CREATOR)
+        if (NOT USE_QT_CREATOR AND WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${qt_major_version}::windeployqt)
             set(imported_win_deploy_qt_location "${qt_installation_prefix}/bin/windeployqt.exe")
 
             if (EXISTS ${imported_win_deploy_qt_location})
@@ -56,7 +56,7 @@ if (BUILD_UI)
         file(GLOB_RECURSE ui_headers *.h)
         file(GLOB_RECURSE ui_sources *.cpp)
         file(GLOB_RECURSE ui_uis *.ui)
-        set(ui_resources "${CMAKE_CURRENT_SOURCE_DIR}/Resources/app.qrc")
+        set(ui_resources "${CMAKE_CURRENT_SOURCE_DIR}/Resources/app.qrc" "${CMAKE_CURRENT_SOURCE_DIR}/i18n/translations.qrc")
         set(ui_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ui.h")
 
         add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header} ${ui_resources})
@@ -81,6 +81,33 @@ if (BUILD_UI)
         # Linked libraries
         target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${qt_major_version}::Widgets)
+
+        # Linguist tools module
+        option(GENERATE_TRANSLATIONS "Check it to generate/update the Blokus UI translation files." ON)
+        find_package(Qt${qt_major_version} COMPONENTS LinguistTools QUIET)
+        if (GENERATE_TRANSLATIONS AND DEFINED Qt${qt_major_version}LinguistTools_FOUND AND Qt${qt_major_version}LinguistTools_FOUND)
+            # Function to generate/update ts and qm files searching recursively in SRC_DIR
+            function(generate_app_translations CUSTOM_TARGET TS_DIR TS_FILES SRC_DIR)
+                set(update_ts_target_name ${CUSTOM_TARGET}_update_ts)
+                set(update_qm_target_name ${CUSTOM_TARGET}_update_qm)
+
+                add_custom_target(${update_ts_target_name}
+                    COMMAND ${Qt5_LUPDATE_EXECUTABLE} -recursive ${SRC_DIR} -ts ${TS_FILES}
+                    WORKING_DIRECTORY ${TS_DIR})
+
+                add_custom_target(${update_qm_target_name}
+                    COMMAND ${Qt5_LRELEASE_EXECUTABLE} ${TS_FILES}
+                    WORKING_DIRECTORY ${TS_DIR})
+
+                add_dependencies(${update_qm_target_name} ${update_ts_target_name})
+                add_dependencies(${CUSTOM_TARGET} ${update_qm_target_name})
+            endfunction()
+
+            set(ts_dir "${CMAKE_CURRENT_SOURCE_DIR}/i18n")
+            set(ts_files "${ts_dir}/blokus_fr.ts")
+
+            generate_app_translations(${PROJECT_NAME} ${ts_dir} ${ts_files} ${CMAKE_CURRENT_SOURCE_DIR})
+        endif()
 
         # Post build step to deploy needed stuff in output directory under Windows
         if (TARGET Qt${qt_major_version}::windeployqt)
