@@ -1,35 +1,25 @@
 #pragma once
 
-#include "BlokusIA.h"
+#include "GenericMinMax_IA.h"
 
 namespace BlokusIA
 {
-	//-------------------------------------------------------------------------------------------------
-	class TwoPlayerMinMax_IA : public IAStats
-	{
-	public:
-		TwoPlayerMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles)
-            : m_maxDepth{ _maxDepth }
-            , m_heuristic{ _heuristic }
-        {}
+    struct TwoPlayerMinMaxStrategy
+    {
+        static float computeScore(Slot _maxPlayer, BoardHeuristic _heuristic, const GameState& _gameState)
+        {
+            bool isP0P2_MaxPlayer = _maxPlayer == Slot::P0 || _maxPlayer == Slot::P2;
+            return (isP0P2_MaxPlayer ? 1 : -1) * (_gameState.computeBoardScore(Slot::P0, _heuristic) +
+                                                  _gameState.computeBoardScore(Slot::P2, _heuristic) -
+                                                  _gameState.computeBoardScore(Slot::P1, _heuristic) -
+                                                  _gameState.computeBoardScore(Slot::P3, _heuristic));
+        }
 
-		Move findBestMove(const GameState& _gameState);
+        static bool isMaxPlayerTurn(Slot _maxPlayer, const GameState& _gameState)
+        {
+            return (u32(_maxPlayer) - u32(Slot::P0)) % 2 == _gameState.getPlayerTurn() % 2;
+        }
+    };
 
-		float computeScore(bool _isP0P2_MaxPlayer, const GameState& _gameState)
-		{
-            m_numHeuristicEvaluated++;
-			return (_isP0P2_MaxPlayer ? 1 : -1) * (_gameState.computeBoardScore(Slot::P0, m_heuristic) + 
-                                                   _gameState.computeBoardScore(Slot::P2, m_heuristic) - 
-                                                   _gameState.computeBoardScore(Slot::P1, m_heuristic) - 
-                                                   _gameState.computeBoardScore(Slot::P3, m_heuristic));
-		}
-
-		size_t maxMoveToLookAt(const GameState& _gameState) const;
-
-	private:
-		float evalPositionRec(bool _isMaxPlayerTurn, const GameState& _gameState, u32 _depth, vec2 _a_b);
-
-		u32 m_maxDepth = 0;
-        BoardHeuristic m_heuristic;
-	};
+    using TwoPlayerMinMax_IA = GenericMinMax_IA<TwoPlayerMinMaxStrategy>;
 }
