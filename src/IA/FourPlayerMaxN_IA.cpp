@@ -41,19 +41,26 @@ namespace BlokusIA
 
         auto moves = _gameState.enumerateMoves(true);
 
-        Score bestScore = {};
-        u32 bestScoreIndex = 0;
-        for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
+        if (moves.empty())
         {
-            Score score = evalPositionRec(_gameState.play(moves[i]), _depth + 1);
-            // Each player try to maximize its own score, regardless of the other players
-            if (score[_gameState.getPlayerTurn()] > bestScore[_gameState.getPlayerTurn()])
-            {
-                bestScore = score;
-                bestScoreIndex = u32(i);
-            }
+            return evalPositionRec(_gameState.skip(), _depth + 1);
         }
+        else
+        {
+            Score bestScore = {};
+            u32 bestScoreIndex = 0;
+            for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
+            {
+                Score score = evalPositionRec(_gameState.play(moves[i]), _depth + 1);
+                // Each player try to maximize its own score, regardless of the other players
+                if (score[_gameState.getPlayerTurn()] > bestScore[_gameState.getPlayerTurn()])
+                {
+                    bestScore = score;
+                    bestScoreIndex = u32(i);
+                }
+            }
 
-        return bestScore;
+            return bestScore;
+        }
     }
 }
