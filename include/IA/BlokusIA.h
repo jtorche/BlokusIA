@@ -9,6 +9,7 @@
 namespace BlokusIA
 {
 	extern PieceSymetries s_allPieces;
+    extern u32 s_totalPieceTileCount;
 	void initBlokusIA();
 
 	//-------------------------------------------------------------------------------------------------
@@ -30,11 +31,14 @@ namespace BlokusIA
     };
 
 	//-------------------------------------------------------------------------------------------------
+    struct ExpandCluster;
+
 	class GameState
 	{
 	public:
 		GameState();
 		GameState play(const Move&) const;
+        GameState skip() const;
 
 		const Board& getBoard() const { return m_board; }
 		u32 getPlayerTurn() const { return m_turn % 4; }
@@ -44,14 +48,17 @@ namespace BlokusIA
 
 		float computeHeuristic(const Move& _move) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
-
-        float computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const;
+		float computeScoreUpperBound(Slot _player, BoardHeuristic) const;
+        float computeScoreLowerBound(Slot _player, BoardHeuristic) const;
 
 	private:
 		Board m_board;
 		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
 		u32 m_turn = 0;
 
+        void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
+        float computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const;
+        u32 getPlayedPieceTiles(Slot _player) const;
 	};
 
     //-------------------------------------------------------------------------------------------------
