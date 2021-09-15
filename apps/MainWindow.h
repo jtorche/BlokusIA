@@ -22,6 +22,7 @@ namespace blokusUi
     private:
         void setupActions();
         void setupConnections() const;
+        void setupThemedResources() const;
 
     private slots:
         void updateLanguage() const;

@@ -30,6 +30,12 @@ namespace blokusUi
         {
             m_ui->retranslateUi(this);
         }
+        else if (_event->type() == QEvent::StyleChange)
+        {
+            setupThemedResources();
+        }
+
+        QMainWindow::changeEvent(_event);
     }
 
     void MainWindow::setupActions()
@@ -48,6 +54,8 @@ namespace blokusUi
             ? m_ui->m_actionDarkTheme
             : m_ui->m_actionLightTheme;
         themeToUse->setChecked(true);
+
+        setupThemedResources();
     }
 
     void MainWindow::setupConnections() const
@@ -67,6 +75,14 @@ namespace blokusUi
         // About
         connect(m_ui->m_actionAbout, SIGNAL(triggered()), this, SLOT(about()));
         connect(m_ui->m_actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    }
+
+
+    void MainWindow::setupThemedResources() const
+    {
+        m_ui->m_actionQuit->setIcon(THEME_MANAGER.getIconResource("quit"));
+        m_ui->m_actionDarkTheme->setIcon(THEME_MANAGER.getIconResource("dark"));
+        m_ui->m_actionLightTheme->setIcon(THEME_MANAGER.getIconResource("light"));
     }
 
     void MainWindow::updateLanguage() const

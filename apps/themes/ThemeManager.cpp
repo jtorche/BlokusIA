@@ -27,16 +27,18 @@ namespace blokusUi
     ThemeManager::ThemeManager()
         : m_darkTheme(defaultThemeIsDark())
     {
+        QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+
         setThemeInternal(m_darkTheme);
     }
 
     void ThemeManager::setThemeInternal(bool _darkTheme)
     {
+        m_darkTheme = _darkTheme;
+
         QFile file{ QString { ":/" } + getThemeName(_darkTheme) + "/style.qss" };
         file.open(QFile::ReadOnly | QFile::Text);
         qApp->setStyleSheet(file.readAll());
-
-        m_darkTheme = _darkTheme;
     }
 
     void ThemeManager::setTheme(bool _darkTheme)
@@ -49,8 +51,7 @@ namespace blokusUi
 
     QString ThemeManager::getResourceName(const QString& _iconName) const
     {
-        //TODO
-        return QString{ ":/icons/%1/%2" }.arg(getThemeName(m_darkTheme)).arg(_iconName);
+        return QString{ ":/icons/icons/%1/%2" }.arg(getThemeName(m_darkTheme)).arg(_iconName);
     }
 
     QPixmap ThemeManager::getPixmapResource(const QString& _iconName) const

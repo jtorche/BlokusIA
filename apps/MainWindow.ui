@@ -116,10 +116,6 @@
    </property>
   </action>
   <action name="m_actionQuit">
-   <property name="icon">
-    <iconset resource="resources/app.qrc">
-     <normaloff>:/Blokus/icons/quit.png</normaloff>:/Blokus/icons/quit.png</iconset>
-   </property>
    <property name="text">
     <string>&amp;Quit</string>
    </property>

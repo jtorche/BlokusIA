@@ -4,6 +4,13 @@
         <file>icons/english.png</file>
         <file>icons/french.png</file>
         <file>icons/qt.png</file>
-        <file>icons/quit.png</file>
+
+        <file>icons/dark/quit.png</file>
+        <file>icons/dark/dark.png</file>
+        <file>icons/dark/light.png</file>
+
+        <file>icons/light/quit.png</file>
+        <file>icons/light/dark.png</file>
+        <file>icons/light/light.png</file>
     </qresource>
 </RCC>
