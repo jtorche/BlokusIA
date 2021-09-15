@@ -109,17 +109,17 @@ namespace BlokusIA
 		Slot getSlotSafe(i32 _x, i32 _y) const;
 		void setSlot(u32 _x, u32 _y, Slot _slot);
 
-		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
+		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos, u32 * _adjacencyScore = nullptr) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
 
 		uvec2 getStartingPosition(Slot _player) const;
 
-		using PlayableSlots = std::array<ubyte2, MaxPlayableCorners>;
-		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result) const;
+		using PositionList = std::array<ubyte2, BoardSize*BoardSize>;
+		u32 computeValidSlotsForPlayer(Slot _player, PositionList& _result) const;
 
 		// Assuming _boardPos is a valid position from "computeValidSlotsForPlayer"
-		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>&, bool _isFirstMove) const;
-
+		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, bool _dontCheckCornerRule, 
+                                      std::array<ubyte2, Piece::MaxPlayableCorners>&, std::array<u32, Piece::MaxPlayableCorners> * _adjacencyScores = nullptr) const;
 
 		void print() const;
 

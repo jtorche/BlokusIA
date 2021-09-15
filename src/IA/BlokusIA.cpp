@@ -52,38 +52,48 @@ namespace BlokusIA
         return newGameState;
     }
 
+    void GameState::generateValidMoves(Slot _player, bool _ignoreCornerRule, 
+                                       const Board& _board, u32 _numSlots, const Board::PositionList& _slots, const std::bitset<BlokusGame::PiecesCount>& _remainingPieces, 
+                                       std::vector<Move>& _moves, std::vector<u32>* _adjacencyScores)
+    {
+        // reverse order to look at big pieces first (to improve sorting later)
+        for (auto it = s_allPieces.rbegin(); it != s_allPieces.rend(); ++it)
+        {
+            u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
+            if (_remainingPieces.test(piece))
+            {
+                for (const Piece& p : *it)
+                {
+                    for (u32 i = 0; i < _numSlots; ++i)
+                    {
+                        std::array<ubyte2, Piece::MaxPlayableCorners> pieceMoves;
+                        std::array<u32, Piece::MaxPlayableCorners> adjacencyScores;
+                        u32 numMoveForPiece = _board.getPiecePlayablePositions(_player, p, _slots[i], _ignoreCornerRule, pieceMoves, _adjacencyScores ? &adjacencyScores : nullptr);
+
+                        for (u32 j = 0; j < numMoveForPiece; ++j)
+                        {
+                            _moves.push_back({ p, piece, pieceMoves[j] });
+                            if (_adjacencyScores)
+                                _adjacencyScores->push_back(adjacencyScores[j]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	std::vector<Move> GameState::enumerateMoves(bool _sortByHeuristic) const
 	{
 		std::vector<Move> moves;
 		Slot playerToMove = Slot(u32(Slot::P0) + getPlayerTurn());
 
-		Board::PlayableSlots slots;
+		Board::PositionList slots;
 		u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
 
 		moves.reserve(m_remainingPieces[getPlayerTurn()].count() * numSlots);
 
-		// reverse order to look at big pieces first (to improve sorting later)
-		for (auto it = s_allPieces.rbegin() ;  it != s_allPieces.rend() ; ++it)
-		{
-			u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
-			if (m_remainingPieces[getPlayerTurn()].test(piece))
-			{
-				for (const Piece& p : *it)
-				{
-					for (u32 i = 0; i < numSlots; ++i)
-					{
-						std::array<ubyte2, Piece::MaxPlayableCorners> pieceMoves;
-						u32 numMoveForPiece = m_board.getPiecePlayablePositions(playerToMove, p, slots[i], pieceMoves, m_turn < 4);
-
-						for (u32 j = 0; j < numMoveForPiece; ++j)
-						{
-							moves.push_back({ p, piece, pieceMoves[j] });
-						}
-					}
-				}
-			}
-		}
+        generateValidMoves(playerToMove, m_turn < 4, m_board, numSlots, slots, m_remainingPieces[getPlayerTurn()], moves);
 
 		if (_sortByHeuristic)
 		{
@@ -163,10 +173,10 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     struct ExpandCluster
     {
-        ExpandCluster(Slot _player, const GameState& _state, bool _expandInCorner) 
-            : m_state{ _state }, m_player{ _player }, m_expandInCorner{ _expandInCorner } {}
+        ExpandCluster(Slot _player, const Board& _board, bool _expandInCorner)
+            : m_board{ _board }, m_player{ _player }, m_expandInCorner{ _expandInCorner } {}
 
-        const GameState& m_state;
+        const Board& m_board;
         Slot m_player;
         bool m_expandInCorner = false;
         ubyte m_clusters[Board::BoardSize][Board::BoardSize] = { {0} }; // 0 unexplored, -1 in queue, 1..n cluster index
@@ -190,13 +200,13 @@ namespace BlokusIA
             if (x < 0 || y < 0 || x >= Board::BoardSize || y >= Board::BoardSize)
                 return;
 
-            if (m_state.getBoard().getSlot(x, y) != Slot::Empty)
+            if (m_board.getSlot(x, y) != Slot::Empty)
                 return;
 
-            if (m_state.getBoard().getSlotSafe(x - 1, y) == m_player ||
-                m_state.getBoard().getSlotSafe(x, y - 1) == m_player || 
-                m_state.getBoard().getSlotSafe(x + 1, y) == m_player || 
-                m_state.getBoard().getSlotSafe(x, y + 1) == m_player)
+            if (m_board.getSlotSafe(x - 1, y) == m_player ||
+                m_board.getSlotSafe(x, y - 1) == m_player || 
+                m_board.getSlotSafe(x + 1, y) == m_player || 
+                m_board.getSlotSafe(x, y + 1) == m_player)
                 return;
 
             if (m_clusters[x][y] != 0)
@@ -235,7 +245,8 @@ namespace BlokusIA
 
             if (m_clusters[_pos.x][_pos.y] != 0)
             {
-                m_numPlayableSlotPerCluster[m_clusters[_pos.x][_pos.y] - 1]++;
+                u32 clusterIdx = std::min<u32>(m_clusters[_pos.x][_pos.y], ARRAY_SIZE(m_numPlayableSlotPerCluster)) - 1;
+                m_numPlayableSlotPerCluster[clusterIdx]++;
                 return;
             }
 
@@ -256,18 +267,116 @@ namespace BlokusIA
                 expandTo(x, y, m_clusterIndex);
             }
         }
+
+        void invalidateClusterPositions(const Move& _move)
+        {
+            auto invalidate = [this](int x, int y)
+            {
+                if (x >= 0 && x < Board::BoardSize && y >= 0 && y < Board::BoardSize)
+                    m_clusters[x][y] = 0;
+            };
+
+            for (u32 i = 0; i < _move.piece.getNumTiles(); ++i)
+            {
+                int x = int(Piece::getTileX(_move.piece.getTile(i)));
+                int y = int(Piece::getTileY(_move.piece.getTile(i)));
+                x += int(_move.position.x);
+                y += int(_move.position.y);
+
+                invalidate(x, y);
+                invalidate(x-1, y);
+                invalidate(x+1, y);
+                invalidate(x, y-1);
+                invalidate(x, y+1);
+            }
+        }
+
+        Board generateBoard(Slot _toFill) const
+        {
+            Board board;
+            for (u32 j = 0; j < Board::BoardSize; ++j)
+            {
+                for (u32 i = 0; i < Board::BoardSize; ++i)
+                {
+                    Slot s = m_clusters[i][j] != 0 ? Slot::Empty : _toFill;
+                    board.setSlot(i, j, s);
+                }
+            }
+            return board;
+        }
+
+        void printClusters() const
+        {
+            for (u32 j = 0; j < Board::BoardSize; ++j)
+            {
+                for (u32 i = 0; i < Board::BoardSize; ++i)
+                {
+                    std::cout << (u32)m_clusters[i][j] << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
+
+        bool isReachable(u32 x, u32 y) const 
+        {
+            return m_clusters[x][y] != 0;
+        }
     };
 
     //-------------------------------------------------------------------------------------------------
     float GameState::computeScoreUpperBound(Slot _player, BoardHeuristic) const
     {
-        ExpandCluster clusterExpander(_player , *this, true);
-        computeReachableSlots(_player, clusterExpander);
+# if 0 // too slow
+        // Simulate a "game" where we add each remaining piece of a player using the best fit strategy (no other player add pieces),
+        // We use the final result of the game as an upper bound of the score
+        std::bitset<BlokusGame::PiecesCount> remainingPieces = m_remainingPieces[u32(_player) - u32(Slot::P0)];
+        std::vector<Move> moves;
+        std::vector<u32> bestFitScores;
 
-        u32 potentialPlayableSlots = std::accumulate(clusterExpander.m_clusterSize, clusterExpander.m_clusterSize + clusterExpander.m_clusterIndex, u32(0));
-        std::cout << "Potential slot " << u32(_player) << " : " << potentialPlayableSlots << std::endl;
-        // + 1 to accomodate variation in the heuristic
-        return std::min(getPlayedPieceTiles(_player) + potentialPlayableSlots, s_totalPieceTileCount) + 1.0f;
+        ExpandCluster clusterExpander(_player, getBoard(), true);
+        computeReachableSlots(_player, clusterExpander);
+        
+        Board::PositionList positions = {};
+        u32 numPosition = 0;
+
+        auto fillListOfValidPositions = [&]()
+        {
+            numPosition = 0;
+            for (u32 i = 0; i < Board::BoardSize; ++i)
+            {
+                for (u32 j = 0; j < Board::BoardSize; ++j)
+                {
+                    if (clusterExpander.isReachable(i, j))
+                        positions[numPosition++] = { ubyte(i), ubyte(j) };
+                }
+            }
+        };
+
+        do
+        {
+            fillListOfValidPositions();
+
+            moves.clear();
+            bestFitScores.clear();
+            generateValidMoves(Slot::P0, true, clusterExpander.generateBoard(Slot::P1), numPosition, positions, remainingPieces, moves, &bestFitScores);
+            if (moves.size() > 0)
+            {
+                auto it = std::max_element(bestFitScores.begin(), bestFitScores.end());
+                const Move& bestFitMove = moves[std::distance(bestFitScores.begin(), it)];
+                remainingPieces.reset(bestFitMove.pieceIndex);
+
+                clusterExpander.invalidateClusterPositions(bestFitMove);
+            }
+        } while (moves.size() > 0 && remainingPieces.any());
+
+        // upperbound from unplayabe piece in remainingPieces
+        float score = 0;
+        for (u32 i = 0; i < BlokusGame::PiecesCount; ++i)
+            if (!remainingPieces.test(i))
+                score += s_allPieces[i].begin()->getNumTiles();
+
+        return score + 1.0f;
+#endif 
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -279,7 +388,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     void GameState::computeReachableSlots(Slot _player, ExpandCluster& _expander) const
     {
-        Board::PlayableSlots slots;
+        Board::PositionList slots;
         u32 numSlots = m_board.computeValidSlotsForPlayer(_player, slots);
 
         for (u32 i = 0; i < numSlots; ++i)
@@ -289,7 +398,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     float GameState::computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const
     {
-        ExpandCluster clusterExpander(_player , *this, false);
+        ExpandCluster clusterExpander(_player , getBoard(), false);
         computeReachableSlots(_player, clusterExpander);
 
         float numReachables = 0;
