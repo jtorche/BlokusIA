@@ -62,11 +62,16 @@ if (BUILD_UI)
             "${CMAKE_CURRENT_SOURCE_DIR}/themes/light/style.qrc"
             "${CMAKE_CURRENT_SOURCE_DIR}/i18n/translations.qrc")
         set(ui_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ui.h")
+        set(app_sources ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header} ${ui_resources})
 
-        add_executable(${PROJECT_NAME} ${ui_headers} ${ui_sources} ${ui_uis} ${ui_precompile_header} ${ui_resources})
-        # To avoid having a console when running GUI application
         if (WIN32)
+            set(app_icon_resource_windows "${CMAKE_CURRENT_SOURCE_DIR}/resources/app.rc")
+            add_executable(${PROJECT_NAME} ${app_sources} ${app_icon_resource_windows})
+
+            # To avoid having a console when running GUI application
             set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+        else()
+            add_executable(${PROJECT_NAME} ${app_sources})
         endif()
 
         # Add CAExcludePath to avoid warnings that comes from Qt external library

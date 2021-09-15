@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Blokus Game</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources/app.qrc">
+    <normaloff>:/icons/icons/blokus.png</normaloff>:/icons/icons/blokus.png</iconset>
+  </property>
   <widget class="QWidget" name="m_centralwidget"/>
   <widget class="QMenuBar" name="m_menuBar">
    <property name="geometry">
@@ -59,6 +63,10 @@
   </widget>
   <widget class="QStatusBar" name="m_statusBar"/>
   <action name="m_actionAbout">
+   <property name="icon">
+    <iconset resource="resources/app.qrc">
+     <normaloff>:/icons/icons/blokus.png</normaloff>:/icons/icons/blokus.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;About</string>
    </property>
@@ -66,7 +74,7 @@
   <action name="m_actionAboutQt">
    <property name="icon">
     <iconset resource="resources/app.qrc">
-     <normaloff>:/Blokus/icons/qt.png</normaloff>:/Blokus/icons/qt.png</iconset>
+     <normaloff>:/icons/icons/qt.png</normaloff>:/icons/icons/qt.png</iconset>
    </property>
    <property name="text">
     <string>About &amp;Qt</string>
@@ -89,7 +97,7 @@
    </property>
    <property name="icon">
     <iconset resource="resources/app.qrc">
-     <normaloff>:/Blokus/icons/english.png</normaloff>:/Blokus/icons/english.png</iconset>
+     <normaloff>:/icons/icons/english.png</normaloff>:/icons/icons/english.png</iconset>
    </property>
    <property name="text">
     <string>&amp;English</string>
@@ -101,7 +109,7 @@
    </property>
    <property name="icon">
     <iconset resource="resources/app.qrc">
-     <normaloff>:/Blokus/icons/french.png</normaloff>:/Blokus/icons/french.png</iconset>
+     <normaloff>:/icons/icons/french.png</normaloff>:/icons/icons/french.png</iconset>
    </property>
    <property name="text">
     <string>&amp;French</string>
