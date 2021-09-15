@@ -12,6 +12,8 @@
 #define DEBUG_ASSERT(cond) ((void)(cond))
 #endif
 
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(*x))
+
 namespace core
 {
     void handleAssert(int _line, const char* _file, const char* _msg);

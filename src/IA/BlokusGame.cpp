@@ -218,7 +218,7 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	bool Board::canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const
+	bool Board::canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos, u32* _adjacencyScore) const
 	{
 		DEBUG_ASSERT(_player != Slot::Empty);
 		DEBUG_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
@@ -240,14 +240,22 @@ namespace BlokusIA
 			// Implement the non contact rule with pieces of the same player
 			i32 iTileX = i32(tileX);
 			i32 iTileY = i32(tileY);
-			if (getSlotSafe(iTileX - 1, iTileY) == _player)
-				return false;
-			if (getSlotSafe(iTileX + 1, iTileY) == _player)
-				return false;
-			if (getSlotSafe(iTileX, iTileY - 1) == _player)
-				return false;
-			if (getSlotSafe(iTileX, iTileY + 1) == _player)
-				return false;
+
+            Slot s = getSlotSafe(iTileX - 1, iTileY);
+			if (s == _player) return false;
+            if (_adjacencyScore) _adjacencyScore += (s == Slot::Empty ? 0 : 1);
+
+            s = getSlotSafe(iTileX + 1, iTileY);
+            if (s == _player) return false;
+            if (_adjacencyScore) _adjacencyScore += (s == Slot::Empty ? 0 : 1);
+
+            s = getSlotSafe(iTileX, iTileY - 1);
+            if (s == _player) return false;
+            if (_adjacencyScore) _adjacencyScore += (s == Slot::Empty ? 0 : 1);
+
+            s = getSlotSafe(iTileX, iTileY + 1);
+            if (s == _player) return false;
+            if (_adjacencyScore) _adjacencyScore += (s == Slot::Empty ? 0 : 1);
 		}
 
 		return true;
@@ -325,20 +333,21 @@ namespace BlokusIA
 	}
 
 	//-------------------------------------------------------------------------------------------------
-	u32 Board::getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>& _outPositions, bool _isFirstMove) const
+	u32 Board::getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, bool _dontCheckCornerRule, 
+                                         std::array<ubyte2, Piece::MaxPlayableCorners>& _outPositions, std::array<u32, Piece::MaxPlayableCorners>* _adjacencyScores) const
 	{
 		DEBUG_ASSERT(_player != Slot::Empty);
-		DEBUG_ASSERT(_boardPos.x < BoardSize&& _boardPos.y < BoardSize);
+		DEBUG_ASSERT(_boardPos.x < BoardSize && _boardPos.y < BoardSize);
 
 		u32 numPosition = 0;
 		ivec2 iBoardPos = { int(_boardPos.x), int(_boardPos.y) };
 
 		bool compatibleCorner[4] = 
 		{ 
-			getSlotSafe(iBoardPos.x - 1, iBoardPos.y - 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x + 1, iBoardPos.y - 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x + 1, iBoardPos.y + 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x - 1, iBoardPos.y + 1) == _player || _isFirstMove
+			getSlotSafe(iBoardPos.x - 1, iBoardPos.y - 1) == _player || _dontCheckCornerRule,
+			getSlotSafe(iBoardPos.x + 1, iBoardPos.y - 1) == _player || _dontCheckCornerRule,
+			getSlotSafe(iBoardPos.x + 1, iBoardPos.y + 1) == _player || _dontCheckCornerRule,
+			getSlotSafe(iBoardPos.x - 1, iBoardPos.y + 1) == _player || _dontCheckCornerRule
 		};
 
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
@@ -358,8 +367,12 @@ namespace BlokusIA
 					ivec2 finalPos = iBoardPos - tilePos;
 					if (finalPos.x >= 0 && finalPos.y >= 0)
 					{
-						if (canAddPiece(_player, _piece, uvec2(u32(finalPos.x), u32(finalPos.y))))
+                        u32 adjacencyScore = 0;
+						if (canAddPiece(_player, _piece, uvec2(u32(finalPos.x), u32(finalPos.y)), _adjacencyScores ? &adjacencyScore : nullptr))
 						{
+                            if (_adjacencyScores)
+                                _adjacencyScores->operator[](numPosition) = adjacencyScore;
+
 							_outPositions[numPosition++] = { ubyte(finalPos.x), ubyte(finalPos.y) };
 							break;
 						}

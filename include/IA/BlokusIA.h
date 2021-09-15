@@ -51,6 +51,10 @@ namespace BlokusIA
 		float computeScoreUpperBound(Slot _player, BoardHeuristic) const;
         float computeScoreLowerBound(Slot _player, BoardHeuristic) const;
 
+        static void generateValidMoves(Slot _player, bool _ignoreCornerRule, const Board& _board,
+                                       u32 _numSlots, const Board::PlayableSlots& _slots, const std::bitset<BlokusGame::PiecesCount>& _remainingPieces, 
+                                       std::vector<Move>& _moves, std::vector<u32>* _adjacencyScores = nullptr);
+
 	private:
 		Board m_board;
 		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
