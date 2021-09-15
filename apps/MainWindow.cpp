@@ -4,6 +4,8 @@
 #include <QActionGroup>
 #include <QMessageBox>
 
+#include "themes/ThemeManager.h"
+
 namespace blokusUi
 {
     MainWindow::MainWindow(QWidget* _parent)
@@ -33,10 +35,20 @@ namespace blokusUi
 
     void MainWindow::setupActions()
     {
-        auto languagesGroup = new QActionGroup(this);
+        // Language
+        auto languagesGroup = new QActionGroup{ this };
         languagesGroup->addAction(m_ui->m_actionSystemLocale);
         languagesGroup->addAction(m_ui->m_actionEnglish);
         languagesGroup->addAction(m_ui->m_actionFrench);
+
+        // Theme
+        auto themesGroup = new QActionGroup{ this };
+        themesGroup->addAction(m_ui->m_actionDarkTheme);
+        themesGroup->addAction(m_ui->m_actionLightTheme);
+        QAction* themeToUse = THEME_MANAGER.isDarkTheme()
+            ? m_ui->m_actionDarkTheme
+            : m_ui->m_actionLightTheme;
+        themeToUse->setChecked(true);
     }
 
     void MainWindow::setupConnections()
@@ -48,6 +60,10 @@ namespace blokusUi
         connect(m_ui->m_actionSystemLocale, SIGNAL(triggered()), this, SLOT(updateLanguage()));
         connect(m_ui->m_actionEnglish, SIGNAL(triggered()), this, SLOT(updateLanguage()));
         connect(m_ui->m_actionFrench, SIGNAL(triggered()), this, SLOT(updateLanguage()));
+
+        // Theme
+        connect(m_ui->m_actionDarkTheme, SIGNAL(triggered()), this, SLOT(updateTheme()));
+        connect(m_ui->m_actionLightTheme, SIGNAL(triggered()), this, SLOT(updateTheme()));
 
         // About
         connect(m_ui->m_actionAbout, SIGNAL(triggered()), this, SLOT(about()));
@@ -76,6 +92,11 @@ namespace blokusUi
 
         // Load translation file based on selected language
         setupTranslator(locale);
+    }
+
+    void MainWindow::updateTheme()
+    {
+        THEME_MANAGER.setTheme(m_ui->m_actionDarkTheme->isChecked());
     }
 
     void MainWindow::about()

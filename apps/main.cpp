@@ -9,7 +9,7 @@ int main(int _argc, char* _argv[])
     app.setApplicationName("Blokus");
     app.setApplicationVersion("1.0.0");
 
-    blokusUi::ThemeManager::getInstance();
+    THEME_MANAGER;
 
     blokusUi::MainWindow window;
     window.show();

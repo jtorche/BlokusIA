@@ -45,8 +45,16 @@
     </property>
     <addaction name="m_actionQuit"/>
    </widget>
+   <widget class="QMenu" name="m_themeMenu">
+    <property name="title">
+     <string>&amp;Theme</string>
+    </property>
+    <addaction name="m_actionDarkTheme"/>
+    <addaction name="m_actionLightTheme"/>
+   </widget>
    <addaction name="m_gameMenu"/>
    <addaction name="m_languagesMenu"/>
+   <addaction name="m_themeMenu"/>
    <addaction name="m_helpMenu"/>
   </widget>
   <widget class="QStatusBar" name="m_statusBar"/>
@@ -106,6 +114,22 @@
    </property>
    <property name="text">
     <string>&amp;Quit</string>
+   </property>
+  </action>
+  <action name="m_actionDarkTheme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Dark</string>
+   </property>
+  </action>
+  <action name="m_actionLightTheme">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Light</string>
    </property>
   </action>
  </widget>

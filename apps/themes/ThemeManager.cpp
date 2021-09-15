@@ -19,9 +19,9 @@ namespace blokusUi
         return windowsIsInDarkTheme();
     }
 
-    static char* getThemeName(bool darkTheme)
+    static const char* getThemeName(bool _darkTheme)
     {
-        return darkTheme ? "dark" : "light";
+        return _darkTheme ? "dark" : "light";
     }
 
     ThemeManager::ThemeManager()
@@ -30,30 +30,30 @@ namespace blokusUi
         setThemeInternal(m_darkTheme);
     }
 
-    void ThemeManager::setThemeInternal(bool darkTheme)
+    void ThemeManager::setThemeInternal(bool _darkTheme)
     {
-        QFile file{ QString { ":/" } + getThemeName(darkTheme) + "/style.qss" };
+        QFile file{ QString { ":/" } + getThemeName(_darkTheme) + "/style.qss" };
         file.open(QFile::ReadOnly | QFile::Text);
         qApp->setStyleSheet(file.readAll());
 
-        m_darkTheme = darkTheme;
+        m_darkTheme = _darkTheme;
     }
 
-    void ThemeManager::setTheme(bool darkTheme)
+    void ThemeManager::setTheme(bool _darkTheme)
     {
-        if (m_darkTheme == darkTheme)
+        if (m_darkTheme == _darkTheme)
             return;
 
-        setThemeInternal(darkTheme);
+        setThemeInternal(_darkTheme);
     }
 
-    QString ThemeManager::getResourceName(const QString& _iconName)
+    QString ThemeManager::getResourceName(const QString& _iconName) const
     {
         //TODO
         return QString{ ":/icons/%1/%2" }.arg(getThemeName(m_darkTheme)).arg(_iconName);
     }
 
-    QPixmap ThemeManager::getPixmapResource(const QString& _iconName)
+    QPixmap ThemeManager::getPixmapResource(const QString& _iconName) const
     {
         QString resourceName = getResourceName(_iconName);
         QPixmap pixmap = QPixmap{ resourceName };
@@ -61,7 +61,7 @@ namespace blokusUi
         return pixmap;
     }
 
-    QIcon ThemeManager::getIconResource(const QString& _iconName)
+    QIcon ThemeManager::getIconResource(const QString& _iconName) const
     {
         QIcon icon;
         QPixmap pixmap = getPixmapResource(_iconName);

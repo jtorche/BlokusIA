@@ -27,6 +27,7 @@ namespace blokusUi
 
     private slots:
         void updateLanguage();
+        void updateTheme();
         void about();
 
     private:

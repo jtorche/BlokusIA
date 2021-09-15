@@ -1,9 +1,13 @@
+#pragma once
+
 class QString;
 class QPixmap;
 class QIcon;
 
 namespace blokusUi
 {
+    #define THEME_MANAGER blokusUi::ThemeManager::getInstance()
+
 	class ThemeManager
 	{
 	private:
@@ -17,14 +21,15 @@ namespace blokusUi
 		}
 
 	private:
-		void setThemeInternal(bool darkTheme);
+		void setThemeInternal(bool _darkTheme);
 	
 	public:
-		void setTheme(bool darkTheme);
+        bool isDarkTheme() const { return m_darkTheme; }
+        void setTheme(bool _darkTheme);
 
-        QString getResourceName(const QString& _iconName);
-        QPixmap getPixmapResource(const QString& _iconName);
-		QIcon getIconResource(const QString& _iconName);
+        QString getResourceName(const QString& _iconName) const;
+        QPixmap getPixmapResource(const QString& _iconName) const;
+        QIcon getIconResource(const QString& _iconName) const;
 
 	private:
 		bool m_darkTheme;
