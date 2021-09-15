@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QTranslator>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,16 +21,14 @@ namespace blokusUi
 
     private:
         void setupActions();
-        void setupConnections();
-        void setupTranslator(const QLocale& _locale);
+        void setupConnections() const;
 
     private slots:
-        void updateLanguage();
-        void updateTheme();
+        void updateLanguage() const;
+        void updateTheme() const;
         void about();
 
     private:
         Ui::MainWindow* m_ui;
-        QTranslator m_translator;
     };
 }

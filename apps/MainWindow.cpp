@@ -4,6 +4,7 @@
 #include <QActionGroup>
 #include <QMessageBox>
 
+#include "i18n/TranslationManager.h"
 #include "themes/ThemeManager.h"
 
 namespace blokusUi
@@ -12,8 +13,6 @@ namespace blokusUi
         : QMainWindow(_parent)
         , m_ui(new Ui::MainWindow)
     {
-        setupTranslator(QLocale{});
-
         m_ui->setupUi(this);
 
         setupActions();
@@ -51,7 +50,7 @@ namespace blokusUi
         themeToUse->setChecked(true);
     }
 
-    void MainWindow::setupConnections()
+    void MainWindow::setupConnections() const
     {
         // Game
         connect(m_ui->m_actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
@@ -70,16 +69,8 @@ namespace blokusUi
         connect(m_ui->m_actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     }
 
-    void MainWindow::setupTranslator(const QLocale& _locale)
+    void MainWindow::updateLanguage() const
     {
-        m_translator.load(_locale, "blokus", "_", ":/translations");
-        qApp->installTranslator(&m_translator);
-    }
-
-    void MainWindow::updateLanguage()
-    {
-        qApp->removeTranslator(&m_translator);
-
         QLocale locale;
         if (m_ui->m_actionEnglish->isChecked())
         {
@@ -90,11 +81,10 @@ namespace blokusUi
             locale = QLocale::Language::French;
         }
 
-        // Load translation file based on selected language
-        setupTranslator(locale);
+        TRANSLATION_MANAGER.setLanguage(locale);
     }
 
-    void MainWindow::updateTheme()
+    void MainWindow::updateTheme() const
     {
         THEME_MANAGER.setTheme(m_ui->m_actionDarkTheme->isChecked());
     }
