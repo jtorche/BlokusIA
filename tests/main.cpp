@@ -16,32 +16,14 @@ int main()
 	runTest();
 
 	GameState gameState;
-    BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpace;
-	FourPlayerMaxN_IA IA(3, heuristic);
+	FourPlayerMaxN_IA IA(3, BoardHeuristic::ReachableEmptySpace);
 	u32 numTurn = 0;
 	while(numTurn < 20)
 	{
 		Move move = IA.findBestMove(gameState);
 		if (move.isValid())
 			gameState = gameState.play(move);
-        else
-        {
-            gameState = gameState.skip();
-            std::cout << "!! Player 0 has lost." << std::endl;
-            break;
-        }
-
-        for (u32 i = 0; i < 3; ++i)
-        {
-            auto moves = gameState.enumerateMoves(true);
-            if (moves.empty())
-            {
-                gameState = gameState.skip();
-                std::cout << "!! Player " << i + 2 << " has lost." << std::endl;
-            }
-            else
-                gameState = gameState.play(moves[0]);
-        }
+		else break;
 
 		numTurn++;
 
