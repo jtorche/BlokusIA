@@ -5,6 +5,10 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	std::array<Piece, BlokusGame::PiecesCount> Helpers::getAllPieces()
 	{
+		//  ---> x
+		//  |
+		// \ /
+		//  y
 		return
 		{
 			// 1
@@ -32,7 +36,7 @@ namespace BlokusIA
 			// 6
 			// xxx
 			//  x
-			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,1), Piece::build(1,1) },
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,1) },
 
 			// 7
 			// xxxx
@@ -46,7 +50,7 @@ namespace BlokusIA
 			// 9
 			// xx
 			//  xx  
-			{ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(1,2) },
+			{ Piece::build(0,0), Piece::build(1,0), Piece::build(1,1), Piece::build(2,1) },
 
 			// 10
 			// xxxxx
@@ -78,7 +82,7 @@ namespace BlokusIA
 			// x
 			// xx
 			// xx
-			{ Piece::build(0,0), Piece::build(1,0), Piece::build(2,0), Piece::build(1,0), Piece::build(1,1) },
+			{ Piece::build(0,0), Piece::build(0,1), Piece::build(0,2), Piece::build(1,1), Piece::build(1,2) },
 
 			// 16
 			// xx
