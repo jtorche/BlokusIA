@@ -3,6 +3,7 @@
 
 #include "IA/FourPlayerMaxN_IA.h"
 #include "IA/ParanoidFourPlayer_IA.h"
+#include "IA/IterativeIA.h"
 
 void runTest();
 
@@ -16,13 +17,27 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
 
-    ParanoidFourPlayer_IA IA(4, heuristic);
+    IterativeIA<FourPlayerMaxN_IA> IA;
     u32 numTurn = 0;
-    while (numTurn < 20)
+    while (1)
     {
-        Move move = IA.findBestMove(gameState);
+        IA.startComputation(heuristic, gameState);
+
+        u32 thinking = 1;
+        while (thinking)
+        {
+            std::cout << "\nContinue ? ";
+            std::cin >> thinking;
+
+            std::cout << "Cur depth:" << IA.getBestMove().second << std::endl;
+            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec" << std::endl;
+        }
+
+        IA.stopComputation();
+
+        Move move = IA.getBestMove().first;
         if (move.isValid())
             gameState = gameState.play(move);
         else
@@ -47,16 +62,9 @@ int main()
 		numTurn++;
 
 		gameState.getBoard().print();
-        std::cout << "Num H evaluated: " << IA.m_numHeuristicEvaluated << ", "<< IA.nodePerSecond() << " node/sec" << std::endl;
-        //for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
-        //{
-        //    float upperBound = gameState.computeScoreUpperBound(s, heuristic);
-        //    std::cout << u32(s) << ":" << gameState.computeScoreLowerBound(s, heuristic) << " < "
-        //        << gameState.computeBoardScore(s, heuristic) << " < "
-        //        << upperBound << std::endl;
-        //}
 
-        system("pause");
+        for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
+            std::cout << u32(s) << ":" << gameState.computeBoardScore(s, heuristic) << std::endl;
 	}
 	
 	std::cout << "NumTurn " << numTurn << "\n";

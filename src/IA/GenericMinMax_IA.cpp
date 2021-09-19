@@ -6,21 +6,12 @@ namespace BlokusIA
 {
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-	size_t GenericMinMax_IA<Strategy>::maxMoveToLookAt(const GameState& _gameState) const
-	{
-		if (_gameState.getTurnCount() < 16)
-			return 8;
-		else
-			return 16;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-    template<typename Strategy>
 	Move GenericMinMax_IA<Strategy>::findBestMove(const GameState& _gameState)
 	{
         start();
 
 		auto moves = _gameState.enumerateMoves(true);
+
 		moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
 
 		if (moves.empty())
@@ -61,7 +52,7 @@ namespace BlokusIA
 
         bool isMaxPlayerTurn = Strategy::isMaxPlayerTurn(_maxPlayer, _gameState);
 
-		if (_depth >= m_maxDepth)
+		if (_depth >= m_maxDepth || m_stopIA)
 			return computeScore(_maxPlayer, _gameState);
 
 		auto moves = _gameState.enumerateMoves(true);

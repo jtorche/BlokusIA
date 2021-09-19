@@ -6,7 +6,7 @@ namespace BlokusIA
 {
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-	class GenericMinMax_IA : public IAStats
+	class GenericMinMax_IA : public BaseIA
 	{
 	public:
         GenericMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles)
@@ -21,8 +21,6 @@ namespace BlokusIA
             m_numHeuristicEvaluated++;
             return Strategy::computeScore(_maxPlayer, m_heuristic, _gameState);
 		}
-
-		size_t maxMoveToLookAt(const GameState& _gameState) const;
 
 	private:
 		float evalPositionRec(Slot _maxPlayer, const GameState& _gameState, u32 _depth, vec2 _a_b);

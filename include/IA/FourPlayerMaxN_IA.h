@@ -4,9 +4,8 @@
 
 namespace BlokusIA
 {
-    // TODO: https://www.aaai.org/Papers/AAAI/2000/AAAI00-031.pdf
     //-------------------------------------------------------------------------------------------------
-    class FourPlayerMaxN_IA : public IAStats
+    class FourPlayerMaxN_IA : public BaseIA
     {
     public:
         using Score = std::array<float, 4>;
@@ -25,8 +24,6 @@ namespace BlokusIA
                      _gameState.computeBoardScore(Slot::P2, m_heuristic),
                      _gameState.computeBoardScore(Slot::P3, m_heuristic) };
         }
-
-        size_t maxMoveToLookAt(const GameState& _gameState) const;
 
     private:
         Score evalPositionRec(const GameState& _gameState, u32 _depth);

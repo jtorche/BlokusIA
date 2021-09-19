@@ -31,6 +31,7 @@ namespace BlokusIA
         NumberOfMoves,
         ReachableEmptySpace,
         ReachableEmptySpaceWeighted,
+        ReachableEmptySpaceWeighted2,
     };
 
 	//-------------------------------------------------------------------------------------------------
@@ -60,13 +61,15 @@ namespace BlokusIA
 		u32 m_turn = 0;
 
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
-        float computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const;
+        float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
         u32 getPlayedPieceTiles(Slot _player) const;
 	};
 
     //-------------------------------------------------------------------------------------------------
-    struct IAStats
+    struct BaseIA
     {
+        std::atomic<bool> m_stopIA = false;
+
         std::atomic<u32> m_numNodesExplored = 0;
         std::atomic<u32> m_numHeuristicEvaluated = 0;
 
@@ -77,5 +80,6 @@ namespace BlokusIA
         void stop();
 
         float nodePerSecond() const;
+        size_t maxMoveToLookAt(const GameState& _state) const;
     };
 }

@@ -7,6 +7,7 @@ namespace BlokusIA
     {
         start();
         auto moves = _gameState.enumerateMoves(true);
+
         moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
 
         if (moves.empty())
@@ -33,17 +34,11 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    size_t FourPlayerMaxN_IA::maxMoveToLookAt(const GameState&) const
-    {
-        return 16;
-    }
-
-    //-------------------------------------------------------------------------------------------------
     FourPlayerMaxN_IA::Score FourPlayerMaxN_IA::evalPositionRec(const GameState& _gameState, u32 _depth)
     {
         m_numNodesExplored++;
 
-        if (_depth >= m_maxDepth)
+        if (_depth >= m_maxDepth || m_stopIA)
             return computeScore(_gameState);
 
         auto moves = _gameState.enumerateMoves(true);

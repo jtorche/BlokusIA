@@ -17,6 +17,7 @@ namespace BlokusIA
         {
             s_totalPieceTileCount += _pieces.begin()->getNumTiles();
         }
+        srand((u32)time(nullptr));
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -122,8 +123,7 @@ namespace BlokusIA
 
 		DEBUG_ASSERT(closestDistToCenter <= 1);
 
-		return _move.piece.getNumTiles() * 10.0f +
-			   _move.piece.getNumCorners() +
+		return _move.piece.getNumTiles() +
 			   1.f - closestDistToCenter;
 	}
 
@@ -153,9 +153,18 @@ namespace BlokusIA
             score += (numMove / (numMove + 1));
         }
         else if (_heuristicType == BoardHeuristic::ReachableEmptySpace ||
-                 _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted)
+                 _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted || 
+                 _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted2)
         {
-            score += computeFreeSpaceHeuristic(_player, _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted);
+            float powFactor = 0;
+            switch (_heuristicType)
+            {
+            case BoardHeuristic::ReachableEmptySpaceWeighted:
+                powFactor = 1; break;
+            case BoardHeuristic::ReachableEmptySpaceWeighted2:
+                powFactor = 2; break;
+            }
+            score += computeFreeSpaceHeuristic(_player, powFactor);
         }
 
 		return score;
@@ -287,7 +296,7 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    float GameState::computeFreeSpaceHeuristic(Slot _player, bool _weightCluster) const
+    float GameState::computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const
     {
         ExpandCluster clusterExpander(_player , *this, false);
         computeReachableSlots(_player, clusterExpander);
@@ -297,10 +306,8 @@ namespace BlokusIA
         {
             if (clusterExpander.m_clusterSize[i] == 0)
                 break;
-            float weight = 1;
-            if (_weightCluster)
-                weight = float(clusterExpander.m_numPlayableSlotPerCluster[i]) / (clusterExpander.m_numPlayableSlotPerCluster[i] + 1);
 
+            float weight = powf(float(clusterExpander.m_numPlayableSlotPerCluster[i]) / (clusterExpander.m_numPlayableSlotPerCluster[i] + 1), _weightCluster);
             numReachables += clusterExpander.m_clusterSize[i] * weight;
         }
 
@@ -308,20 +315,29 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    void IAStats::start()
+    size_t BaseIA::maxMoveToLookAt(const GameState& _state) const
+    {
+        if (_state.getTurnCount() < 16)
+            return 4;
+        else
+            return 16;
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    void BaseIA::start()
     {
         m_numHeuristicEvaluated = 0;
         m_numNodesExplored = 0;
         m_start = std::chrono::steady_clock::now();
     }
 
-    void IAStats::stop()
+    void BaseIA::stop()
     {
         std::chrono::duration<float> diff = std::chrono::steady_clock::now() - m_start;
         m_timeInSecond = diff.count();
     }
 
-    float IAStats::nodePerSecond() const
+    float BaseIA::nodePerSecond() const
     {
         return m_numNodesExplored / m_timeInSecond;
     }
