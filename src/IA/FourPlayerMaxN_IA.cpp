@@ -12,15 +12,22 @@ namespace BlokusIA
         if (moves.empty())
             return {};
 
-        std::vector<float> scores(moves.size());
-        std::transform(moves.begin(), moves.end(), scores.begin(),
-            [&](const Move& move) -> float
+        std::vector<std::future<float>> asyncScores(moves.size());
+        std::transform(moves.begin(), moves.end(), asyncScores.begin(),
+            [&](const Move& move) -> std::future<float>
         {
-            return evalPositionRec(_gameState.play(move), 0)[_gameState.getPlayerTurn()];
+            return s_threadPool.submit([&]() -> float { return evalPositionRec(_gameState.play(move), 0)[_gameState.getPlayerTurn()]; });
+        });
+
+        std::vector<float> scores(asyncScores.size());
+        std::transform(asyncScores.begin(), asyncScores.end(), scores.begin(),
+            [&](std::future<float>& _score)
+        {
+            return _score.get();
         });
 
         auto best = std::max_element(scores.begin(), scores.end());
-
+        
         stop();
         return moves[std::distance(scores.begin(), best)];
     }

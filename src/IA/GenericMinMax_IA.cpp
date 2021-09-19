@@ -26,15 +26,26 @@ namespace BlokusIA
 		if (moves.empty())
 			return {};
 
-		std::vector<float> scores(moves.size());
-		float b = std::numeric_limits<float>::max();
-		std::transform(moves.begin(), moves.end(), scores.begin(),
-			[&](const Move& move) -> float
-			{
-				float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move), 0, { -std::numeric_limits<float>::max(), b });
-				b = std::min(b, score);
-				return score;
-			});
+        std::vector<std::future<float>> asyncScores(moves.size());
+        std::atomic<float> b = std::numeric_limits<float>::max();
+
+        std::transform(moves.begin(), moves.end(), asyncScores.begin(),
+            [&](const Move& move) -> std::future<float>
+        {
+            return s_threadPool.submit([&]() -> float 
+            { 
+                float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move), 0, { -std::numeric_limits<float>::max(), b });
+                b.store(std::min(b.load(), score));
+                return score;
+            });
+        });
+
+        std::vector<float> scores(asyncScores.size());
+        std::transform(asyncScores.begin(), asyncScores.end(), scores.begin(),
+            [&](std::future<float>& _score)
+        {
+            return _score.get();
+        });
 		
 		auto best = std::max_element(scores.begin(), scores.end());
 
@@ -55,32 +66,39 @@ namespace BlokusIA
 
 		auto moves = _gameState.enumerateMoves(true);
 
-		// The "maxPlayer" supposes the opponent minimize his score, reverse for the "minPlayer"
-		float score = isMaxPlayerTurn ? std::numeric_limits<float>::max() : -std::numeric_limits<float>::max();
+        if (moves.empty())
+        {
+            return evalPositionRec(_maxPlayer, _gameState.skip(), _depth + 1, _a_b);
+        }
+        else
+        {
+            // The "maxPlayer" supposes the opponent minimize his score, reverse for the "minPlayer"
+            float score = isMaxPlayerTurn ? std::numeric_limits<float>::max() : -std::numeric_limits<float>::max();
 
-		auto minmax = [isMaxPlayerTurn](float s1, float s2)
-		{
-			return isMaxPlayerTurn ? std::min(s1, s2) : std::max(s1, s2);
-		};
+            auto minmax = [isMaxPlayerTurn](float s1, float s2)
+            {
+                return isMaxPlayerTurn ? std::min(s1, s2) : std::max(s1, s2);
+            };
 
-		for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
-		{
-			score = minmax(evalPositionRec(_maxPlayer, _gameState.play(moves[i]), _depth + 1, _a_b), score);
-			if (isMaxPlayerTurn)
-			{
-				if (score <= _a_b.x)
-					return score;
-				_a_b.y = std::min(_a_b.y, score);
-			}
-			else
-			{
-				if (score >= _a_b.y)
-					return score;
-				_a_b.x = std::max(_a_b.x, score);
-			}
-		}
+            for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
+            {
+                score = minmax(evalPositionRec(_maxPlayer, _gameState.play(moves[i]), _depth + 1, _a_b), score);
+                if (isMaxPlayerTurn)
+                {
+                    if (score <= _a_b.x)
+                        return score;
+                    _a_b.y = std::min(_a_b.y, score);
+                }
+                else
+                {
+                    if (score >= _a_b.y)
+                        return score;
+                    _a_b.x = std::max(_a_b.x, score);
+                }
+            }
 
-		return score;
+            return score;
+        }
 	}
 
     template class GenericMinMax_IA<TwoPlayerMinMaxStrategy>;

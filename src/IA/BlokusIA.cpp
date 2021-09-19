@@ -6,6 +6,7 @@ namespace BlokusIA
 {
 	PieceSymetries s_allPieces = {};
     u32 s_totalPieceTileCount = 0;
+    thread_pool s_threadPool;
 
 	//-------------------------------------------------------------------------------------------------
 	void initBlokusIA()
@@ -265,7 +266,6 @@ namespace BlokusIA
         computeReachableSlots(_player, clusterExpander);
 
         u32 potentialPlayableSlots = std::accumulate(clusterExpander.m_clusterSize, clusterExpander.m_clusterSize + clusterExpander.m_clusterIndex, u32(0));
-        std::cout << "Potential slot " << u32(_player) << " : " << potentialPlayableSlots << std::endl;
         // + 1 to accomodate variation in the heuristic
         return std::min(getPlayedPieceTiles(_player) + potentialPlayableSlots, s_totalPieceTileCount) + 1.0f;
     }

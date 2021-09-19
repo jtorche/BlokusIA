@@ -16,9 +16,9 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpace;
+    const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
 
-    FourPlayerMaxN_IA IA(3, heuristic);
+    ParanoidFourPlayer_IA IA(4, heuristic);
     u32 numTurn = 0;
     while (numTurn < 20)
     {
@@ -28,17 +28,17 @@ int main()
         else
         {
             gameState = gameState.skip();
-            std::cout << "!! Player 0 has lost." << std::endl;
+            std::cout << "!! Player 1 has lost." << std::endl;
             break;
         }
 
-        for (u32 i = 0; i < 3; ++i)
+        for (u32 i = 1; i < 4; ++i)
         {
             auto moves = gameState.enumerateMoves(true);
             if (moves.empty())
             {
                 gameState = gameState.skip();
-                std::cout << "!! Player " << i + 2 << " has lost." << std::endl;
+                std::cout << "!! Player " << i + 1 << " has lost." << std::endl;
             }
             else
                 gameState = gameState.play(moves[0]);
@@ -48,13 +48,13 @@ int main()
 
 		gameState.getBoard().print();
         std::cout << "Num H evaluated: " << IA.m_numHeuristicEvaluated << ", "<< IA.nodePerSecond() << " node/sec" << std::endl;
-        for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
-        {
-            float upperBound = gameState.computeScoreUpperBound(s, heuristic);
-            std::cout << u32(s) << ":" << gameState.computeScoreLowerBound(s, heuristic) << " < "
-                << gameState.computeBoardScore(s, heuristic) << " < "
-                << upperBound << std::endl;
-        }
+        //for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
+        //{
+        //    float upperBound = gameState.computeScoreUpperBound(s, heuristic);
+        //    std::cout << u32(s) << ":" << gameState.computeScoreLowerBound(s, heuristic) << " < "
+        //        << gameState.computeBoardScore(s, heuristic) << " < "
+        //        << upperBound << std::endl;
+        //}
 
         system("pause");
 	}

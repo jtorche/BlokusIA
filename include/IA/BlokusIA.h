@@ -2,14 +2,17 @@
 
 #include <bitset>
 #include <chrono>
+#include <atomic>
 
 #include "BlokusGame.h"
 #include "BlokusGameHelpers.h"
+#include "Core/thread_pool.h"
 
 namespace BlokusIA
 {
 	extern PieceSymetries s_allPieces;
     extern u32 s_totalPieceTileCount;
+    extern thread_pool s_threadPool;
 	void initBlokusIA();
 
 	//-------------------------------------------------------------------------------------------------
@@ -64,8 +67,8 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     struct IAStats
     {
-        u32 m_numNodesExplored = 0;
-        u32 m_numHeuristicEvaluated = 0;
+        std::atomic<u32> m_numNodesExplored = 0;
+        std::atomic<u32> m_numHeuristicEvaluated = 0;
 
         std::chrono::steady_clock::time_point m_start;
         float m_timeInSecond = 0;
