@@ -537,7 +537,7 @@ namespace ska
 
             iterator find(const FindKey& _key)
             {
-                size_t index = m_hash_policy.index_for_hash(hash_object(_key), num_slots_minus_one);
+                size_t index = m_hash_policy.index_for_hash(hash_object(_key), m_num_slots_minus_one);
                 EntryPointer it = m_entries + ptrdiff_t(index);
                 for (int8_t distance = 0; it->distance_from_desired >= distance; ++distance, ++it)
                 {
