@@ -7,7 +7,7 @@
 #include <QMessageBox>
 
 #include "i18n/TranslationManager.h"
-#include "themes/ThemeManager.h"
+#include "theme/ThemeManager.h"
 
 #include "IA/BlokusGameHelpers.h"
 

@@ -2,7 +2,7 @@
 
 #include <QPainter>
 
-#include "themes/ThemeManager.h"
+#include "theme/ThemeManager.h"
 
 namespace blokusUi
 {
