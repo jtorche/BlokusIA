@@ -2,10 +2,16 @@
 #include "./ui_MainWindow.h"
 
 #include <QActionGroup>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QMessageBox>
 
 #include "i18n/TranslationManager.h"
 #include "themes/ThemeManager.h"
+
+#include "IA/BlokusGameHelpers.h"
+
+#include "game/Piece.h"
 
 namespace blokusUi
 {
@@ -17,6 +23,43 @@ namespace blokusUi
 
         setupActions();
         setupConnections();
+
+        auto view = new QGraphicsView(m_ui->m_centralwidget);
+        view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        
+        view->setFixedSize(1200, 1000);
+        auto scene = new QGraphicsScene(view);
+        scene->setSceneRect(0, 0, 1200, 1000);
+        view->setScene(scene);
+        setGeometry(0, 0, 1200, 1200);
+        u32 x = 10;
+        u32 y = 10;
+        auto pieces = BlokusIA::Helpers::getAllPieces();
+        BlokusIA::Slot slot = BlokusIA::Slot::P0;
+        for (const auto& p : pieces)
+        {
+            auto piece = new Piece(p, slot);
+            
+            if (slot == BlokusIA::Slot::P0)
+                slot = BlokusIA::Slot::P1;
+            else if (slot == BlokusIA::Slot::P1)
+                slot = BlokusIA::Slot::P2;
+            else if (slot == BlokusIA::Slot::P2)
+                slot = BlokusIA::Slot::P3;
+            else if (slot == BlokusIA::Slot::P3)
+                slot = BlokusIA::Slot::P0;
+            
+            piece->setPos(x, y);
+            scene->addItem(piece);
+
+            x += 210;
+            if (x + 210 > 1200)
+            {
+                y += 160;
+                x = 10;
+            }
+        }
     }
 
     MainWindow::~MainWindow()
