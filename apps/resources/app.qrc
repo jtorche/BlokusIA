@@ -13,4 +13,9 @@
         <file>icons/light/dark.png</file>
         <file>icons/light/light.png</file>
     </qresource>
+    <qresource prefix="/colors">
+        <file>dark/colors.xml</file>
+
+        <file>light/colors.xml</file>
+    </qresource>
 </RCC>

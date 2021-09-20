@@ -6,6 +6,8 @@
 #include <QPainter>
 #include <QSettings>
 
+#include "utils/XmlConfigReader.h"
+
 namespace blokusUi
 {
     static bool windowsIsInDarkTheme()
@@ -36,9 +38,20 @@ namespace blokusUi
     {
         m_darkTheme = _darkTheme;
 
-        QFile file{ QString { ":/" } + getThemeName(_darkTheme) + "/style.qss" };
+        const char* themeName = getThemeName(_darkTheme);
+        // Load application style
+        QFile file{ QString { ":/" } + themeName + "/style.qss" };
         file.open(QFile::ReadOnly | QFile::Text);
         qApp->setStyleSheet(file.readAll());
+
+        // Load theme colors
+        if (m_colors.find(themeName) == m_colors.cend())
+        {
+            auto config = XmlConfigReader::loadConfiguration(
+                QString{ ":/colors/%1/colors.xml" }.arg(themeName).toStdString(),
+                "color");
+            m_colors[themeName] = config;
+        }
     }
 
     void ThemeManager::setTheme(bool _darkTheme)
@@ -49,6 +62,16 @@ namespace blokusUi
         setThemeInternal(_darkTheme);
     }
 
+    QColor ThemeManager::getColor(const QString& _colorName) const
+    {
+        Configuration colorsConfig = m_colors.at(getThemeName(m_darkTheme));
+        auto colorIt = colorsConfig.find(_colorName.toStdString());
+        if (colorIt == colorsConfig.cend())
+            return {};
+
+        return { colorIt->second.c_str() };
+    }
+
     QString ThemeManager::getResourceName(const QString& _iconName) const
     {
         return QString{ ":/icons/icons/%1/%2" }.arg(getThemeName(m_darkTheme)).arg(_iconName);
@@ -57,7 +80,7 @@ namespace blokusUi
     QPixmap ThemeManager::getPixmapResource(const QString& _iconName) const
     {
         QString resourceName = getResourceName(_iconName);
-        QPixmap pixmap = QPixmap{ resourceName };
+        QPixmap pixmap{ resourceName };
         DEBUG_ASSERT(!pixmap.isNull());
         return pixmap;
     }
@@ -65,7 +88,7 @@ namespace blokusUi
     QIcon ThemeManager::getIconResource(const QString& _iconName) const
     {
         QIcon icon;
-        QPixmap pixmap = getPixmapResource(_iconName);
+        QPixmap pixmap{ getPixmapResource(_iconName) };
         icon.addPixmap(pixmap);
         if (m_darkTheme)
         {
