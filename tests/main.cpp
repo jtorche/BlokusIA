@@ -4,6 +4,7 @@
 #include "IA/FourPlayerMaxN_IA.h"
 #include "IA/ParanoidFourPlayer_IA.h"
 #include "IA/IterativeIA.h"
+#include "IA/Cache.h"
 
 void runTest();
 
@@ -17,7 +18,7 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceOnly;
 
     IterativeIA<FourPlayerMaxN_IA> IA;
     u32 numTurn = 0;
@@ -32,10 +33,11 @@ int main()
             std::cin >> thinking;
 
             std::cout << "Cur depth:" << IA.getBestMove().second << std::endl;
-            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec" << std::endl;
+            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec, cacheHitRatio: " << getGlobalCache().getCacheHitRatio() << std::endl;
         }
 
         IA.stopComputation();
+        getGlobalCache().resetStats();
 
         Move move = IA.getBestMove().first;
         if (move.isValid())

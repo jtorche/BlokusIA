@@ -15,6 +15,9 @@ namespace BlokusIA
     extern thread_pool s_threadPool;
 	void initBlokusIA();
 
+    class GameStateCache;
+    GameStateCache& getGlobalCache();
+
 	//-------------------------------------------------------------------------------------------------
 	struct Move
 	{
@@ -28,10 +31,12 @@ namespace BlokusIA
     enum class BoardHeuristic
     {
         RemainingTiles,
-        NumberOfMoves,
         ReachableEmptySpace,
         ReachableEmptySpaceWeighted,
         ReachableEmptySpaceWeighted2,
+        ReachableEmptySpaceOnly,
+        ReachableEmptySpaceWeightedOnly,
+        BoardHeuristic_Count,
     };
 
 	//-------------------------------------------------------------------------------------------------
@@ -44,6 +49,8 @@ namespace BlokusIA
 		GameState play(const Move&) const;
         GameState skip() const;
 
+        bool operator==(const GameState&) const;
+
 		const Board& getBoard() const { return m_board; }
 		u32 getPlayerTurn() const { return m_turn % 4; }
 		u32 getTurnCount() const { return m_turn; }
@@ -52,17 +59,19 @@ namespace BlokusIA
 
 		float computeHeuristic(const Move& _move) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
-		float computeScoreUpperBound(Slot _player, BoardHeuristic) const;
-        float computeScoreLowerBound(Slot _player, BoardHeuristic) const;
 
 	private:
 		Board m_board;
 		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
 		u32 m_turn = 0;
 
+        float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
-        float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
+        float computeFreeSpaceHeuristic(Slot _player, float _weightCluster, bool _includeUnreachableSideEmptySlot) const;
         u32 getPlayedPieceTiles(Slot _player) const;
+
+        friend struct std::hash<BlokusIA::GameState>;
+        friend class GameStateCache;
 	};
 
     //-------------------------------------------------------------------------------------------------
@@ -80,6 +89,25 @@ namespace BlokusIA
         void stop();
 
         float nodePerSecond() const;
+        u32 getNumNodeExplored() const;
         size_t maxMoveToLookAt(const GameState& _state) const;
+    };
+}
+
+//-------------------------------------------------------------------------------------------------
+namespace std
+{
+    template<> struct hash<BlokusIA::GameState>
+    {
+        size_t operator()(const BlokusIA::GameState& _key) const
+        {
+            size_t h = 0;
+            core::hash_combine(h, _key.getTurnCount());
+            core::hash_combine(h, _key.getBoard());
+            for(const auto& bitSet : _key.m_remainingPieces)
+                core::hash_combine(h, bitSet.to_ulong());
+
+            return h;
+        }
     };
 }

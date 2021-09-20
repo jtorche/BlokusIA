@@ -21,6 +21,7 @@ namespace BlokusIA
 
             while (m_stopIA == false)
             {
+                m_startClock = std::chrono::steady_clock::now();
                 Move move = m_runningIA->findBestMove(_gameState);
                 if (m_stopIA == false)
                 {
@@ -56,7 +57,13 @@ namespace BlokusIA
     float IterativeIA<IA_t>::nodePerSecond()
     {
         std::lock_guard _{ m_mutex };
-        return m_nodePerSecond;
+        if (m_runningIA)
+        {
+            std::chrono::duration<float> timeSinceStart = std::chrono::steady_clock::now() - m_startClock;
+            return float(m_runningIA->getNumNodeExplored()) / timeSinceStart.count();
+        }
+        else
+            return m_nodePerSecond;
     }
 
     template<typename IA_t>

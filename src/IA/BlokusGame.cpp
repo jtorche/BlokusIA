@@ -188,6 +188,12 @@ namespace BlokusIA
 		}
 	}
 
+    //-------------------------------------------------------------------------------------------------
+    bool Board::operator==(const Board& _board) const
+    {
+        return memcmp(m_board.data(), _board.m_board.data(), sizeof(m_board)) == 0;
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	static u32 flatten(u32 i, u32 j) { return (j * Board::BoardSize + i); }
 

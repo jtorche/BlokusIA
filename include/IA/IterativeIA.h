@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BlokusIA.h"
+#include <chrono>
 
 namespace BlokusIA
 {
@@ -21,6 +22,7 @@ namespace BlokusIA
         Move m_bestMove;
         u32 m_bestMoveDepth = u32(-1);
         float m_nodePerSecond = 0;
+        std::chrono::steady_clock::time_point m_startClock;
 
         std::thread * m_thread = nullptr;
         IA_t* m_runningIA = nullptr;

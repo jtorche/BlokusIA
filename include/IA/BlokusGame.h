@@ -105,6 +105,8 @@ namespace BlokusIA
 		Board() = default;
 		Board(const Board&) = default;
 
+        bool operator==(const Board&) const;
+
 		Slot getSlot(u32 _x, u32 _y) const;
 		Slot getSlotSafe(i32 _x, i32 _y) const;
 		void setSlot(u32 _x, u32 _y, Slot _slot);
@@ -128,6 +130,8 @@ namespace BlokusIA
 
 		// each u32 store a 8x1 sub board, each slot on 4 bits
 		std::array<u32, (BoardSize*BoardSize)/8> m_board = { {0} };
+
+        friend std::hash<BlokusIA::Board>;
 	};
 
 	//-------------------------------------------------------------------------------------------------
@@ -154,4 +158,15 @@ namespace std
 			return h;
 		}
 	};
+
+    template<> struct hash<BlokusIA::Board>
+    {
+        size_t operator()(const BlokusIA::Board& _key) const
+        {
+            size_t h = 0;
+            for(u32 dat : _key.m_board)
+                core::hash_combine(h, dat);
+            return h;
+        }
+    };
 }
