@@ -353,7 +353,7 @@ namespace ska
             {
             }
             sherwood_v3_table(const sherwood_v3_table& _other, const ArgumentAlloc& _alloc)
-                : EntryAlloc(_alloc), Hasher(_other), Equal(_other), _max_load_factor(_other._max_load_factor)
+                : EntryAlloc(_alloc), Hasher(_other), Equal(_other), m_max_load_factor(_other.m_max_load_factor)
             {
                 rehash_for_other_container(_other);
                 try
@@ -363,7 +363,7 @@ namespace ska
                 catch (...)
                 {
                     clear();
-                    deallocate_data(m_entries, m_num_slots_minus_one, max_lookups);
+                    deallocate_data(m_entries, m_num_slots_minus_one, m_max_lookups);
                     throw;
                 }
             }
@@ -391,7 +391,7 @@ namespace ska
                     }
                     AssignIfTrue<EntryAlloc, AllocatorTraits::propagate_on_container_copy_assignment::value>()(*this, _other);
                 }
-                _max_load_factor = _other._max_load_factor;
+                m_max_load_factor = _other.m_max_load_factor;
                 static_cast<Hasher&>(*this) = _other;
                 static_cast<Equal&>(*this) = _other;
                 rehash_for_other_container(_other);
