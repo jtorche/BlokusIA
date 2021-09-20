@@ -25,7 +25,7 @@ namespace BlokusIA
         {
             return s_threadPool.submit([&]() -> float 
             { 
-                float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move), 0, { -std::numeric_limits<float>::max(), b });
+                float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move), 1, { -std::numeric_limits<float>::max(), b });
                 b.store(std::min(b.load(), score));
                 return score;
             });

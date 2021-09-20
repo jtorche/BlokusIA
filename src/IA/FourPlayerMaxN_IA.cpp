@@ -17,7 +17,7 @@ namespace BlokusIA
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
             [&](const Move& move) -> std::future<float>
         {
-            return s_threadPool.submit([&]() -> float { return evalPositionRec(_gameState.play(move), 0)[_gameState.getPlayerTurn()]; });
+            return s_threadPool.submit([&]() -> float { return evalPositionRec(_gameState.play(move), 1)[_gameState.getPlayerTurn()]; });
         });
 
         std::vector<float> scores(asyncScores.size());
