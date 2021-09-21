@@ -6,12 +6,14 @@
 
 #include <cstdint>
 #include <cstddef>
+
 #include <algorithm>
 #include <cmath>
 #include <functional>
 #include <iterator>
-#include <utility>
+#include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #ifdef _MSC_VER
 #define SKA_NOINLINE(...) __declspec(noinline) __VA_ARGS__

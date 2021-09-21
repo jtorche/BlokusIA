@@ -3,6 +3,8 @@
 #include <windows.h>
 #include <DebugApi.h>
 
+#include <iostream>
+
 namespace core
 {
     void handleAssert(int _line, const char* _file, const char* _msg)
