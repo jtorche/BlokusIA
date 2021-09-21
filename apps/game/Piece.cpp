@@ -14,6 +14,12 @@ namespace blokusUi
         , m_piece(_piece)
     {
         DEBUG_ASSERT(_player != BlokusIA::Slot::Empty);
+        assignBrushes();
+    }
+
+    void Piece::updateThemedResources()
+    {
+        assignBrushes();
     }
 
     QRectF Piece::boundingRect() const
@@ -27,6 +33,17 @@ namespace blokusUi
             height = std::max(height, BlokusIA::Piece::getTileY(tile) + 1);
         }
         return QRectF{ 0, 0, qreal(width * ms_scale), qreal(height * ms_scale) };
+    }
+
+    void Piece::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
+    {
+        _painter->setRenderHint(QPainter::Antialiasing);
+
+        for (ubyte i = 0; i < m_piece.getNumTiles(); ++i)
+        {
+            BlokusIA::Piece::Tile tile = m_piece.getTile(i);            
+            drawTile(*_painter, tile, m_brush, m_darkenBrush);
+        }
     }
 
     static QColor PlayerToColor(const BlokusIA::Slot& _player)
@@ -49,18 +66,10 @@ namespace blokusUi
         return {};
     }
 
-    void Piece::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
+    void Piece::assignBrushes()
     {
-        _painter->setRenderHint(QPainter::Antialiasing);
-
-        QBrush brush{ PlayerToColor(m_player) };
-        QBrush darkenBrush{ brush.color().darker(150) };
-
-        for (ubyte i = 0; i < m_piece.getNumTiles(); ++i)
-        {
-            BlokusIA::Piece::Tile tile = m_piece.getTile(i);            
-            drawTile(*_painter, tile, brush, darkenBrush);
-        }
+        m_brush = { PlayerToColor(m_player) };
+        m_darkenBrush = { m_brush.color().darker(150) };
     }
 
     void Piece::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile, const QBrush& brush, const QBrush& darkenBrush) const
