@@ -323,6 +323,9 @@ namespace BlokusIA
             if (x < 0 || y < 0 || x >= Board::BoardSize || y >= Board::BoardSize)
                 return;
 
+            if (m_clusters[x][y] != 0)
+                return;
+
             if (m_state.getBoard().getSlot(x, y) != Slot::Empty)
                 return;
 
@@ -334,9 +337,6 @@ namespace BlokusIA
                     m_state.getBoard().getSlotSafe(x, y + 1) == m_player)
                     return;
             }
-
-            if (m_clusters[x][y] != 0)
-                return;
 
             m_clusters[x][y] = ubyte(-1);
             m_expandCluster[m_expandClusterSize++] = { ubyte(x), ubyte(y) };

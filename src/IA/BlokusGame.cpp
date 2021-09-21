@@ -236,35 +236,6 @@ namespace BlokusIA
     }
 
 	//-------------------------------------------------------------------------------------------------
-	static u32 flatten(u32 i, u32 j) { return (j * Board::BoardSize + i); }
-
-	//-------------------------------------------------------------------------------------------------
-	Slot Board::getSlot(u32 _x, u32 _y) const
-	{
-	    u32 packed = m_board[flatten(_x, _y) >> 3];
-		u32 offset = (flatten(_x, _y) & 0x7) << 2;
-		return Slot((packed >> offset) & 0xF);
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	void Board::setSlot(u32 _x, u32 _y, Slot _slot)
-	{
-		u32 packed = m_board[flatten(_x, _y) >> 3];
-		u32 offset = (flatten(_x, _y) & 0x7) << 2;
-		packed = packed & ~(0xF << offset);
-		packed += u32(_slot) << offset;
-		m_board[flatten(_x, _y) >> 3] = packed;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	Slot Board::getSlotSafe(i32 _x, i32 _y) const
-	{
-		if (_x < 0 || _x >= i32(BoardSize) || _y < 0 || _y >= i32(BoardSize))
-			return Slot::Empty;
-		return getSlot(u32(_x), u32(_y));
-	}
-
-	//-------------------------------------------------------------------------------------------------
 	bool Board::canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const
 	{
 		DEBUG_ASSERT(_player != Slot::Empty);
@@ -351,24 +322,6 @@ namespace BlokusIA
 		}
 
 		return numCorners;
-	}
-
-	//-------------------------------------------------------------------------------------------------
-	uvec2 Board::getStartingPosition(Slot _player) const
-	{
-		switch (_player)
-		{
-		case Slot::P0:
-			return { 0,0 };
-		case Slot::P1:
-			return { 0, BoardSize - 1 };
-		case Slot::P2:
-			return { BoardSize - 1, BoardSize - 1 };
-		case Slot::P3:
-			return { BoardSize - 1, 0 };
-		}
-
-		return {};
 	}
 
 	//-------------------------------------------------------------------------------------------------
