@@ -39,6 +39,12 @@ namespace BlokusIA
         BoardHeuristic_Count,
     };
 
+    enum class MoveHeuristic
+    {
+        TileCount,
+        ReachableSpace,
+    };
+
 	//-------------------------------------------------------------------------------------------------
     struct ExpandCluster;
 
@@ -55,9 +61,11 @@ namespace BlokusIA
 		u32 getPlayerTurn() const { return m_turn % 4; }
 		u32 getTurnCount() const { return m_turn; }
 
-		std::vector<Move> enumerateMoves(bool _sortByHeuristic) const;
+		std::vector<Move> enumerateMoves() const;
+        void findCandidatMoves(MoveHeuristic _heuristic, u32 _numMoves, std::vector<Move>& _allMoves) const;
+        u32 getPlayedPieceTiles(Slot _player) const;
 
-		float computeHeuristic(const Move& _move) const;
+		float computeHeuristic(const Move& _move, MoveHeuristic) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
 
 	private:
@@ -68,7 +76,6 @@ namespace BlokusIA
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
         float computeFreeSpaceHeuristic(Slot _player, float _weightCluster, bool _includeUnreachableSideEmptySlot) const;
-        u32 getPlayedPieceTiles(Slot _player) const;
 
         friend struct std::hash<BlokusIA::GameState>;
         friend class GameStateCache;
@@ -90,7 +97,7 @@ namespace BlokusIA
 
         float nodePerSecond() const;
         u32 getNumNodeExplored() const;
-        size_t maxMoveToLookAt(const GameState& _state) const;
+        u32 maxMoveToLookAt(const GameState& _state) const;
     };
 }
 

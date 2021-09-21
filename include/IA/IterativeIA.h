@@ -11,7 +11,7 @@ namespace BlokusIA
     {
     public:
         IterativeIA() = default;
-        void startComputation(BoardHeuristic, GameState);
+        void startComputation(BoardHeuristic, MoveHeuristic, GameState);
         void stopComputation();
 
         float nodePerSecond();

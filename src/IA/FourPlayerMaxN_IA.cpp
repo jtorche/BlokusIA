@@ -6,9 +6,8 @@ namespace BlokusIA
     Move FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
     {
         start();
-        auto moves = _gameState.enumerateMoves(true);
-
-        moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
+        auto moves = _gameState.enumerateMoves();
+        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
             return {};
@@ -41,7 +40,8 @@ namespace BlokusIA
         if (_depth >= m_maxDepth || m_stopIA)
             return computeScore(_gameState);
 
-        auto moves = _gameState.enumerateMoves(true);
+        auto moves = _gameState.enumerateMoves();
+        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
         {
@@ -51,7 +51,7 @@ namespace BlokusIA
         {
             Score bestScore = {};
             u32 bestScoreIndex = 0;
-            for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
+            for (size_t i = 0; i < moves.size(); ++i)
             {
                 Score score = evalPositionRec(_gameState.play(moves[i]), _depth + 1);
                 // Each player try to maximize its own score, regardless of the other players

@@ -9,9 +9,10 @@ namespace BlokusIA
 	class GenericMinMax_IA : public BaseIA
 	{
 	public:
-        GenericMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles)
+        GenericMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles, MoveHeuristic _moveHeuristic = MoveHeuristic::TileCount)
             : m_maxDepth{ _maxDepth }
             , m_heuristic{ _heuristic }
+            , m_moveHeuristic{ _moveHeuristic }
         {}
 
 		Move findBestMove(const GameState& _gameState);
@@ -27,5 +28,6 @@ namespace BlokusIA
 
 		u32 m_maxDepth = 0;
         BoardHeuristic m_heuristic;
+        MoveHeuristic m_moveHeuristic;
 	};
 }

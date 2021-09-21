@@ -6,7 +6,7 @@
 namespace BlokusIA
 {
     template<typename IA_t>
-    void IterativeIA<IA_t>::startComputation(BoardHeuristic _heuristic, GameState _gameState)
+    void IterativeIA<IA_t>::startComputation(BoardHeuristic _heuristic, MoveHeuristic _moveHeuristic,  GameState _gameState)
     {
         DEBUG_ASSERT(m_thread == nullptr);
 
@@ -14,10 +14,10 @@ namespace BlokusIA
         m_bestMoveDepth = {};
         m_stopIA = false;
 
-        m_thread = new std::thread([this, _heuristic, _gameState]()
+        m_thread = new std::thread([this, _heuristic, _moveHeuristic, _gameState]()
         {
             u32 maxDepth = 1;
-            m_runningIA = new IA_t(maxDepth, _heuristic);
+            m_runningIA = new IA_t(maxDepth, _heuristic, _moveHeuristic);
 
             while (m_stopIA == false)
             {
@@ -30,7 +30,7 @@ namespace BlokusIA
                     m_bestMoveDepth = maxDepth;
                     m_nodePerSecond = m_runningIA->nodePerSecond();
                     delete m_runningIA;
-                    m_runningIA = new IA_t(++maxDepth, _heuristic);
+                    m_runningIA = new IA_t(++maxDepth, _heuristic, _moveHeuristic);
                 }
             }
         });

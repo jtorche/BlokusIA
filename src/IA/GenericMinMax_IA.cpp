@@ -10,9 +10,8 @@ namespace BlokusIA
 	{
         start();
 
-		auto moves = _gameState.enumerateMoves(true);
-
-		moves.resize(std::min(moves.size(), maxMoveToLookAt(_gameState)));
+        auto moves = _gameState.enumerateMoves();
+        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
 
 		if (moves.empty())
 			return {};
@@ -55,7 +54,8 @@ namespace BlokusIA
 		if (_depth >= m_maxDepth || m_stopIA)
 			return computeScore(_maxPlayer, _gameState);
 
-		auto moves = _gameState.enumerateMoves(true);
+        auto moves = _gameState.enumerateMoves();
+        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
         {
@@ -71,7 +71,7 @@ namespace BlokusIA
                 return isMaxPlayerTurn ? std::min(s1, s2) : std::max(s1, s2);
             };
 
-            for (size_t i = 0; i < std::min(moves.size(), maxMoveToLookAt(_gameState)); ++i)
+            for (size_t i = 0; i < moves.size(); ++i)
             {
                 score = minmax(evalPositionRec(_maxPlayer, _gameState.play(moves[i]), _depth + 1, _a_b), score);
                 if (isMaxPlayerTurn)

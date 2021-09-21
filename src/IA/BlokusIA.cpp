@@ -74,7 +74,7 @@ namespace BlokusIA
     }
 
 	//-------------------------------------------------------------------------------------------------
-	std::vector<Move> GameState::enumerateMoves(bool _sortByHeuristic) const
+	std::vector<Move> GameState::enumerateMoves() const
 	{
 		std::vector<Move> moves;
 		Slot playerToMove = Slot(u32(Slot::P0) + getPlayerTurn());
@@ -106,44 +106,70 @@ namespace BlokusIA
 			}
 		}
 
-		if (_sortByHeuristic)
-		{
-            std::vector<std::pair<Move, float>> moves_scores(moves.size());
-            std::transform(moves.begin(), moves.end(), moves_scores.begin(),
-                [&](const Move& move) -> std::pair<Move, float>
-            {
-                return { move, computeHeuristic(move) };
-            });
-
-			std::sort(std::begin(moves_scores), std::end(moves_scores), [this](const auto& m1, const auto& m2)
-			{
-				return m1.second > m2.second;
-			});
-
-            std::transform(moves_scores.begin(), moves_scores.end(), moves.begin(), [](const auto& p)
-            {
-                return p.first;
-            });
-		}
 		return moves;
 	}
 
+    //-------------------------------------------------------------------------------------------------
+    void GameState::findCandidatMoves(MoveHeuristic _heuristic, u32 _numMoves, std::vector<Move>& _allMoves) const
+    {
+        _numMoves = std::min(_numMoves, u32(_allMoves.size()));
+
+        std::vector<std::pair<Move, float>> moves_scores(_allMoves.size());
+        std::transform(_allMoves.begin(), _allMoves.end(), moves_scores.begin(),
+            [&](const Move& move) -> std::pair<Move, float>
+        {
+            return { move, computeHeuristic(move, _heuristic) };
+        });
+    
+    	std::partial_sort(std::begin(moves_scores), std::begin(moves_scores) + _numMoves, std::end(moves_scores),
+            [this](const auto& m1, const auto& m2)
+    	{
+    		return m1.second > m2.second;
+    	});
+    
+        _allMoves.resize(_numMoves);
+        std::transform(moves_scores.begin(), moves_scores.begin() + _numMoves, _allMoves.begin(), [](const auto& p)
+        {
+            return p.first;
+        });
+    }
+
 	//-------------------------------------------------------------------------------------------------
-	float GameState::computeHeuristic(const Move& _move) const
+	float GameState::computeHeuristic(const Move& _move, MoveHeuristic _moveHeuristic) const
 	{
-		float closestDistToCenter = std::numeric_limits<float>::max();
-		vec2 boardCenter = { Board::BoardSize / 2, Board::BoardSize / 2 };
-		for (u32 i = 0; i < _move.piece.getNumTiles(); ++i)
-		{
-			vec2 tilePos = vec2{ 0.5f + (float)Piece::getTileX(_move.piece.getTile(i)), 0.5f + (float)Piece::getTileY(_move.piece.getTile(i)) };
-			tilePos += vec2(_move.position.x, _move.position.y);
-			closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
-		}
+        float distToCenterHeuristic = 0;
 
-		DEBUG_ASSERT(closestDistToCenter <= 1);
+        // first 4 rounds, we favor a rush to the center
+        if (getTurnCount() < 16)
+        {
+            float closestDistToCenter = std::numeric_limits<float>::max();
+            vec2 boardCenter = { Board::BoardSize / 2, Board::BoardSize / 2 };
+            for (u32 i = 0; i < _move.piece.getNumTiles(); ++i)
+            {
+                vec2 tilePos = vec2{ 0.5f + (float)Piece::getTileX(_move.piece.getTile(i)), 0.5f + (float)Piece::getTileY(_move.piece.getTile(i)) };
+                tilePos += vec2(_move.position.x, _move.position.y);
+                closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
+            }
+            distToCenterHeuristic = 1.f - closestDistToCenter;
+        }
 
-		return _move.piece.getNumTiles() +
-			   1.f - closestDistToCenter;
+		DEBUG_ASSERT(distToCenterHeuristic <= 1);
+
+        if(_moveHeuristic == MoveHeuristic::TileCount)
+		    return _move.piece.getNumTiles() + distToCenterHeuristic;
+        else if (_moveHeuristic == MoveHeuristic::ReachableSpace)
+        {
+            Slot playerToMove = Slot(u32(Slot::P0) + getPlayerTurn());
+            GameState moveState = play(_move);
+            float numReachable = moveState.computeFreeSpaceHeuristic(playerToMove, 0, true);
+            numReachable += moveState.getPlayedPieceTiles(playerToMove);
+
+            // we still favor big piece
+            return numReachable * 10 + float(_move.piece.getNumTiles()) + distToCenterHeuristic;
+        }
+
+        DEBUG_ASSERT(0);
+        return 0;
 	}
 
     //-------------------------------------------------------------------------------------------------
@@ -332,14 +358,9 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    size_t BaseIA::maxMoveToLookAt(const GameState& _state) const
+    u32 BaseIA::maxMoveToLookAt(const GameState&) const
     {
-        &_state;
-        return 2000;
-        //if (_state.getTurnCount() < 12)
-        //    return 4;
-        //else
-        //    return 16;
+        return 8;
     }
 
     //-------------------------------------------------------------------------------------------------
