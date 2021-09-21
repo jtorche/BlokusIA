@@ -6,10 +6,12 @@
 #include <QGraphicsView>
 #include <QMessageBox>
 
+#include "IA/BlokusGameHelpers.h"
+
 #include "i18n/TranslationManager.h"
 #include "theme/ThemeManager.h"
 
-#include "IA/BlokusGameHelpers.h"
+#include "widgets/BlokusGraphicsView.h"
 
 #include "game/Piece.h"
 
@@ -24,7 +26,7 @@ namespace blokusUi
         setupActions();
         setupConnections();
 
-        auto view = new QGraphicsView(m_ui->m_centralwidget);
+        auto view = new BlokusGraphicsView(m_ui->m_centralwidget);
         view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         
