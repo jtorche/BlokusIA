@@ -31,6 +31,10 @@ namespace BlokusIA
                     m_nodePerSecond = m_runningIA->nodePerSecond();
                     delete m_runningIA;
                     m_runningIA = new IA_t(++maxDepth, _heuristic, _moveHeuristic);
+
+                    // avoid infinite depth
+                    if (maxDepth == 100)
+                        break;
                 }
             }
         });

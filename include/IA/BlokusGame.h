@@ -75,6 +75,7 @@ namespace BlokusIA
 		Tile getTile(u32 _index) const { return m_layout[_index]; }
 		ubyte getNumTiles() const { return m_numTiles; }
 		ubyte getNumCorners() const { return m_numCorners; }
+        u16 getNumBorderTiles() const { return m_numBorderTiles; }
 
 		Piece rotate(Rotation _rot) const;
 
@@ -84,13 +85,14 @@ namespace BlokusIA
 	private:
 		void sort();
 		void flush();
+        void computeNumBorderTiles();
 
 		Tile m_layout[MaxTile] = { {0} };
 		Corners m_corners;
 
 		ubyte m_numTiles = 0;
 		ubyte m_numCorners = 0;
-		ubyte2 m_pad;
+        u16 m_numBorderTiles = 0;
 
 	};
 	static_assert(sizeof(Piece) == 12);

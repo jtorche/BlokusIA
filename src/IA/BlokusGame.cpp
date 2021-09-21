@@ -64,7 +64,11 @@ namespace BlokusIA
 			}
 		}
 
-		sort();
+        if (m_numTiles > 0)
+        {
+            sort();
+            computeNumBorderTiles();
+        }
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -97,6 +101,43 @@ namespace BlokusIA
 			m_corners.setCorners(i, corners[0], corners[1], corners[2], corners[3]);
 		}
 	}
+
+    //-------------------------------------------------------------------------------------------------
+    void Piece::computeNumBorderTiles()
+    {
+        constexpr u32 MaxPieceSizeX = 5;
+        constexpr u32 MaxPieceSizeY = 5;
+        bool smallGrid[MaxPieceSizeX+2][MaxPieceSizeY+2] = { {} };
+        
+        for (u32 i = 0; i < MaxTile; ++i)
+        {
+            if (m_layout[i] != 0)
+            {
+                u32 curX = getTileX(m_layout[i]);
+                u32 curY = getTileY(m_layout[i]);
+                DEBUG_ASSERT(curX < MaxPieceSizeX && curY < MaxPieceSizeY);
+
+                smallGrid[curX+1][curY+1] = true;
+            }
+        }
+
+        m_numBorderTiles = 0;
+        for(u32 i = 0 ; i < MaxPieceSizeX+2; ++i)
+            for (u32 j = 0; j < MaxPieceSizeY+2; ++j)
+        {
+            if (!smallGrid[i][j])
+            {
+                if (i > 0 && smallGrid[i - 1][j])
+                    m_numBorderTiles++;
+                else if(i < MaxPieceSizeX + 1 && smallGrid[i + 1][j])
+                    m_numBorderTiles++;
+                else if (j > 0 && smallGrid[i][j - 1])
+                    m_numBorderTiles++;
+                else if (j < MaxPieceSizeY + 1 && smallGrid[i][j + 1])
+                    m_numBorderTiles++;
+            }
+        }
+    }
 
 	//-------------------------------------------------------------------------------------------------
 	Piece Piece::rotate(Rotation _rot) const

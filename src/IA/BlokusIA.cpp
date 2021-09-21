@@ -32,8 +32,11 @@ namespace BlokusIA
 	GameState::GameState()
 	{
 		// initially all pieces are playable
-		for (auto& remaining : m_remainingPieces)
-			remaining.set();
+        for (auto& remaining : m_remainingPieces)
+        {
+            remaining.set();
+            remaining.reset(BlokusGame::PiecesCount);
+        }
 	}
 
     //-------------------------------------------------------------------------------------------------
@@ -47,6 +50,12 @@ namespace BlokusIA
                m_turn == _state.m_turn;
     }
 
+    //-------------------------------------------------------------------------------------------------
+    static Slot convertToSlot(u32 _playerIndex)
+    {
+        return Slot(u32(Slot::P0) + _playerIndex);
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	GameState GameState::play(const Move& _move) const
 	{
@@ -56,9 +65,15 @@ namespace BlokusIA
 		DEBUG_ASSERT(m_remainingPieces[turn].test(_move.pieceIndex));
 		newGameState.m_remainingPieces[turn].reset(_move.pieceIndex);
 
-		Slot player = Slot(u32(Slot::P0) + turn);
+		Slot player = convertToSlot(turn);
 		DEBUG_ASSERT(m_board.canAddPiece(player, _move.piece, { _move.position.x, _move.position.y }));
 		newGameState.m_board.addPiece(player, _move.piece, _move.position);
+        newGameState.m_playedTiles[turn] += _move.piece.getNumTiles();
+
+        constexpr u32 pieceSpaceCompensation[5] = { 4,6,8,10,12 };
+        DEBUG_ASSERT(_move.piece.getNumTiles() <= 5);
+        newGameState.m_pieceSpaceScoreCompensation[turn] += pieceSpaceCompensation[_move.piece.getNumTiles() - 1];
+
 		newGameState.m_turn = m_turn + 1;
 
 		return newGameState;
@@ -68,6 +83,7 @@ namespace BlokusIA
     GameState GameState::skip() const
     {
         GameState newGameState = *this;
+        newGameState.m_remainingPieces[getPlayerTurn()].set(BlokusGame::PiecesCount);
         newGameState.m_turn = m_turn + 1;
 
         return newGameState;
@@ -76,8 +92,11 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	std::vector<Move> GameState::enumerateMoves() const
 	{
+        if (m_remainingPieces[getPlayerTurn()].test(BlokusGame::PiecesCount))
+            return {};
+
 		std::vector<Move> moves;
-		Slot playerToMove = Slot(u32(Slot::P0) + getPlayerTurn());
+		Slot playerToMove = convertToSlot(getPlayerTurn());
 
 		Board::PlayableSlots slots;
 		u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
@@ -85,7 +104,7 @@ namespace BlokusIA
 		moves.reserve(m_remainingPieces[getPlayerTurn()].count() * numSlots);
 
 		// reverse order to look at big pieces first (to improve sorting later)
-		for (auto it = s_allPieces.rbegin() ;  it != s_allPieces.rend() ; ++it)
+		for (auto it = s_allPieces.rbegin() ; it != s_allPieces.rend() ; ++it)
 		{
 			u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
 			if (m_remainingPieces[getPlayerTurn()].test(piece))
@@ -132,6 +151,39 @@ namespace BlokusIA
         {
             return p.first;
         });
+
+        if (getTurnCount() < g_NumTurnToRushCenter * 4 && !moves_scores.empty())
+        {
+            // only keep best move to rush center
+            auto it = std::find_if(moves_scores.begin(), moves_scores.end(), [&](const auto& val)
+            {
+                return val.second != moves_scores.begin()->second;
+            });
+
+            if (it != moves_scores.end())
+                _allMoves.resize(std::distance(moves_scores.begin(), it));
+        }
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    u32 GameState::getBestMoveIndex(const std::vector<float>& _scores)
+    {
+        auto best = std::max_element(_scores.begin(), _scores.end());
+        size_t numBestScore = std::count_if(_scores.begin(), _scores.end(), [bestScore = *best](float val) { return val == bestScore; });
+
+        u32 selectedMove = rand() % numBestScore;
+        u32 counter = 0;
+        for (u32 i = 0; i < _scores.size(); ++i)
+        {
+            if (_scores[i] == *best)
+            {
+                if (selectedMove == counter++)
+                    return i;
+            }
+        }
+
+        DEBUG_ASSERT(false);
+        return 0;
     }
 
 	//-------------------------------------------------------------------------------------------------
@@ -140,7 +192,7 @@ namespace BlokusIA
         float distToCenterHeuristic = 0;
 
         // first 4 rounds, we favor a rush to the center
-        if (getTurnCount() < 16)
+        if (getTurnCount() < g_NumTurnToRushCenter*4)
         {
             float closestDistToCenter = std::numeric_limits<float>::max();
             vec2 boardCenter = { Board::BoardSize / 2, Board::BoardSize / 2 };
@@ -151,6 +203,8 @@ namespace BlokusIA
                 closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
             }
             distToCenterHeuristic = 1.f - closestDistToCenter;
+
+            return distToCenterHeuristic;
         }
 
 		DEBUG_ASSERT(distToCenterHeuristic <= 1);
@@ -159,7 +213,7 @@ namespace BlokusIA
 		    return _move.piece.getNumTiles() + distToCenterHeuristic;
         else if (_moveHeuristic == MoveHeuristic::ReachableSpace)
         {
-            Slot playerToMove = Slot(u32(Slot::P0) + getPlayerTurn());
+            Slot playerToMove = convertToSlot(getPlayerTurn());
             GameState moveState = play(_move);
             float numReachable = moveState.computeFreeSpaceHeuristic(playerToMove, 0, true);
             numReachable += moveState.getPlayedPieceTiles(playerToMove);
@@ -175,13 +229,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     u32 GameState::getPlayedPieceTiles(Slot _player) const
     {
-        u32 result = 0;
-        u32 playerIndex = u32(_player) - u32(Slot::P0);
-        for (u32 i = 0; i < BlokusGame::PiecesCount; ++i)
-            if (!m_remainingPieces[playerIndex].test(i))
-                result += s_allPieces[i].begin()->getNumTiles();
-
-        return result;
+        return m_playedTiles[u32(_player) - u32(Slot::P0)];
     }
 
 	//-------------------------------------------------------------------------------------------------
@@ -193,6 +241,22 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     float GameState::computeBoardScoreInner(Slot _player, BoardHeuristic _heuristicType) const
     {
+        float negativeScore = 0; // second place means score = -1e6, third = -2e6, ...
+
+        // Detect if the player can't win anymore
+        if (noMoveLeft(_player))
+        {
+            for (u32 i = 0; i < 4; ++i)
+            {
+                if(convertToSlot(i) != _player && getPlayedPieceTiles(_player) < getPlayedPieceTiles(convertToSlot(i)))
+                    negativeScore -= 1000000.f;
+            }
+        }
+
+        // we can't win anymore, so we return a negative heuristic to avoid this scenario at all cost
+        if (negativeScore < 0)
+            return negativeScore;
+
         if (_heuristicType == BoardHeuristic::RemainingTiles)
             return (float)getPlayedPieceTiles(_player);
 
@@ -215,12 +279,14 @@ namespace BlokusIA
             if (_heuristicType == BoardHeuristic::ReachableEmptySpaceOnly ||
                 _heuristicType == BoardHeuristic::ReachableEmptySpaceWeightedOnly)
             {
-                // we include unreachable empty side slot so we can sum with "getPlayedPieceTiles" without any bias
-                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor, true);
-                return freeSpaceHeuristic + (float)getPlayedPieceTiles(_player);
+                // We sum the m_numBorderTileCache to make sure playing big pieces is better than playing small pieces
+                // Because playing big pieces also loose some free space
+                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor, false);
+                return freeSpaceHeuristic + (float)(getPlayedPieceTiles(_player) + m_pieceSpaceScoreCompensation[u32(_player) - u32(Slot::P0)]);
             }
             else
             {
+                // Here big pieces are always prioritized
                 float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor, false);
                 return (float)getPlayedPieceTiles(_player) + freeSpaceHeuristic / (Board::BoardSize * Board::BoardSize);
             }
@@ -360,7 +426,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     u32 BaseIA::maxMoveToLookAt(const GameState&) const
     {
-        return 8;
+        return 32;
     }
 
     //-------------------------------------------------------------------------------------------------

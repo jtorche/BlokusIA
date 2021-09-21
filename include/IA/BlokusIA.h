@@ -51,6 +51,8 @@ namespace BlokusIA
 	class GameState
 	{
 	public:
+        static const u32 g_NumTurnToRushCenter = 3;
+
 		GameState();
 		GameState play(const Move&) const;
         GameState skip() const;
@@ -60,6 +62,7 @@ namespace BlokusIA
 		const Board& getBoard() const { return m_board; }
 		u32 getPlayerTurn() const { return m_turn % 4; }
 		u32 getTurnCount() const { return m_turn; }
+        bool noMoveLeft(Slot _player) const { return m_remainingPieces[u32(_player) - u32(Slot::P0)].test(BlokusGame::PiecesCount); }
 
 		std::vector<Move> enumerateMoves() const;
         void findCandidatMoves(MoveHeuristic _heuristic, u32 _numMoves, std::vector<Move>& _allMoves) const;
@@ -68,10 +71,16 @@ namespace BlokusIA
 		float computeHeuristic(const Move& _move, MoveHeuristic) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
 
+        static u32 getBestMoveIndex(const std::vector<float>&);
+
 	private:
 		Board m_board;
-		std::bitset<BlokusGame::PiecesCount> m_remainingPieces[4];
+		std::bitset<BlokusGame::PiecesCount + 1> m_remainingPieces[4]; // last bit to store if a player can't play anymore
 		u32 m_turn = 0;
+        u32 m_playedTiles[4] = {};
+        // accumulate a value to compensate the space lost by playing big pieces
+        // in order to still favor big pieces in "space based" heuristic
+        u32 m_pieceSpaceScoreCompensation[4] = {}; 
 
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;

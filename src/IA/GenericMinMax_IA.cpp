@@ -37,10 +37,10 @@ namespace BlokusIA
             return _score.get();
         });
 		
-		auto best = std::max_element(scores.begin(), scores.end());
+        u32 bestMoveIndex = GameState::getBestMoveIndex(scores);
 
         stop();
-		return moves[std::distance(scores.begin(), best)];
+		return moves[bestMoveIndex];
 	}
 
 	//-------------------------------------------------------------------------------------------------

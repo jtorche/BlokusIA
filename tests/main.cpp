@@ -18,7 +18,8 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeightedOnly;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceOnly;
+    // const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
     const MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
 
     IterativeIA<FourPlayerMaxN_IA> IA;
