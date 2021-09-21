@@ -39,11 +39,6 @@ namespace blokusUi
         m_darkTheme = _darkTheme;
 
         const char* themeName = getThemeName(_darkTheme);
-        // Load application style
-        QFile file{ QString { ":/" } + themeName + "/style.qss" };
-        file.open(QFile::ReadOnly | QFile::Text);
-        qApp->setStyleSheet(file.readAll());
-
         // Load theme colors
         if (m_colors.find(themeName) == m_colors.cend())
         {
@@ -52,6 +47,11 @@ namespace blokusUi
                 "color");
             m_colors[themeName] = config;
         }
+
+        // Load application style
+        QFile file{ QString { ":/" } + themeName + "/style.qss" };
+        file.open(QFile::ReadOnly | QFile::Text);
+        qApp->setStyleSheet(file.readAll());
     }
 
     void ThemeManager::setTheme(bool _darkTheme)
