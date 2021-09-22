@@ -12,6 +12,9 @@ using u64 = uint64_t;
 using i32 = int32_t;
 using i64 = int64_t;
 
+using f32 = float;
+using f64 = double;
+
 using ubyte = unsigned char;
 
 using vec4 = linalg::aliases::float4;
