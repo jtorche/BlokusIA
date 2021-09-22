@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <QBrush>
 #include <QGraphicsItem>
 
@@ -9,12 +11,11 @@
 
 namespace blokusUi
 {
-    class Piece : public QGraphicsItem, public IThemeable
+    class Board : public QGraphicsItem, public IThemeable
     {
     public:
-        Piece(
-            const BlokusIA::Piece& _piece,
-            const BlokusIA::Slot& _player,
+        Board(
+            const BlokusIA::Board& _board,
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
@@ -27,14 +28,15 @@ namespace blokusUi
             QWidget* _widget) override;
 
     private:
-        void assignBrush();
-        void drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const;
+        void assignBrushes();
+        void drawBoard(QPainter& _painter) const;
 
     private:
-        BlokusIA::Slot m_player;
-        BlokusIA::Piece m_piece;
-        QBrush m_brush;
+        BlokusIA::Board m_board;
+        QBrush m_boardBrush;
+        std::array<QBrush, 4> m_playerBrushes;
 
+        static constexpr f32 BorderWidthRatio = 1/f32(3);
         static u32 ms_scale;
     };
 }

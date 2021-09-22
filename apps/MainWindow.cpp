@@ -13,6 +13,7 @@
 
 #include "widgets/BlokusGraphicsView.h"
 
+#include "game/Board.h"
 #include "game/Piece.h"
 
 namespace blokusUi
@@ -30,13 +31,19 @@ namespace blokusUi
         view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         
-        view->setFixedSize(1200, 1000);
+        view->setFixedSize(1400, 1200);
         auto scene = new QGraphicsScene(view);
-        scene->setSceneRect(0, 0, 1200, 1000);
+        scene->setSceneRect(0, 0, 1400, 1200);
         view->setScene(scene);
-        setGeometry(0, 0, 1200, 1200);
-        u32 x = 10;
-        u32 y = 10;
+        setGeometry(0, 0, 1400, 1200);
+
+        BlokusIA::Board b;
+        auto board = new Board(b);
+        board->setPos(25, 25);
+        scene->addItem(board);
+
+        u32 x = 50;
+        u32 y = 50;
         auto pieces = BlokusIA::Helpers::getAllPieces();
         BlokusIA::Slot slot = BlokusIA::Slot::P0;
         for (const auto& p : pieces)
@@ -59,7 +66,7 @@ namespace blokusUi
             if (x + 210 > 1200)
             {
                 y += 160;
-                x = 10;
+                x = 50;
             }
         }
     }

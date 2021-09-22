@@ -14,12 +14,12 @@ namespace blokusUi
         , m_piece(_piece)
     {
         DEBUG_ASSERT(_player != BlokusIA::Slot::Empty);
-        assignBrushes();
+        assignBrush();
     }
 
     void Piece::updateThemedResources()
     {
-        assignBrushes();
+        assignBrush();
     }
 
     QRectF Piece::boundingRect() const
@@ -39,10 +39,11 @@ namespace blokusUi
     {
         _painter->setRenderHint(QPainter::Antialiasing);
 
+        // Draw tiles
         for (ubyte i = 0; i < m_piece.getNumTiles(); ++i)
         {
             BlokusIA::Piece::Tile tile = m_piece.getTile(i);            
-            drawTile(*_painter, tile, m_brush, m_darkenBrush);
+            drawTile(*_painter, tile);
         }
     }
 
@@ -66,13 +67,12 @@ namespace blokusUi
         return {};
     }
 
-    void Piece::assignBrushes()
+    void Piece::assignBrush()
     {
-        m_brush = { PlayerToColor(m_player) };
-        m_darkenBrush = { m_brush.color().darker(150) };
+        m_brush = PlayerToColor(m_player);
     }
 
-    void Piece::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile, const QBrush& brush, const QBrush& darkenBrush) const
+    void Piece::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const
     {
         static qreal topAndLeftOutline = 0.04 * ms_scale;
         static qreal semiTopAndLeftOutline = topAndLeftOutline / 2;
@@ -83,7 +83,8 @@ namespace blokusUi
         const qreal offsetX = BlokusIA::Piece::getTileX(tile) * ms_scale;
         const qreal offsetY = BlokusIA::Piece::getTileY(tile) * ms_scale;
 
-        QPen pen{ brush, topAndLeftOutline };
+        QBrush darkenBrush{ m_brush.color().darker(150) };
+        QPen pen{ m_brush, topAndLeftOutline };
         QPen darkenPen{ darkenBrush, bottomAndRightOutline };
 
         // Draw bottom and right lines
@@ -111,7 +112,7 @@ namespace blokusUi
         qreal gradientLength = ms_scale - (topAndLeftOutline + bottomAndRightOutline);
         QLinearGradient gradient{ 0, 0, 0, qreal(ms_scale) };
         gradient.setColorAt(0.0, darkenBrush.color());
-        gradient.setColorAt(1.0, brush.color());
+        gradient.setColorAt(1.0, m_brush.color());
         gradient.setSpread(QGradient::RepeatSpread);
 
         _painter.setPen(Qt::NoPen);
