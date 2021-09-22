@@ -258,13 +258,13 @@ namespace BlokusIA
 			// Implement the non contact rule with pieces of the same player
 			i32 iTileX = i32(tileX);
 			i32 iTileY = i32(tileY);
-			if (getSlotSafe(iTileX - 1, iTileY) == _player)
+			if (getSlotSafe<-1,0>(iTileX, iTileY) == _player)
 				return false;
-			if (getSlotSafe(iTileX + 1, iTileY) == _player)
+			if (getSlotSafe<1,0>(iTileX, iTileY) == _player)
 				return false;
-			if (getSlotSafe(iTileX, iTileY - 1) == _player)
+			if (getSlotSafe<0,-1>(iTileX, iTileY) == _player)
 				return false;
-			if (getSlotSafe(iTileX, iTileY + 1) == _player)
+			if (getSlotSafe<0,1>(iTileX, iTileY) == _player)
 				return false;
 		}
 
@@ -289,6 +289,22 @@ namespace BlokusIA
 		}
 	}
 
+    //-------------------------------------------------------------------------------------------------
+    bool Board::isValidPlayableSlot(Slot _player, ubyte2 _pos) const
+    {
+        if (getSlot(_pos.x, _pos.y) == Slot::Empty)
+        {
+            int x = _pos.x;
+            int y = _pos.y;
+
+            return (getSlotSafe<-1, 0>(x, y) != _player && getSlotSafe<1, 0>(x, y) != _player &&
+                    getSlotSafe<0, -1>(x, y) != _player && getSlotSafe<0, 1>(x, y) != _player &&
+                    (getSlotSafe<-1, -1>(x, y) == _player || getSlotSafe<1, -1>(x, y) == _player ||
+                     getSlotSafe<-1, 1>(x, y) == _player || getSlotSafe<1, 1>(x, y) == _player));
+        }
+        return false;
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	u32 Board::computeValidSlotsForPlayer(Slot _player, Board::PlayableSlots& _result) const
 	{
@@ -299,25 +315,11 @@ namespace BlokusIA
 		{
 			for (i32 i = 0; i < i32(BoardSize); ++i)
 			{
-				if (getSlot(u32(i), u32(j)) == Slot::Empty)
-				{
-					if (getStartingPosition(_player) == uvec2{ u32(i), u32(j) })
-					{
-						_result[numCorners++] = { ubyte(i), ubyte(j) };
-					}
-					else
-					{
-						if (getSlotSafe(i - 1, j) != _player && getSlotSafe(i + 1, j) != _player &&
-							getSlotSafe(i, j - 1) != _player && getSlotSafe(i, j + 1) != _player)
-						{
-							if (getSlotSafe(i - 1, j - 1) == _player || getSlotSafe(i + 1, j - 1) == _player ||
-								getSlotSafe(i - 1, j + 1) == _player || getSlotSafe(i + 1, j + 1) == _player)
-							{
-								_result[numCorners++] = { ubyte(i), ubyte(j) };
-							}
-						}
-					}
-				}
+                ubyte2 pos = ubyte2{ ubyte(i), ubyte(j) };
+                if (getStartingPosition(_player) == pos || isValidPlayableSlot(_player, pos))
+                {
+                    _result[numCorners++] = pos;
+                }
 			}
 		}
 
@@ -335,10 +337,10 @@ namespace BlokusIA
 
 		bool compatibleCorner[4] = 
 		{ 
-			getSlotSafe(iBoardPos.x - 1, iBoardPos.y - 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x + 1, iBoardPos.y - 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x + 1, iBoardPos.y + 1) == _player || _isFirstMove,
-			getSlotSafe(iBoardPos.x - 1, iBoardPos.y + 1) == _player || _isFirstMove
+			getSlotSafe<-1,-1>(iBoardPos.x, iBoardPos.y) == _player || _isFirstMove,
+			getSlotSafe<1,-1>(iBoardPos.x, iBoardPos.y) == _player || _isFirstMove,
+			getSlotSafe<1,1>(iBoardPos.x, iBoardPos.y) == _player || _isFirstMove,
+			getSlotSafe<-1,1>(iBoardPos.x, iBoardPos.y) == _player || _isFirstMove
 		};
 
 		for (u32 i = 0; i < Piece::MaxTile; ++i)

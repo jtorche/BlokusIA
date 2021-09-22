@@ -7,7 +7,13 @@ namespace BlokusIA
 {
 	PieceSymetries s_allPieces = {};
     u32 s_totalPieceTileCount = 0;
+
+#ifdef _DEBUG
+    thread_pool s_threadPool(1);
+#else
     thread_pool s_threadPool;
+#endif
+
     GameStateCache g_cache;
 
 	//-------------------------------------------------------------------------------------------------
@@ -28,6 +34,12 @@ namespace BlokusIA
         return g_cache;
     }
 
+    //-------------------------------------------------------------------------------------------------
+    static Slot convertToSlot(u32 _playerIndex)
+    {
+        return Slot(u32(Slot::P0) + _playerIndex);
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	GameState::GameState()
 	{
@@ -36,6 +48,12 @@ namespace BlokusIA
         {
             remaining.set();
             remaining.reset(BlokusGame::PiecesCount);
+        }
+
+        for (u32 i = 0; i < 4; ++i)
+        {
+            m_numPlaybablePos[i] = 1;
+            m_playablePositions[i][0] = Board::getStartingPosition(convertToSlot(i));
         }
 	}
 
@@ -48,12 +66,6 @@ namespace BlokusIA
                m_remainingPieces[2] == _state.m_remainingPieces[2] &&
                m_remainingPieces[3] == _state.m_remainingPieces[3] &&
                m_turn == _state.m_turn;
-    }
-
-    //-------------------------------------------------------------------------------------------------
-    static Slot convertToSlot(u32 _playerIndex)
-    {
-        return Slot(u32(Slot::P0) + _playerIndex);
     }
 
 	//-------------------------------------------------------------------------------------------------
@@ -69,6 +81,7 @@ namespace BlokusIA
 		DEBUG_ASSERT(m_board.canAddPiece(player, _move.piece, { _move.position.x, _move.position.y }));
 		newGameState.m_board.addPiece(player, _move.piece, _move.position);
         newGameState.m_playedTiles[turn] += _move.piece.getNumTiles();
+        newGameState.updatePlayablePositions(player, _move);
 
         constexpr u32 pieceSpaceCompensation[5] = { 4,6,8,10,12 };
         DEBUG_ASSERT(_move.piece.getNumTiles() <= 5);
@@ -98,10 +111,10 @@ namespace BlokusIA
 		std::vector<Move> moves;
 		Slot playerToMove = convertToSlot(getPlayerTurn());
 
-		Board::PlayableSlots slots;
-		u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
+		const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
+        u32 numSlots = m_numPlaybablePos[getPlayerTurn()];
 
-		moves.reserve(m_remainingPieces[getPlayerTurn()].count() * numSlots);
+		moves.reserve(512);
 
 		// reverse order to look at big pieces first (to improve sorting later)
 		for (auto it = s_allPieces.rbegin() ; it != s_allPieces.rend() ; ++it)
@@ -318,11 +331,34 @@ namespace BlokusIA
             --m_expandClusterSize;
         }
 
+        template<int OffsetX, int OffsetY>
         void addToClusterList(int x, int y)
         {
-            if (x < 0 || y < 0 || x >= Board::BoardSize || y >= Board::BoardSize)
-                return;
+            static_assert(!(OffsetX != 0 && OffsetY != 0));
+            if constexpr (OffsetX < 0)
+            {
+                if (x + OffsetX < 0)
+                    return;
+            }
+            else if constexpr (OffsetX > 0)
+            {
+                if (x + OffsetX >= Board::BoardSize)
+                    return;
+            }
+            else if constexpr (OffsetY < 0)
+            {
+                if (y + OffsetY < 0)
+                    return;
+            }
+            else if constexpr (OffsetY > 0)
+            {
+                if (y + OffsetY >= Board::BoardSize)
+                    return;
+            }
 
+            x += OffsetX;
+            y += OffsetY;
+            
             if (m_clusters[x][y] != 0)
                 return;
 
@@ -331,10 +367,10 @@ namespace BlokusIA
 
             if (!m_includeSideUnreachableEmptySlot)
             {
-                if (m_state.getBoard().getSlotSafe(x - 1, y) == m_player ||
-                    m_state.getBoard().getSlotSafe(x, y - 1) == m_player ||
-                    m_state.getBoard().getSlotSafe(x + 1, y) == m_player ||
-                    m_state.getBoard().getSlotSafe(x, y + 1) == m_player)
+                if (m_state.getBoard().getSlotSafe<-1,0>(x, y) == m_player ||
+                    m_state.getBoard().getSlotSafe<1,0>(x, y) == m_player ||
+                    m_state.getBoard().getSlotSafe<0,-1>(x, y) == m_player ||
+                    m_state.getBoard().getSlotSafe<0,1>(x, y) == m_player)
                     return;
             }
 
@@ -351,18 +387,10 @@ namespace BlokusIA
             m_clusters[_x][_y] = ubyte(_clusterIndex);
             m_clusterSize[_clusterIndex - 1]++;
 
-            addToClusterList(_x - 1, _y);
-            addToClusterList(_x + 1, _y);
-            addToClusterList(_x, _y - 1);
-            addToClusterList(_x, _y + 1);
-
-            //if (m_expandInCorner)
-            //{
-            //    addToClusterList(_x - 1, _y - 1);
-            //    addToClusterList(_x + 1, _y - 1);
-            //    addToClusterList(_x - 1, _y + 1);
-            //    addToClusterList(_x + 1, _y + 1);
-            //}
+            addToClusterList<-1,0>(_x, _y);
+            addToClusterList<1,0>(_x, _y);
+            addToClusterList<0,-1>(_x, _y);
+            addToClusterList<0,1>(_x, _y);
         }
 
         void expandFrom(ubyte2 _pos)
@@ -397,8 +425,9 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     void GameState::computeReachableSlots(Slot _player, ExpandCluster& _expander) const
     {
-        Board::PlayableSlots slots;
-        u32 numSlots = m_board.computeValidSlotsForPlayer(_player, slots);
+        u32 playerIndex = u32(_player) - u32(Slot::P0);
+        const Board::PlayableSlots& slots = m_playablePositions[playerIndex];
+        u32 numSlots = m_numPlaybablePos[playerIndex];
 
         for (u32 i = 0; i < numSlots; ++i)
             _expander.expandFrom(slots[i]);
@@ -421,6 +450,69 @@ namespace BlokusIA
         }
 
         return numReachables;
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    void GameState::updatePlayablePositions(Slot _player, const Move& _move)
+    {
+        for (u32 p = 0; p < 4; ++p)
+        {
+            for (u32 i = 0; i < m_numPlaybablePos[p]; ++i)
+            {
+                if (getTurnCount() < p) // the round of move, we skip this process because the first playable slot is an exception
+                    continue;
+
+                if (!m_board.isValidPlayableSlot(convertToSlot(p), m_playablePositions[p][i]))
+                {
+                    std::swap(m_playablePositions[p][i], m_playablePositions[p][m_numPlaybablePos[p]-1]);
+                    m_numPlaybablePos[p]--;
+                    i--;
+                }
+            }
+        }
+
+        ivec2 iBoardPos = { int(_move.position.x), int(_move.position.y) };
+        u32 playerIndex = u32(_player) - u32(Slot::P0);
+        for (u32 i = 0; i < Piece::MaxTile; ++i)
+        {
+            if (_move.piece.getTile(i) == 0)
+                break;
+
+            ivec2 tilePos = { int(Piece::getTileX(_move.piece.getTile(i))), int(Piece::getTileY(_move.piece.getTile(i))) };
+            tilePos += iBoardPos;
+
+            ubyte corners[4];
+            _move.piece.getCorners(i, corners);
+
+            for (u32 c = 0; c < 4; ++c)
+            {
+                if (corners[c])
+                {
+                    ivec2 cornerPos = tilePos;
+                    switch (c)
+                    {
+                    case 0:
+                        cornerPos += ivec2(-1, -1); break;
+                    case 1:
+                        cornerPos += ivec2(1, -1); break;
+                    case 2:
+                        cornerPos += ivec2(1, 1); break;
+                    case 3:
+                        cornerPos += ivec2(-1, 1); break;
+                    }
+
+                    if (cornerPos.x >= 0 && cornerPos.x < Board::BoardSize && cornerPos.y >= 0 && cornerPos.y < Board::BoardSize)
+                    {
+                        ubyte2 pos = { ubyte(cornerPos.x), ubyte(cornerPos.y) };
+                        if (m_board.isValidPlayableSlot(_player, pos))
+                        {
+                            DEBUG_ASSERT(m_numPlaybablePos[playerIndex] < Board::MaxPlayableCorners);
+                            m_playablePositions[playerIndex][m_numPlaybablePos[playerIndex]++] = pos;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     //-------------------------------------------------------------------------------------------------

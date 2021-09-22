@@ -82,9 +82,15 @@ namespace BlokusIA
         // in order to still favor big pieces in "space based" heuristic
         u32 m_pieceSpaceScoreCompensation[4] = {}; 
 
+        // Cache playable positions per players
+        ubyte m_numPlaybablePos[4] = {};
+        Board::PlayableSlots m_playablePositions[4];
+
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
         float computeFreeSpaceHeuristic(Slot _player, float _weightCluster, bool _includeUnreachableSideEmptySlot) const;
+
+        void updatePlayablePositions(Slot _player, const Move& _move);
 
         friend struct std::hash<BlokusIA::GameState>;
         friend class GameStateCache;

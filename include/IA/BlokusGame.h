@@ -102,7 +102,7 @@ namespace BlokusIA
 	{
 	public:
 		static constexpr u32 BoardSize = 20;
-		static constexpr u32 MaxPlayableCorners = 128; // arbitrary value, probably too high
+		static constexpr u32 MaxPlayableCorners = 64; // arbitrary value, probably too high
 
 		Board() = default;
 		Board(const Board&) = default;
@@ -110,16 +110,17 @@ namespace BlokusIA
         bool operator==(const Board&) const;
 
 		Slot getSlot(u32 _x, u32 _y) const;
-		Slot getSlotSafe(i32 _x, i32 _y) const;
 		void setSlot(u32 _x, u32 _y, Slot _slot);
+        template<int OffsetX, int OffsetY> Slot getSlotSafe(i32 _x, i32 _y) const;
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
 
-		uvec2 getStartingPosition(Slot _player) const;
+		static ubyte2 getStartingPosition(Slot _player);
 
 		using PlayableSlots = std::array<ubyte2, MaxPlayableCorners>;
 		u32 computeValidSlotsForPlayer(Slot _player, PlayableSlots& _result) const;
+        bool isValidPlayableSlot(Slot _player, ubyte2 _pos) const;
 
 		// Assuming _boardPos is a valid position from "computeValidSlotsForPlayer"
 		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>&, bool _isFirstMove) const;
@@ -166,15 +167,56 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    inline Slot Board::getSlotSafe(i32 _x, i32 _y) const
+    template<int OffsetX, int OffsetY>
+    Slot Board::getSlotSafe(i32 _x, i32 _y) const
     {
-        if (_x < 0 || _x >= i32(BoardSize) || _y < 0 || _y >= i32(BoardSize))
-            return Slot::Empty;
-        return getSlot(u32(_x), u32(_y));
+        if constexpr (OffsetX < 0 && OffsetY < 0)
+        {
+            if (_x + OffsetX < 0 || _y + OffsetY < 0)
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetX > 0 && OffsetY < 0)
+        {
+            if (_x + OffsetX >= i32(BoardSize) || _y + OffsetY < 0)
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetX < 0 && OffsetY > 0)
+        {
+            if (_x + OffsetX < 0 || _y + OffsetY >= i32(BoardSize))
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetX > 0 && OffsetY > 0)
+        {
+            if (_x + OffsetX >= i32(BoardSize) || _y + OffsetY >= i32(BoardSize))
+                return Slot::Empty;
+        }
+
+        else if constexpr (OffsetX < 0) 
+        {
+            if(_x + OffsetX < 0)
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetX > 0)
+        {
+            if (_x + OffsetX >= i32(BoardSize))
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetY < 0)
+        {
+            if (_y + OffsetY < 0)
+                return Slot::Empty;
+        }
+        else if constexpr (OffsetY > 0)
+        {
+            if (_y + OffsetY >= i32(BoardSize))
+                return Slot::Empty;
+        }
+        
+        return getSlot(u32(_x+OffsetX), u32(_y+OffsetY));
     }
 
     //-------------------------------------------------------------------------------------------------
-    inline uvec2 Board::getStartingPosition(Slot _player) const
+    inline ubyte2 Board::getStartingPosition(Slot _player)
     {
         switch (_player)
         {
