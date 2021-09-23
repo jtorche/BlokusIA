@@ -52,7 +52,7 @@ namespace BlokusIA
 
         for (u32 i = 0; i < 4; ++i)
         {
-            m_numPlaybablePos[i] = 1;
+            m_numPlayablePos[i] = 1;
             m_playablePositions[i][0] = Board::getStartingPosition(convertToSlot(i));
         }
 	}
@@ -112,7 +112,15 @@ namespace BlokusIA
 		Slot playerToMove = convertToSlot(getPlayerTurn());
 
 		const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
-        u32 numSlots = m_numPlaybablePos[getPlayerTurn()];
+        u32 numSlots = m_numPlayablePos[getPlayerTurn()];
+
+        //Board::PlayableSlots slots;
+        //u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
+        //if (numSlots != m_numPlayablePos[getPlayerTurn()])
+        //{
+        //    std::cout << std::endl;
+        //    m_board.print();
+        //}
 
 		moves.reserve(512);
 
@@ -427,7 +435,7 @@ namespace BlokusIA
     {
         u32 playerIndex = u32(_player) - u32(Slot::P0);
         const Board::PlayableSlots& slots = m_playablePositions[playerIndex];
-        u32 numSlots = m_numPlaybablePos[playerIndex];
+        u32 numSlots = m_numPlayablePos[playerIndex];
 
         for (u32 i = 0; i < numSlots; ++i)
             _expander.expandFrom(slots[i]);
@@ -457,15 +465,15 @@ namespace BlokusIA
     {
         for (u32 p = 0; p < 4; ++p)
         {
-            for (u32 i = 0; i < m_numPlaybablePos[p]; ++i)
+            for (u32 i = 0; i < m_numPlayablePos[p]; ++i)
             {
                 if (getTurnCount() < p) // the round of move, we skip this process because the first playable slot is an exception
                     continue;
 
                 if (!m_board.isValidPlayableSlot(convertToSlot(p), m_playablePositions[p][i]))
                 {
-                    std::swap(m_playablePositions[p][i], m_playablePositions[p][m_numPlaybablePos[p]-1]);
-                    m_numPlaybablePos[p]--;
+                    std::swap(m_playablePositions[p][i], m_playablePositions[p][m_numPlayablePos[p]-1]);
+                    m_numPlayablePos[p]--;
                     i--;
                 }
             }
@@ -506,8 +514,8 @@ namespace BlokusIA
                         ubyte2 pos = { ubyte(cornerPos.x), ubyte(cornerPos.y) };
                         if (m_board.isValidPlayableSlot(_player, pos))
                         {
-                            DEBUG_ASSERT(m_numPlaybablePos[playerIndex] < Board::MaxPlayableCorners);
-                            m_playablePositions[playerIndex][m_numPlaybablePos[playerIndex]++] = pos;
+                            DEBUG_ASSERT(m_numPlayablePos[playerIndex] < Board::MaxPlayableCorners);
+                            m_playablePositions[playerIndex][m_numPlayablePos[playerIndex]++] = pos;
                         }
                     }
                 }

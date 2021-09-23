@@ -316,7 +316,7 @@ namespace BlokusIA
 			for (i32 i = 0; i < i32(BoardSize); ++i)
 			{
                 ubyte2 pos = ubyte2{ ubyte(i), ubyte(j) };
-                if (getStartingPosition(_player) == pos || isValidPlayableSlot(_player, pos))
+                if ((getStartingPosition(_player) == pos && getSlot(pos.x, pos.y) == Slot::Empty) || isValidPlayableSlot(_player, pos))
                 {
                     _result[numCorners++] = pos;
                 }

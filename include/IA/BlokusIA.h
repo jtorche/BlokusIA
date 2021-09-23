@@ -83,7 +83,7 @@ namespace BlokusIA
         u32 m_pieceSpaceScoreCompensation[4] = {}; 
 
         // Cache playable positions per players
-        ubyte m_numPlaybablePos[4] = {};
+        ubyte m_numPlayablePos[4] = {};
         Board::PlayableSlots m_playablePositions[4];
 
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
