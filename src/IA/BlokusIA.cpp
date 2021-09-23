@@ -116,7 +116,10 @@ namespace BlokusIA
 
         //Board::PlayableSlots slots;
         //u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
-        //if (numSlots != m_numPlayablePos[getPlayerTurn()])
+        //Board::PlayableSlots incrSlots = m_playablePositions[getPlayerTurn()];
+        //std::sort(slots.begin(), slots.begin() + numSlots);
+        //std::sort(incrSlots.begin(), incrSlots.begin() + m_numPlayablePos[getPlayerTurn()]);
+        //if (slots != incrSlots)
         //{
         //    std::cout << std::endl;
         //    m_board.print();
@@ -461,22 +464,39 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
+    static bool insertSorted(u32 _numSlots, Board::PlayableSlots& _array, ubyte2 _element)
+    {
+        auto begin = _array.begin();
+        auto end = _array.begin() + _numSlots;
+
+        auto insertionPoint = std::lower_bound(begin, end, _element);
+        if (*insertionPoint == _element)
+            return false;
+
+        for (auto it = end; it != insertionPoint; --it)
+            *it = *(it - 1);
+
+        *insertionPoint = _element;
+        return true;
+    }
+
+    //-------------------------------------------------------------------------------------------------
     void GameState::updatePlayablePositions(Slot _player, const Move& _move)
     {
         for (u32 p = 0; p < 4; ++p)
         {
+            Board::PlayableSlots updatedPlayableSlots = {};
+            u32 numSlots = 0;
             for (u32 i = 0; i < m_numPlayablePos[p]; ++i)
             {
-                if (getTurnCount() < p) // the round of move, we skip this process because the first playable slot is an exception
-                    continue;
-
-                if (!m_board.isValidPlayableSlot(convertToSlot(p), m_playablePositions[p][i]))
+                // The first turn for each player, we include the slot automatically
+                if (getTurnCount() < p || m_board.isValidPlayableSlot(convertToSlot(p), m_playablePositions[p][i]))
                 {
-                    std::swap(m_playablePositions[p][i], m_playablePositions[p][m_numPlayablePos[p]-1]);
-                    m_numPlayablePos[p]--;
-                    i--;
+                    updatedPlayableSlots[numSlots++] = m_playablePositions[p][i];
                 }
             }
+            m_numPlayablePos[p] = ubyte(numSlots);
+            memcpy(m_playablePositions[p].data(), updatedPlayableSlots.data(), numSlots * sizeof(ubyte2));
         }
 
         ivec2 iBoardPos = { int(_move.position.x), int(_move.position.y) };
@@ -515,7 +535,8 @@ namespace BlokusIA
                         if (m_board.isValidPlayableSlot(_player, pos))
                         {
                             DEBUG_ASSERT(m_numPlayablePos[playerIndex] < Board::MaxPlayableCorners);
-                            m_playablePositions[playerIndex][m_numPlayablePos[playerIndex]++] = pos;
+                            if(insertSorted(m_numPlayablePos[playerIndex], m_playablePositions[playerIndex], pos))
+                                m_numPlayablePos[playerIndex]++;
                         }
                     }
                 }
@@ -526,7 +547,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     u32 BaseIA::maxMoveToLookAt(const GameState&) const
     {
-        return 32;
+        return 64;
     }
 
     //-------------------------------------------------------------------------------------------------
