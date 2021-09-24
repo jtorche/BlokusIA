@@ -99,17 +99,18 @@ void pieceTest2()
 
 void boardTest()
 {
+    Piece p(Piece::build(0, 0));
 	{
 		Board board;
-		board.setSlot(0, 0, Slot::P0);
+        board.addPiece(Slot::P0, p, { 0,0 });
 		DEBUG_ASSERT(board.getSlot(0, 0) == Slot::P0);
 	}
 	{
 		Board board;
-		board.setSlot(8, 10, Slot::P0);
-		board.setSlot(9, 10, Slot::P1);
-		board.setSlot(10, 10, Slot::P2);
-		board.setSlot(11, 10, Slot::P3);
+        board.addPiece(Slot::P0, p, { 8,10 });
+        board.addPiece(Slot::P1, p, { 9, 10 });
+        board.addPiece(Slot::P2, p, { 10, 10 });
+        board.addPiece(Slot::P3, p, { 11, 10 });
 		DEBUG_ASSERT(board.getSlot(8, 10) == Slot::P0);
 		DEBUG_ASSERT(board.getSlot(9, 10) == Slot::P1);
 		DEBUG_ASSERT(board.getSlot(10, 10) == Slot::P2);

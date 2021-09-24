@@ -14,6 +14,7 @@ namespace BlokusIA
     extern u32 s_totalPieceTileCount;
     extern thread_pool s_threadPool;
 	void initBlokusIA();
+    void printAllPieces();
 
     class GameStateCache;
     GameStateCache& getGlobalCache();
@@ -43,6 +44,7 @@ namespace BlokusIA
     {
         TileCount,
         ReachableSpace,
+        JuicyCorner,
     };
 
 	//-------------------------------------------------------------------------------------------------
@@ -52,6 +54,7 @@ namespace BlokusIA
 	{
 	public:
         static const u32 g_NumTurnToRushCenter = 3;
+        static const float s_endGameScore;
 
 		GameState();
 		GameState play(const Move&) const;
@@ -78,7 +81,7 @@ namespace BlokusIA
 		std::bitset<BlokusGame::PiecesCount + 1> m_remainingPieces[4]; // last bit to store if a player can't play anymore
 		u32 m_turn = 0;
         u32 m_playedTiles[4] = {};
-        // accumulate a value to compensate the space lost by playing big pieces
+        // Accumulate a value to compensate the space lost by playing big pieces
         // in order to still favor big pieces in "space based" heuristic
         u32 m_pieceSpaceScoreCompensation[4] = {}; 
 
@@ -88,7 +91,8 @@ namespace BlokusIA
 
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
-        float computeFreeSpaceHeuristic(Slot _player, float _weightCluster, bool _includeUnreachableSideEmptySlot) const;
+        float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
+        float computeJuicyCornerHeuristic(Slot _player, const Move& _move) const;
 
         void updatePlayablePositions(Slot _player, const Move& _move);
 

@@ -105,9 +105,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     void Piece::computeNumBorderTiles()
     {
-        constexpr u32 MaxPieceSizeX = 5;
-        constexpr u32 MaxPieceSizeY = 5;
-        bool smallGrid[MaxPieceSizeX+2][MaxPieceSizeY+2] = { {} };
+        bool smallGrid[g_MaxPieceSizeX+2][g_MaxPieceSizeY+2] = { {} };
         
         for (u32 i = 0; i < MaxTile; ++i)
         {
@@ -115,25 +113,25 @@ namespace BlokusIA
             {
                 u32 curX = getTileX(m_layout[i]);
                 u32 curY = getTileY(m_layout[i]);
-                DEBUG_ASSERT(curX < MaxPieceSizeX && curY < MaxPieceSizeY);
+                DEBUG_ASSERT(curX < g_MaxPieceSizeX && curY < g_MaxPieceSizeY);
 
                 smallGrid[curX+1][curY+1] = true;
             }
         }
 
         m_numBorderTiles = 0;
-        for(u32 i = 0 ; i < MaxPieceSizeX+2; ++i)
-            for (u32 j = 0; j < MaxPieceSizeY+2; ++j)
+        for(u32 i = 0 ; i < g_MaxPieceSizeX+2; ++i)
+            for (u32 j = 0; j < g_MaxPieceSizeY+2; ++j)
         {
             if (!smallGrid[i][j])
             {
                 if (i > 0 && smallGrid[i - 1][j])
                     m_numBorderTiles++;
-                else if(i < MaxPieceSizeX + 1 && smallGrid[i + 1][j])
+                else if(i < g_MaxPieceSizeX + 1 && smallGrid[i + 1][j])
                     m_numBorderTiles++;
                 else if (j > 0 && smallGrid[i][j - 1])
                     m_numBorderTiles++;
-                else if (j < MaxPieceSizeY + 1 && smallGrid[i][j + 1])
+                else if (j < g_MaxPieceSizeY + 1 && smallGrid[i][j + 1])
                     m_numBorderTiles++;
             }
         }
@@ -192,6 +190,51 @@ namespace BlokusIA
 		return piece;
 	}
 
+    //-------------------------------------------------------------------------------------------------
+    void Piece::print() const
+    {
+        char grid[g_MaxPieceSizeX + 2][g_MaxPieceSizeY + 2];
+        for (u32 j = 0; j < g_MaxPieceSizeY + 2; ++j)
+            for(u32 i = 0 ; i< g_MaxPieceSizeX + 2; ++i)
+        {
+            grid[i][j] = ' ';
+        }
+
+        u32 maxY = 0;
+        for (u32 i = 0; i < MaxTile; ++i)
+        {
+            if (m_layout[i] != 0)
+            {
+                u32 curX = getTileX(m_layout[i])+1;
+                u32 curY = getTileY(m_layout[i])+1;
+                maxY = std::max(maxY, curY);
+
+                grid[curX][curY] = '0';
+
+                ubyte corners[4];
+                getCorners(i, corners);
+
+                if(corners[0])
+                    grid[curX-1][curY-1] = 'X';
+                if (corners[1])
+                    grid[curX+1][curY-1] = 'X';
+                if (corners[2])
+                    grid[curX+1][curY+1] = 'X';
+                if (corners[3])
+                    grid[curX-1][curY+1] = 'X';
+            }
+        }
+
+        for (u32 j = 0; j < maxY+2; ++j)
+        {
+            for (u32 i = 0; i < g_MaxPieceSizeX + 2; ++i)
+            {
+                std::cout << grid[i][j];
+            }
+            std::cout << std::endl;
+        }
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	void Corners::setCorners(u32 _tileIndex, ubyte _c1, ubyte _c2, ubyte _c3, ubyte _c4)
 	{
@@ -235,12 +278,42 @@ namespace BlokusIA
         return memcmp(m_board.data(), _board.m_board.data(), sizeof(m_board)) == 0;
     }
 
+    //-------------------------------------------------------------------------------------------------
+    void Board::setSlot(u32 _x, u32 _y, Slot _slot)
+    {
+        DEBUG_ASSERT(_slot != Slot::Empty);
+
+        u32 flattenIndex = flatten(_x, _y) >> 3;
+        u32 packed = m_board[flattenIndex];
+        u32 offset = (flatten(_x, _y) & 0x7) << 2;
+        packed = packed & ~(0xF << offset);
+        packed += u32(_slot) << offset;
+        m_board[flattenIndex] = packed;
+
+        auto updateContactRuleCache = [this, _slot](u32 x, u32 y)
+        {
+            u32 flattenIndex = flatten(x, y) >> 3;
+            u32 packed = m_nonContactRuleCache[flattenIndex];
+            u32 offset = (flatten(x, y) & 0x7) << 2;
+            u32 mask = 1 << (u32(_slot) - u32(Slot::P0));
+            packed = packed | (mask << offset);
+            m_nonContactRuleCache[flattenIndex] = packed;
+        };
+
+        updateContactRuleCache(_x, _y);
+        if (_x > 0)              updateContactRuleCache(_x - 1, _y);
+        if (_x < BoardSize - 1) updateContactRuleCache(_x + 1, _y);
+        if (_y > 0)             updateContactRuleCache(_x, _y - 1);
+        if (_y < BoardSize - 1) updateContactRuleCache(_x, _y + 1);
+    }
+
 	//-------------------------------------------------------------------------------------------------
 	bool Board::canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const
 	{
 		DEBUG_ASSERT(_player != Slot::Empty);
 		DEBUG_ASSERT(_pos.x < BoardSize && _pos.y < BoardSize);
 
+        ubyte playerIndex = ubyte(_player) - ubyte(Slot::P0);
 		for (u32 i = 0; i < Piece::MaxTile; ++i)
 		{
 			if (_piece.getTile(i) == 0)
@@ -255,17 +328,8 @@ namespace BlokusIA
 			if (getSlot(tileX, tileY) != Slot::Empty)
 				return false;
 
-			// Implement the non contact rule with pieces of the same player
-			i32 iTileX = i32(tileX);
-			i32 iTileY = i32(tileY);
-			if (getSlotSafe<-1,0>(iTileX, iTileY) == _player)
-				return false;
-			if (getSlotSafe<1,0>(iTileX, iTileY) == _player)
-				return false;
-			if (getSlotSafe<0,-1>(iTileX, iTileY) == _player)
-				return false;
-			if (getSlotSafe<0,1>(iTileX, iTileY) == _player)
-				return false;
+            if (getContactRuleCache(tileX, tileY) & (ubyte(1) << playerIndex))
+                return false;
 		}
 
 		return true;

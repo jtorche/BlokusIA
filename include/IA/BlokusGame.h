@@ -82,7 +82,12 @@ namespace BlokusIA
 		static u32 getTileX(Tile _tile) { return _tile & 0x7; }
 		static u32 getTileY(Tile _tile) { return (_tile >> 3) & 0x7; }
 
+        void print() const;
+
 	private:
+        static constexpr u32 g_MaxPieceSizeX = 5;
+        static constexpr u32 g_MaxPieceSizeY = 5;
+
 		void sort();
 		void flush();
         void computeNumBorderTiles();
@@ -110,8 +115,13 @@ namespace BlokusIA
         bool operator==(const Board&) const;
 
 		Slot getSlot(u32 _x, u32 _y) const;
-		void setSlot(u32 _x, u32 _y, Slot _slot);
-        template<int OffsetX, int OffsetY> Slot getSlotSafe(i32 _x, i32 _y) const;
+        ubyte getContactRuleCache(u32 _x, u32 _y) const;
+
+        template<int OffsetX, int OffsetY> 
+        Slot getSlotSafe(i32 _x, i32 _y) const { return (Slot)getSafe<false, OffsetX, OffsetY>(_x, _y); }
+
+        template<int OffsetX, int OffsetY> 
+        Slot getContactRuleCacheSafe(i32 _x, i32 _y) const { return getSafe<true, OffsetX, OffsetY>(_x, _y); }
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
@@ -125,7 +135,6 @@ namespace BlokusIA
 		// Assuming _boardPos is a valid position from "computeValidSlotsForPlayer"
 		u32 getPiecePlayablePositions(Slot _player, const Piece& _piece, ubyte2 _boardPos, std::array<ubyte2, Piece::MaxPlayableCorners>&, bool _isFirstMove) const;
 
-
 		void print() const;
 
 	private:
@@ -133,6 +142,17 @@ namespace BlokusIA
 
 		// each u32 store a 8x1 sub board, each slot on 4 bits
 		std::array<u32, (BoardSize*BoardSize)/8> m_board = { {0} };
+
+        // each u32 store a 8x1 sub board, each slot on 4 bits stores if it is possible to play a tile
+        // regarding the "non contact" rule. (one bit per player).
+        // It is also false if the tile is occupied by the player.
+        std::array<u32, (BoardSize * BoardSize) / 8> m_nonContactRuleCache = { {0} };
+
+    private:
+        void setSlot(u32 _x, u32 _y, Slot _slot);
+
+        template<bool callGetContactRuleCache, int OffsetX, int OffsetY>
+        ubyte getSafe(i32 _x, i32 _y) const;
 
         friend std::hash<BlokusIA::Board>;
 	};
@@ -157,62 +177,63 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    inline void Board::setSlot(u32 _x, u32 _y, Slot _slot)
+    inline ubyte Board::getContactRuleCache(u32 _x, u32 _y) const
     {
-        u32 packed = m_board[flatten(_x, _y) >> 3];
+        u32 packed = m_nonContactRuleCache[flatten(_x, _y) >> 3];
         u32 offset = (flatten(_x, _y) & 0x7) << 2;
-        packed = packed & ~(0xF << offset);
-        packed += u32(_slot) << offset;
-        m_board[flatten(_x, _y) >> 3] = packed;
+        return ubyte((packed >> offset) & 0xF);
     }
 
     //-------------------------------------------------------------------------------------------------
-    template<int OffsetX, int OffsetY>
-    Slot Board::getSlotSafe(i32 _x, i32 _y) const
+    template<bool callGetContactRuleCache, int OffsetX, int OffsetY>
+    ubyte Board::getSafe(i32 _x, i32 _y) const
     {
         if constexpr (OffsetX < 0 && OffsetY < 0)
         {
             if (_x + OffsetX < 0 || _y + OffsetY < 0)
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetX > 0 && OffsetY < 0)
         {
             if (_x + OffsetX >= i32(BoardSize) || _y + OffsetY < 0)
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetX < 0 && OffsetY > 0)
         {
             if (_x + OffsetX < 0 || _y + OffsetY >= i32(BoardSize))
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetX > 0 && OffsetY > 0)
         {
             if (_x + OffsetX >= i32(BoardSize) || _y + OffsetY >= i32(BoardSize))
-                return Slot::Empty;
+                return 0;
         }
 
         else if constexpr (OffsetX < 0) 
         {
             if(_x + OffsetX < 0)
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetX > 0)
         {
             if (_x + OffsetX >= i32(BoardSize))
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetY < 0)
         {
             if (_y + OffsetY < 0)
-                return Slot::Empty;
+                return 0;
         }
         else if constexpr (OffsetY > 0)
         {
             if (_y + OffsetY >= i32(BoardSize))
-                return Slot::Empty;
+                return 0;
         }
         
-        return getSlot(u32(_x+OffsetX), u32(_y+OffsetY));
+        if constexpr (callGetContactRuleCache)
+            return getContactRuleCache(u32(_x + OffsetX), u32(_y + OffsetY));
+        else
+            return (ubyte)getSlot(u32(_x+OffsetX), u32(_y+OffsetY));
     }
 
     //-------------------------------------------------------------------------------------------------

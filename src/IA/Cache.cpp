@@ -3,9 +3,10 @@
 
 namespace BlokusIA
 {
+#if 0
     float GameStateCache::computeBoardScore(const GameState& _gameState, Slot _player, BoardHeuristic _heuristic)
     {
-#if 0
+
         std::lock_guard _{ m_mutex };
 
         auto& cache = m_boardScore[u32(_heuristic)][u32(_player) - u32(Slot::P0)];
@@ -22,9 +23,9 @@ namespace BlokusIA
             m_cacheMiss++;
             return score;
         } 
-#endif
         return _gameState.computeBoardScoreInner(_player, _heuristic);
     }
+#endif
 
     void GameStateCache::resetStats()
     {

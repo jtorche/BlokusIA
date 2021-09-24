@@ -16,6 +16,8 @@ namespace BlokusIA
 
     GameStateCache g_cache;
 
+    const float GameState::s_endGameScore = 1000000.f;
+
 	//-------------------------------------------------------------------------------------------------
 	void initBlokusIA()
 	{
@@ -27,6 +29,22 @@ namespace BlokusIA
         }
         srand((u32)time(nullptr));
 	}
+
+    //-------------------------------------------------------------------------------------------------
+    void printAllPieces()
+    {
+        u32 pieceIndex = 1;
+        for (const auto& _pieces : s_allPieces)
+        {
+            std::cout << "------------------------------\n";
+            std::cout << "Piece " << pieceIndex++ << ":\n";
+            for (const auto& piece : _pieces)
+            {
+                std::cout << "--------\n";
+                piece.print();
+            }
+        }
+    }
 
     //-------------------------------------------------------------------------------------------------
     GameStateCache& getGlobalCache()
@@ -113,17 +131,6 @@ namespace BlokusIA
 
 		const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
         u32 numSlots = m_numPlayablePos[getPlayerTurn()];
-
-        //Board::PlayableSlots slots;
-        //u32 numSlots = m_board.computeValidSlotsForPlayer(playerToMove, slots);
-        //Board::PlayableSlots incrSlots = m_playablePositions[getPlayerTurn()];
-        //std::sort(slots.begin(), slots.begin() + numSlots);
-        //std::sort(incrSlots.begin(), incrSlots.begin() + m_numPlayablePos[getPlayerTurn()]);
-        //if (slots != incrSlots)
-        //{
-        //    std::cout << std::endl;
-        //    m_board.print();
-        //}
 
 		moves.reserve(512);
 
@@ -213,10 +220,9 @@ namespace BlokusIA
 	//-------------------------------------------------------------------------------------------------
 	float GameState::computeHeuristic(const Move& _move, MoveHeuristic _moveHeuristic) const
 	{
-        float distToCenterHeuristic = 0;
+        Slot playerToMove = convertToSlot(getPlayerTurn());
 
-        // first 4 rounds, we favor a rush to the center
-        if (getTurnCount() < g_NumTurnToRushCenter*4)
+        float distToCenterHeuristic = 0;
         {
             float closestDistToCenter = std::numeric_limits<float>::max();
             vec2 boardCenter = { Board::BoardSize / 2, Board::BoardSize / 2 };
@@ -227,23 +233,22 @@ namespace BlokusIA
                 closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
             }
             distToCenterHeuristic = 1.f - closestDistToCenter;
-
-            return distToCenterHeuristic;
+            DEBUG_ASSERT(distToCenterHeuristic <= 1);
         }
-
-		DEBUG_ASSERT(distToCenterHeuristic <= 1);
 
         if(_moveHeuristic == MoveHeuristic::TileCount)
 		    return _move.piece.getNumTiles() + distToCenterHeuristic;
         else if (_moveHeuristic == MoveHeuristic::ReachableSpace)
         {
-            Slot playerToMove = convertToSlot(getPlayerTurn());
             GameState moveState = play(_move);
-            float numReachable = moveState.computeFreeSpaceHeuristic(playerToMove, 0, true);
-            numReachable += moveState.getPlayedPieceTiles(playerToMove);
+            float numReachable = moveState.computeFreeSpaceHeuristic(playerToMove, 0);
+            numReachable += (float)(getPlayedPieceTiles(playerToMove) + m_pieceSpaceScoreCompensation[u32(playerToMove) - u32(Slot::P0)]);
 
-            // we still favor big piece
-            return numReachable * 10 + float(_move.piece.getNumTiles()) + distToCenterHeuristic;
+            return numReachable + distToCenterHeuristic;
+        }
+        else if (_moveHeuristic == MoveHeuristic::JuicyCorner)
+        {
+            return computeJuicyCornerHeuristic(playerToMove, _move)*10 + float(_move.piece.getNumTiles()) + distToCenterHeuristic;
         }
 
         DEBUG_ASSERT(0);
@@ -265,21 +270,25 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     float GameState::computeBoardScoreInner(Slot _player, BoardHeuristic _heuristicType) const
     {
-        float negativeScore = 0; // second place means score = -1e6, third = -2e6, ...
-
-        // Detect if the player can't win anymore
-        if (noMoveLeft(_player))
+        float winOrLooseScore = 0; // first place means score = 1e6, second place means score = -1e6, third = -2e6, ...
+        u32 numOpponentsDefeated = 0;
+        for (u32 i = 0; i < 4; ++i)
         {
-            for (u32 i = 0; i < 4; ++i)
+            if (convertToSlot(i) != _player)
             {
-                if(convertToSlot(i) != _player && getPlayedPieceTiles(_player) < getPlayedPieceTiles(convertToSlot(i)))
-                    negativeScore -= 1000000.f;
+                if (noMoveLeft(_player) && getPlayedPieceTiles(_player) < getPlayedPieceTiles(convertToSlot(i)))
+                    winOrLooseScore -= s_endGameScore;
+                else if (noMoveLeft(convertToSlot(i)) && getPlayedPieceTiles(_player) >= getPlayedPieceTiles(convertToSlot(i)))
+                    numOpponentsDefeated++;
             }
         }
 
-        // we can't win anymore, so we return a negative heuristic to avoid this scenario at all cost
-        if (negativeScore < 0)
-            return negativeScore;
+        if (numOpponentsDefeated == 3)
+            winOrLooseScore = s_endGameScore;
+
+        // We detect an endgame, return an extrem score to avoid/force the scenario
+        if (winOrLooseScore != 0)
+            return winOrLooseScore;
 
         if (_heuristicType == BoardHeuristic::RemainingTiles)
             return (float)getPlayedPieceTiles(_player);
@@ -305,13 +314,13 @@ namespace BlokusIA
             {
                 // We sum the m_numBorderTileCache to make sure playing big pieces is better than playing small pieces
                 // Because playing big pieces also loose some free space
-                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor, false);
+                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor);
                 return freeSpaceHeuristic + (float)(getPlayedPieceTiles(_player) + m_pieceSpaceScoreCompensation[u32(_player) - u32(Slot::P0)]);
             }
             else
             {
                 // Here big pieces are always prioritized
-                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor, false);
+                float freeSpaceHeuristic = computeFreeSpaceHeuristic(_player, powFactor);
                 return (float)getPlayedPieceTiles(_player) + freeSpaceHeuristic / (Board::BoardSize * Board::BoardSize);
             }
         }
@@ -320,12 +329,12 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     struct ExpandCluster
     {
-        ExpandCluster(Slot _player, const GameState& _state, bool _includeSideUnreachableEmptySlot)
-            : m_state{ _state }, m_player{ _player }, m_includeSideUnreachableEmptySlot{ _includeSideUnreachableEmptySlot } {}
+        ExpandCluster(Slot _player, const GameState& _state)
+            : m_state{ _state }, m_player{ _player }, m_playerIndex{ ubyte(ubyte(_player) - ubyte(Slot::P0)) } {}
 
         const GameState& m_state;
         Slot m_player;
-        bool m_includeSideUnreachableEmptySlot = false;
+        ubyte m_playerIndex;
         ubyte m_clusters[Board::BoardSize][Board::BoardSize] = { {0} }; // 0 unexplored, -1 in queue, 1..n cluster index
         std::array<ubyte2, Board::BoardSize * Board::BoardSize> m_expandCluster; // queue of tiles to expand
         u32 m_expandClusterSize = 0;
@@ -376,14 +385,8 @@ namespace BlokusIA
             if (m_state.getBoard().getSlot(x, y) != Slot::Empty)
                 return;
 
-            if (!m_includeSideUnreachableEmptySlot)
-            {
-                if (m_state.getBoard().getSlotSafe<-1,0>(x, y) == m_player ||
-                    m_state.getBoard().getSlotSafe<1,0>(x, y) == m_player ||
-                    m_state.getBoard().getSlotSafe<0,-1>(x, y) == m_player ||
-                    m_state.getBoard().getSlotSafe<0,1>(x, y) == m_player)
-                    return;
-            }
+            if (m_state.getBoard().getContactRuleCache(x, y) & (ubyte(1) << m_playerIndex))
+                return;
 
             m_clusters[x][y] = ubyte(-1);
             m_expandCluster[m_expandClusterSize++] = { ubyte(x), ubyte(y) };
@@ -431,6 +434,19 @@ namespace BlokusIA
                 expandTo(x, y, m_clusterIndex);
             }
         }
+
+        void print() const
+        {
+            for (u32 j = 0; j < Board::BoardSize; ++j)
+            {
+                for (u32 i = 0; i < Board::BoardSize; ++i)
+                {
+                    std::cout << u32(m_clusters[i][j]);
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+        }
     };
 
     //-------------------------------------------------------------------------------------------------
@@ -445,9 +461,9 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    float GameState::computeFreeSpaceHeuristic(Slot _player, float _weightCluster, bool _includeSideUnreachableEmptySlot) const
+    float GameState::computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const
     {
-        ExpandCluster clusterExpander(_player , *this, _includeSideUnreachableEmptySlot);
+        ExpandCluster clusterExpander(_player , *this);
         computeReachableSlots(_player, clusterExpander);
 
         float numReachables = 0;
@@ -461,6 +477,76 @@ namespace BlokusIA
         }
 
         return numReachables;
+    }
+
+    //-------------------------------------------------------------------------------------------------
+    float GameState::computeJuicyCornerHeuristic(Slot _player, const Move& _move) const
+    {
+        auto notEmptyAndNotPlayer = [_player](Slot s) { return s != Slot::Empty && s != _player; };
+
+        bool hasConnectedCornerWithMyself = false;
+
+        for (u32 i = 0; i < _move.piece.getNumTiles(); ++i)
+        {
+            Piece::Tile tile = _move.piece.getTile(i);
+            if (tile == 0)
+                break;
+
+            ubyte corners[4];
+            _move.piece.getCorners(i, corners);
+            {
+                int tileX = int(Piece::getTileX(tile) + _move.position.x);
+                int tileY = int(Piece::getTileY(tile) + _move.position.y);
+
+                // check if the piece is connected to another player piece through this "juicy corner"
+                // Remainder of corner order:
+                // 1    2
+                // ------
+                // |    |
+                // |    |
+                // ------
+                // 4    3
+
+                // X4
+                // ?X
+                if (corners[3] &&
+                    notEmptyAndNotPlayer(m_board.getSlotSafe<-1, 0>(tileX, tileY)) && // (tileX, tileY) is empty &&
+                    m_board.getSlotSafe<-1, 1>(tileX, tileY) == _player && notEmptyAndNotPlayer(m_board.getSlotSafe<0, 1>(tileX, tileY)))
+                {
+                    hasConnectedCornerWithMyself = true;
+                }
+
+                // X?
+                // 2X
+                else if (corners[1] &&
+                    notEmptyAndNotPlayer(m_board.getSlotSafe<0, -1>(tileX, tileY)) && m_board.getSlotSafe<1, -1>(tileX, tileY) == _player &&
+                    /* (tileX, tileY) is empty && */ notEmptyAndNotPlayer(m_board.getSlotSafe<1, 0>(tileX, tileY)))
+                {
+
+                    hasConnectedCornerWithMyself = true;
+                }
+
+                // 3X
+                // X?
+                else if (corners[2] &&
+                    /* (tileX, tileY) is empty && */ notEmptyAndNotPlayer(m_board.getSlotSafe<1, 0>(tileX, tileY)) && 
+                    notEmptyAndNotPlayer(m_board.getSlotSafe<0, 1>(tileX, tileY)) && m_board.getSlotSafe<1, 1>(tileX, tileY) == _player)
+                {
+                    hasConnectedCornerWithMyself = true;
+                }
+
+                // ?X
+                // X1
+                else if (corners[0] &&
+                    m_board.getSlotSafe<-1, -1>(tileX, tileY) == _player && notEmptyAndNotPlayer(m_board.getSlotSafe<0, -1>(tileX, tileY)) &&
+                    notEmptyAndNotPlayer(m_board.getSlotSafe<-1, 0>(tileX, tileY)) /* && (tileX, tileY) is empty*/)
+                {
+                    hasConnectedCornerWithMyself = true;
+                }
+            }
+        }
+
+        return hasConnectedCornerWithMyself ? 1.f : 0.f;
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -547,7 +633,7 @@ namespace BlokusIA
     //-------------------------------------------------------------------------------------------------
     u32 BaseIA::maxMoveToLookAt(const GameState&) const
     {
-        return 64;
+        return 16;
     }
 
     //-------------------------------------------------------------------------------------------------

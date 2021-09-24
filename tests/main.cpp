@@ -13,14 +13,15 @@ using namespace BlokusIA;
 int main()
 {
 	initBlokusIA();
+    printAllPieces();
 
 	// run some unit test
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceOnly;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeightedOnly;
     // const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
-    const MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+    const MoveHeuristic moveHeuristic = MoveHeuristic::JuicyCorner;
 
     IterativeIA<FourPlayerMaxN_IA> IA;
     u32 numTurn = 0;
