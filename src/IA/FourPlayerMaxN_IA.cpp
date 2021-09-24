@@ -3,7 +3,7 @@
 namespace BlokusIA
 {
     //-------------------------------------------------------------------------------------------------
-    Move FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
+    std::pair<Move, float> FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
     {
         start();
         auto moves = _gameState.enumerateMoves();
@@ -29,7 +29,8 @@ namespace BlokusIA
         u32 bestMoveIndex = GameState::getBestMoveIndex(scores);
 
         stop();
-        return moves[bestMoveIndex];
+
+        return { moves[bestMoveIndex], scores[bestMoveIndex] };
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -49,7 +50,11 @@ namespace BlokusIA
         }
         else
         {
-            Score bestScore = {};
+            Score bestScore = { -std::numeric_limits<float>::infinity(), 
+                                -std::numeric_limits<float>::infinity(), 
+                                -std::numeric_limits<float>::infinity(), 
+                                -std::numeric_limits<float>::infinity() };
+
             u32 bestScoreIndex = 0;
             for (size_t i = 0; i < moves.size(); ++i)
             {

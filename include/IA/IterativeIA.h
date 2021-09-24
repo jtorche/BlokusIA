@@ -6,6 +6,14 @@
 namespace BlokusIA
 {
     //-------------------------------------------------------------------------------------------------
+    struct BestMove
+    {
+        Move move;
+        float playerScore = 0;
+        u32 depth = u32(-1);
+    };
+
+    //-------------------------------------------------------------------------------------------------
     template<typename IA_t>
     class IterativeIA
     {
@@ -15,12 +23,11 @@ namespace BlokusIA
         void stopComputation();
 
         float nodePerSecond();
-        std::pair<Move, u32> getBestMove();
+        BestMove getBestMove();
 
     private:
         std::mutex m_mutex;
-        Move m_bestMove;
-        u32 m_bestMoveDepth = u32(-1);
+        BestMove m_bestMove;
         float m_nodePerSecond = 0;
         std::chrono::steady_clock::time_point m_startClock;
 

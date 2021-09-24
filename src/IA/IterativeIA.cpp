@@ -11,7 +11,6 @@ namespace BlokusIA
         DEBUG_ASSERT(m_thread == nullptr);
 
         m_bestMove = {};
-        m_bestMoveDepth = {};
         m_stopIA = false;
 
         m_thread = new std::thread([this, _heuristic, _moveHeuristic, _gameState]()
@@ -22,12 +21,12 @@ namespace BlokusIA
             while (m_stopIA == false)
             {
                 m_startClock = std::chrono::steady_clock::now();
-                Move move = m_runningIA->findBestMove(_gameState);
+                auto[move, score] = m_runningIA->findBestMove(_gameState);
                 if (m_stopIA == false)
                 {
                     std::lock_guard _{ m_mutex };
-                    m_bestMove = move;
-                    m_bestMoveDepth = maxDepth;
+
+                    m_bestMove = { move, score, maxDepth };
                     m_nodePerSecond = m_runningIA->nodePerSecond();
                     delete m_runningIA;
                     m_runningIA = new IA_t(++maxDepth, _heuristic, _moveHeuristic);
@@ -71,11 +70,11 @@ namespace BlokusIA
     }
 
     template<typename IA_t>
-    std::pair<Move, u32> IterativeIA<IA_t>::getBestMove()
+    BestMove IterativeIA<IA_t>::getBestMove()
     {
         {
             std::lock_guard _{ m_mutex };
-            return { m_bestMove, m_bestMoveDepth };
+            return m_bestMove;
         }
     }
 

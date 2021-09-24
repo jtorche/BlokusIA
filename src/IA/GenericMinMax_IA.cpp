@@ -6,7 +6,7 @@ namespace BlokusIA
 {
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-	Move GenericMinMax_IA<Strategy>::findBestMove(const GameState& _gameState)
+    std::pair<Move, float> GenericMinMax_IA<Strategy>::findBestMove(const GameState& _gameState)
 	{
         start();
 
@@ -40,7 +40,7 @@ namespace BlokusIA
         u32 bestMoveIndex = GameState::getBestMoveIndex(scores);
 
         stop();
-		return moves[bestMoveIndex];
+        return { moves[bestMoveIndex], scores[bestMoveIndex] };
 	}
 
 	//-------------------------------------------------------------------------------------------------

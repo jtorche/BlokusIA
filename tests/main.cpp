@@ -19,9 +19,9 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeightedOnly;
-    // const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
-    const MoveHeuristic moveHeuristic = MoveHeuristic::JuicyCorner;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    //const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
+    const MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
 
     IterativeIA<FourPlayerMaxN_IA> IA;
     u32 numTurn = 0;
@@ -35,14 +35,14 @@ int main()
             std::cout << "\nContinue ? ";
             std::cin >> thinking;
 
-            std::cout << "Cur depth:" << IA.getBestMove().second << std::endl;
-            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec, cacheHitRatio: " << getGlobalCache().getCacheHitRatio() << std::endl;
+            std::cout << "Cur depth:" << IA.getBestMove().depth << std::endl;
+            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec, curMoveScore: " << IA.getBestMove().playerScore << std::endl;
         }
 
         IA.stopComputation();
         getGlobalCache().resetStats();
 
-        Move move = IA.getBestMove().first;
+        Move move = IA.getBestMove().move;
         if (move.isValid())
             gameState = gameState.play(move);
         else

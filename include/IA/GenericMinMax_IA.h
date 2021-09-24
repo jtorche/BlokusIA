@@ -15,7 +15,7 @@ namespace BlokusIA
             , m_moveHeuristic{ _moveHeuristic }
         {}
 
-		Move findBestMove(const GameState& _gameState);
+        std::pair<Move, float> findBestMove(const GameState& _gameState);
 
 		float computeScore(Slot _maxPlayer, const GameState& _gameState)
 		{
