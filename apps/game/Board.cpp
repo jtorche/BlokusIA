@@ -25,7 +25,7 @@ namespace blokusUi
 
     QRectF Board::boundingRect() const
     {
-        qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio) * ms_scale;
+        qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio * 2) * ms_scale;
         return QRectF{ 0, 0, size, size };
     }
 
