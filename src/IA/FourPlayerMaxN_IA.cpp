@@ -6,17 +6,20 @@ namespace BlokusIA
     std::pair<Move, float> FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
     {
         start();
-        auto moves = _gameState.enumerateMoves();
-        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
+        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        if(moves.empty())
+            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
+
+        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
             return {};
 
         std::vector<std::future<float>> asyncScores(moves.size());
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
-            [&](const Move& move) -> std::future<float>
+            [&](const auto& move) -> std::future<float>
         {
-            return s_threadPool.submit([&]() -> float { return evalPositionRec(_gameState.play(move), 1)[_gameState.getPlayerTurn()]; });
+            return s_threadPool.submit([&]() -> float { return evalPositionRec(_gameState.play(move.first), 1)[_gameState.getPlayerTurn()]; });
         });
 
         std::vector<float> scores(asyncScores.size());
@@ -30,7 +33,7 @@ namespace BlokusIA
 
         stop();
 
-        return { moves[bestMoveIndex], scores[bestMoveIndex] };
+        return { moves[bestMoveIndex].first, scores[bestMoveIndex] };
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -41,8 +44,11 @@ namespace BlokusIA
         if (_depth >= m_maxDepth || m_stopIA)
             return computeScore(_gameState);
 
-        auto moves = _gameState.enumerateMoves();
-        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
+        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        if (moves.empty())
+            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
+
+        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
         {
@@ -58,7 +64,7 @@ namespace BlokusIA
             u32 bestScoreIndex = 0;
             for (size_t i = 0; i < moves.size(); ++i)
             {
-                Score score = evalPositionRec(_gameState.play(moves[i]), _depth + 1);
+                Score score = evalPositionRec(_gameState.play(moves[i].first), _depth + 1);
                 // Each player try to maximize its own score, regardless of the other players
                 if (score[_gameState.getPlayerTurn()] > bestScore[_gameState.getPlayerTurn()])
                 {

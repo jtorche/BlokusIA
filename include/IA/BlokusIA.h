@@ -49,6 +49,13 @@ namespace BlokusIA
 
 	//-------------------------------------------------------------------------------------------------
     struct ExpandCluster;
+    struct ReachableSlots
+    {
+        u32 m_numClusters = 0;
+        ubyte m_clusters[Board::BoardSize][Board::BoardSize] = { {0} };
+        ubyte m_numPlayableSlotsPerCluster[(Board::BoardSize * Board::BoardSize) / 4] = {};
+        u16 m_clusterSize[(Board::BoardSize * Board::BoardSize) / 4] = {};
+    };
 
 	class GameState
 	{
@@ -67,11 +74,11 @@ namespace BlokusIA
 		u32 getTurnCount() const { return m_turn; }
         bool noMoveLeft(Slot _player) const { return m_remainingPieces[u32(_player) - u32(Slot::P0)].test(BlokusGame::PiecesCount); }
 
-		std::vector<Move> enumerateMoves() const;
-        void findCandidatMoves(MoveHeuristic _heuristic, u32 _numMoves, std::vector<Move>& _allMoves) const;
+		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic) const;
+        void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves) const;
         u32 getPlayedPieceTiles(Slot _player) const;
 
-		float computeHeuristic(const Move& _move, MoveHeuristic) const;
+		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
 
         static u32 getBestMoveIndex(const std::vector<float>&);
@@ -89,10 +96,20 @@ namespace BlokusIA
         ubyte m_numPlayablePos[4] = {};
         Board::PlayableSlots m_playablePositions[4];
 
+        // Cache of reachable slots per players
+        ReachableSlots m_reachableSlotsCache[4];
+
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
         float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
-        float computeJuicyCornerHeuristic(Slot _player, const Move& _move) const;
+
+        struct JuicyCorner
+        {
+            bool m_hasJuicyCorner1 :     1;
+            bool m_hasSemiJuicyCorner1 : 1;
+            bool m_hasJuicyCorner2 :     1;
+        };
+        JuicyCorner computeJuicyCornerHeuristic(Slot _player, const Move& _move, ubyte2 _playablePos) const;
 
         void updatePlayablePositions(Slot _player, const Move& _move);
 

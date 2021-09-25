@@ -19,9 +19,9 @@ int main()
 	runTest();
 
 	GameState gameState;
-    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceOnly;
     //const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
-    const MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+    const MoveHeuristic moveHeuristic = MoveHeuristic::ReachableSpace;
 
     IterativeIA<FourPlayerMaxN_IA> IA;
     u32 numTurn = 0;
@@ -54,15 +54,15 @@ int main()
 
         for (u32 i = 1; i < 4; ++i)
         {
-            auto moves = gameState.enumerateMoves();
-            gameState.findCandidatMoves(MoveHeuristic::TileCount, 1, moves);
+            auto moves = gameState.enumerateMoves(MoveHeuristic::TileCount);
+            gameState.findCandidatMoves(1, moves);
             if (moves.empty())
             {
                 gameState = gameState.skip();
                 std::cout << "!! Player " << i + 1 << " has lost." << std::endl;
             }
             else
-                gameState = gameState.play(moves[0]);
+                gameState = gameState.play(moves[0].first);
         }
 
 		numTurn++;
@@ -71,7 +71,9 @@ int main()
 
         for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
             std::cout << u32(s) << "(" << gameState.getPlayedPieceTiles(s) << ") :" << gameState.computeBoardScore(s, heuristic) << std::endl;
-	}
+	
+        system("pause");
+    }
 	
 	std::cout << "NumTurn " << numTurn << "\n";
 	gameState.getBoard().print();

@@ -10,8 +10,11 @@ namespace BlokusIA
 	{
         start();
 
-        auto moves = _gameState.enumerateMoves();
-        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
+        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        if (moves.empty())
+            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
+
+        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
 
 		if (moves.empty())
 			return {};
@@ -20,11 +23,11 @@ namespace BlokusIA
         std::atomic<float> b = std::numeric_limits<float>::max();
 
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
-            [&](const Move& move) -> std::future<float>
+            [&](const auto& move) -> std::future<float>
         {
             return s_threadPool.submit([&]() -> float 
             { 
-                float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move), 1, { -std::numeric_limits<float>::max(), b });
+                float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move.first), 1, { -std::numeric_limits<float>::max(), b });
                 b.store(std::min(b.load(), score));
                 return score;
             });
@@ -40,7 +43,7 @@ namespace BlokusIA
         u32 bestMoveIndex = GameState::getBestMoveIndex(scores);
 
         stop();
-        return { moves[bestMoveIndex], scores[bestMoveIndex] };
+        return { moves[bestMoveIndex].first, scores[bestMoveIndex] };
 	}
 
 	//-------------------------------------------------------------------------------------------------
@@ -54,8 +57,11 @@ namespace BlokusIA
 		if (_depth >= m_maxDepth || m_stopIA)
 			return computeScore(_maxPlayer, _gameState);
 
-        auto moves = _gameState.enumerateMoves();
-        _gameState.findCandidatMoves(m_moveHeuristic, maxMoveToLookAt(_gameState), moves);
+        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        if (moves.empty())
+            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
+
+        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
 
         if (moves.empty())
         {
@@ -73,7 +79,7 @@ namespace BlokusIA
 
             for (size_t i = 0; i < moves.size(); ++i)
             {
-                score = minmax(evalPositionRec(_maxPlayer, _gameState.play(moves[i]), _depth + 1, _a_b), score);
+                score = minmax(evalPositionRec(_maxPlayer, _gameState.play(moves[i].first), _depth + 1, _a_b), score);
                 if (isMaxPlayerTurn)
                 {
                     if (score <= _a_b.x)

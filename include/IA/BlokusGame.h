@@ -121,7 +121,7 @@ namespace BlokusIA
         Slot getSlotSafe(i32 _x, i32 _y) const { return (Slot)getSafe<false, OffsetX, OffsetY>(_x, _y); }
 
         template<int OffsetX, int OffsetY> 
-        Slot getContactRuleCacheSafe(i32 _x, i32 _y) const { return getSafe<true, OffsetX, OffsetY>(_x, _y); }
+        ubyte getContactRuleCacheSafe(i32 _x, i32 _y) const { return getSafe<true, OffsetX, OffsetY>(_x, _y); }
 
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
