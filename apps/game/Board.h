@@ -11,6 +11,8 @@
 
 namespace blokusUi
 {
+    class Piece;
+
     class Board : public QGraphicsItem, public IThemeable
     {
     public:
@@ -19,6 +21,11 @@ namespace blokusUi
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
+
+        void addPiece(
+            const BlokusIA::Piece& _piece,
+            const BlokusIA::Slot& _player,
+            ubyte2 _pos);
 
     protected:
         virtual QRectF boundingRect() const override;
@@ -30,6 +37,9 @@ namespace blokusUi
     private:
         void assignBrushes();
         void drawBoard(QPainter& _painter) const;
+
+        QPointF getBoardOffset() const;
+        void setPiecePosition(Piece& _piece, ubyte2 _pos) const;
 
     private:
         BlokusIA::Board m_board;

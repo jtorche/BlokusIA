@@ -15,6 +15,7 @@ namespace blokusUi
         Piece(
             const BlokusIA::Piece& _piece,
             const BlokusIA::Slot& _player,
+            f32 _tileSize,
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
@@ -33,8 +34,7 @@ namespace blokusUi
     private:
         BlokusIA::Slot m_player;
         BlokusIA::Piece m_piece;
+        f32 m_tileSize;
         QBrush m_brush;
-
-        static u32 ms_scale;
     };
 }

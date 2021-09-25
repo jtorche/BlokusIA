@@ -301,7 +301,7 @@ namespace BlokusIA
         };
 
         updateContactRuleCache(_x, _y);
-        if (_x > 0)              updateContactRuleCache(_x - 1, _y);
+        if (_x > 0)             updateContactRuleCache(_x - 1, _y);
         if (_x < BoardSize - 1) updateContactRuleCache(_x + 1, _y);
         if (_y > 0)             updateContactRuleCache(_x, _y - 1);
         if (_y < BoardSize - 1) updateContactRuleCache(_x, _y + 1);

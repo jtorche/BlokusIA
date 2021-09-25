@@ -1,8 +1,11 @@
 #include "Board.h"
 
+#include <QGraphicsScene>
 #include <QPainter>
 
 #include "theme/ThemeManager.h"
+
+#include "game/Piece.h"
 
 namespace blokusUi
 {
@@ -48,7 +51,7 @@ namespace blokusUi
         static qreal boardOutline = 0.03 * ms_scale;
 
         qreal cornerThickness = BorderWidthRatio * ms_scale;
-        QPointF offset{ cornerThickness, cornerThickness };
+        QPointF offset{ getBoardOffset() };
 
         // Translate to real board region
         _painter.translate(offset);
@@ -98,5 +101,26 @@ namespace blokusUi
             _painter.translate(fullBoardLength, 0);
             _painter.rotate(90);
         }
+    }
+
+    QPointF Board::getBoardOffset() const
+    {
+        qreal cornerThickness = BorderWidthRatio * ms_scale;
+        return { cornerThickness, cornerThickness };
+    }
+
+    void Board::setPiecePosition(Piece& _piece, ubyte2 _pos) const
+    {
+        QPointF offset{ getBoardOffset() };
+        _piece.setPos(offset.x() + _pos.x * ms_scale, offset.y() + _pos.y * ms_scale);
+    }
+
+    void Board::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
+    {
+        m_board.addPiece(_player, _piece, _pos);
+
+        auto piece = new Piece(_piece, _player, ms_scale, this);
+        setPiecePosition(*piece, _pos);
+        scene()->addItem(piece);
     }
 }

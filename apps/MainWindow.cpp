@@ -42,7 +42,19 @@ namespace blokusUi
         board->setPos(25, 25);
         scene->addItem(board);
 
-        u32 x = 50;
+        auto pieces = BlokusIA::Helpers::getAllPieces();
+
+        // Test pieces
+        board->addPiece(pieces[5], BlokusIA::Slot::P0, { 0, 0 });
+        board->addPiece(pieces[7].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P1, { BlokusIA::Board::BoardSize - 2, 0 });
+        board->addPiece(pieces[9].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P2, { BlokusIA::Board::BoardSize - 1, BlokusIA::Board::BoardSize - 5 });
+        board->addPiece(pieces[11].rotate(BlokusIA::Rotation::Rot_270), BlokusIA::Slot::P3, { 0, BlokusIA::Board::BoardSize - 3 });
+        board->addPiece(pieces[13], BlokusIA::Slot::P0, { 2, 2 });
+        
+        
+        //scene->addItem(new Piece(p, slot, 50, board));
+
+        /*u32 x = 50;
         u32 y = 50;
         auto pieces = BlokusIA::Helpers::getAllPieces();
         BlokusIA::Slot slot = BlokusIA::Slot::P0;
@@ -68,7 +80,7 @@ namespace blokusUi
                 y += 160;
                 x = 50;
             }
-        }
+        }*/
     }
 
     MainWindow::~MainWindow()

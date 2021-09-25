@@ -6,12 +6,15 @@
 
 namespace blokusUi
 {
-    u32 Piece::ms_scale = 50;
-
-    Piece::Piece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, QGraphicsItem* _parent)
+    Piece::Piece(
+        const BlokusIA::Piece& _piece,
+        const BlokusIA::Slot& _player,
+        f32 _tileSize,
+        QGraphicsItem* _parent)
         : QGraphicsItem(_parent)
         , m_player(_player)
         , m_piece(_piece)
+        , m_tileSize(_tileSize)
     {
         DEBUG_ASSERT(_player != BlokusIA::Slot::Empty);
         assignBrush();
@@ -32,7 +35,7 @@ namespace blokusUi
             width = std::max(width, BlokusIA::Piece::getTileX(tile) + 1);
             height = std::max(height, BlokusIA::Piece::getTileY(tile) + 1);
         }
-        return QRectF{ 0, 0, qreal(width * ms_scale), qreal(height * ms_scale) };
+        return QRectF{ 0, 0, width * m_tileSize, height * m_tileSize };
     }
 
     void Piece::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
@@ -74,21 +77,21 @@ namespace blokusUi
 
     void Piece::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const
     {
-        static qreal topAndLeftOutline = 0.04 * ms_scale;
+        static qreal topAndLeftOutline = 0.04 * m_tileSize;
         static qreal semiTopAndLeftOutline = topAndLeftOutline / 2;
 
-        static qreal bottomAndRightOutline = 0.08 * ms_scale;
+        static qreal bottomAndRightOutline = 0.08 * m_tileSize;
         static qreal semiBottomAndRightOutline = bottomAndRightOutline / 2;
 
-        const qreal offsetX = BlokusIA::Piece::getTileX(tile) * ms_scale;
-        const qreal offsetY = BlokusIA::Piece::getTileY(tile) * ms_scale;
+        const qreal offsetX = BlokusIA::Piece::getTileX(tile) * m_tileSize;
+        const qreal offsetY = BlokusIA::Piece::getTileY(tile) * m_tileSize;
 
         QBrush darkenBrush{ m_brush.color().darker(150) };
         QPen pen{ m_brush, topAndLeftOutline };
         QPen darkenPen{ darkenBrush, bottomAndRightOutline };
 
         // Draw bottom and right lines
-        const qreal darkerOutlineLength = ms_scale - semiBottomAndRightOutline;
+        const qreal darkerOutlineLength = m_tileSize - semiBottomAndRightOutline;
         QPointF topRight{ darkerOutlineLength + offsetX, semiBottomAndRightOutline + offsetY };
         QPointF bottomLeft{ semiBottomAndRightOutline + offsetX, darkerOutlineLength + offsetY };
         QPointF bottomRight{ darkerOutlineLength + offsetX, darkerOutlineLength + offsetY };
@@ -98,7 +101,7 @@ namespace blokusUi
         _painter.drawLine(bottomRight, bottomLeft);
 
         // Draw top and left lines
-        const qreal outlineLength = ms_scale - semiTopAndLeftOutline;
+        const qreal outlineLength = m_tileSize - semiTopAndLeftOutline;
         QPointF topLeft{ semiTopAndLeftOutline + offsetX, semiTopAndLeftOutline + offsetY };
         topRight = { outlineLength - bottomAndRightOutline + offsetX, semiTopAndLeftOutline + offsetY };
         bottomLeft = { semiTopAndLeftOutline + offsetX, outlineLength - bottomAndRightOutline + offsetY };
@@ -109,8 +112,8 @@ namespace blokusUi
 
         // Draw center gradient
         topLeft = { topAndLeftOutline + offsetX, topAndLeftOutline + offsetY };
-        qreal gradientLength = ms_scale - (topAndLeftOutline + bottomAndRightOutline);
-        QLinearGradient gradient{ 0, 0, 0, qreal(ms_scale) };
+        qreal gradientLength = m_tileSize - (topAndLeftOutline + bottomAndRightOutline);
+        QLinearGradient gradient{ 0, 0, 0, m_tileSize };
         gradient.setColorAt(0.0, darkenBrush.color());
         gradient.setColorAt(1.0, m_brush.color());
         gradient.setSpread(QGradient::RepeatSpread);
