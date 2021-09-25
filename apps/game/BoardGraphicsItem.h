@@ -47,6 +47,5 @@ namespace blokusUi
         std::array<QBrush, 4> m_playerBrushes;
 
         static constexpr f32 BorderWidthRatio = 1/f32(3);
-        static u32 ms_scale;
     };
 }
