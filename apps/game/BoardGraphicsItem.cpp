@@ -1,42 +1,42 @@
-#include "Board.h"
+#include "BoardGraphicsItem.h"
 
 #include <QGraphicsScene>
 #include <QPainter>
 
 #include "theme/ThemeManager.h"
 
-#include "game/Piece.h"
+#include "game/PieceGraphicsItem.h"
 
 namespace blokusUi
 {
-    u32 Board::ms_scale = 50;
+    u32 BoardGraphicsItem::ms_scale = 50;
 
-    Board::Board(const BlokusIA::Board& _board, QGraphicsItem* _parent)
+    BoardGraphicsItem::BoardGraphicsItem(const BlokusIA::Board& _board, QGraphicsItem* _parent)
         : QGraphicsItem(_parent)
         , m_board(_board)
     {
         assignBrushes();
     }
 
-    void Board::updateThemedResources()
+    void BoardGraphicsItem::updateThemedResources()
     {
         assignBrushes();
     }
 
-    QRectF Board::boundingRect() const
+    QRectF BoardGraphicsItem::boundingRect() const
     {
         qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio * 2) * ms_scale;
         return QRectF{ 0, 0, size, size };
     }
 
-    void Board::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
+    void BoardGraphicsItem::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
     {
         _painter->setRenderHint(QPainter::Antialiasing);
 
         drawBoard(*_painter);
     }
 
-    void Board::assignBrushes()
+    void BoardGraphicsItem::assignBrushes()
     {
         m_boardBrush = THEME_MANAGER.getColor("board");
 
@@ -46,7 +46,7 @@ namespace blokusUi
         m_playerBrushes[3] = THEME_MANAGER.getColor("player3");
     }
 
-    void Board::drawBoard(QPainter& _painter) const
+    void BoardGraphicsItem::drawBoard(QPainter& _painter) const
     {
         static qreal boardOutline = 0.03 * ms_scale;
 
@@ -103,23 +103,23 @@ namespace blokusUi
         }
     }
 
-    QPointF Board::getBoardOffset() const
+    QPointF BoardGraphicsItem::getBoardOffset() const
     {
         qreal cornerThickness = BorderWidthRatio * ms_scale;
         return { cornerThickness, cornerThickness };
     }
 
-    void Board::setPiecePosition(Piece& _piece, ubyte2 _pos) const
+    void BoardGraphicsItem::setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const
     {
         QPointF offset{ getBoardOffset() };
         _piece.setPos(offset.x() + _pos.x * ms_scale, offset.y() + _pos.y * ms_scale);
     }
 
-    void Board::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
+    void BoardGraphicsItem::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
     {
         m_board.addPiece(_player, _piece, _pos);
 
-        auto piece = new Piece(_piece, _player, ms_scale, this);
+        auto piece = new PieceGraphicsItem(_piece, _player, ms_scale, this);
         setPiecePosition(*piece, _pos);
         scene()->addItem(piece);
     }

@@ -11,12 +11,12 @@
 
 namespace blokusUi
 {
-    class Piece;
+    class PieceGraphicsItem;
 
-    class Board : public QGraphicsItem, public IThemeable
+    class BoardGraphicsItem : public QGraphicsItem, public IThemeable
     {
     public:
-        Board(
+        BoardGraphicsItem(
             const BlokusIA::Board& _board,
             QGraphicsItem* _parent = nullptr);
 
@@ -39,7 +39,7 @@ namespace blokusUi
         void drawBoard(QPainter& _painter) const;
 
         QPointF getBoardOffset() const;
-        void setPiecePosition(Piece& _piece, ubyte2 _pos) const;
+        void setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const;
 
     private:
         BlokusIA::Board m_board;

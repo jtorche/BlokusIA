@@ -1,4 +1,4 @@
-#include "Piece.h"
+#include "PieceGraphicsItem.h"
 
 #include <QPainter>
 
@@ -6,7 +6,7 @@
 
 namespace blokusUi
 {
-    Piece::Piece(
+    PieceGraphicsItem::PieceGraphicsItem(
         const BlokusIA::Piece& _piece,
         const BlokusIA::Slot& _player,
         f32 _tileSize,
@@ -20,12 +20,12 @@ namespace blokusUi
         assignBrush();
     }
 
-    void Piece::updateThemedResources()
+    void PieceGraphicsItem::updateThemedResources()
     {
         assignBrush();
     }
 
-    QRectF Piece::boundingRect() const
+    QRectF PieceGraphicsItem::boundingRect() const
     {
         u32 width = 0;
         u32 height = 0;
@@ -38,7 +38,7 @@ namespace blokusUi
         return QRectF{ 0, 0, width * m_tileSize, height * m_tileSize };
     }
 
-    void Piece::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
+    void PieceGraphicsItem::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
     {
         _painter->setRenderHint(QPainter::Antialiasing);
 
@@ -70,12 +70,12 @@ namespace blokusUi
         return {};
     }
 
-    void Piece::assignBrush()
+    void PieceGraphicsItem::assignBrush()
     {
         m_brush = PlayerToColor(m_player);
     }
 
-    void Piece::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const
+    void PieceGraphicsItem::drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const
     {
         static qreal topAndLeftOutline = 0.04 * m_tileSize;
         static qreal semiTopAndLeftOutline = topAndLeftOutline / 2;

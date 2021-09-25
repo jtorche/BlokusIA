@@ -2,19 +2,12 @@
 #include "./ui_MainWindow.h"
 
 #include <QActionGroup>
-#include <QGraphicsScene>
-#include <QGraphicsView>
 #include <QMessageBox>
-
-#include "IA/BlokusGameHelpers.h"
 
 #include "i18n/TranslationManager.h"
 #include "theme/ThemeManager.h"
 
-#include "widgets/BlokusGraphicsView.h"
-
-#include "game/Board.h"
-#include "game/Piece.h"
+#include "widgets/GameView.h"
 
 namespace blokusUi
 {
@@ -23,64 +16,11 @@ namespace blokusUi
         , m_ui(new Ui::MainWindow)
     {
         m_ui->setupUi(this);
+        m_gameView = new GameView(m_ui->m_centralwidget);
+        m_ui->m_mainLayout->addWidget(m_gameView);
 
         setupActions();
         setupConnections();
-
-        auto view = new BlokusGraphicsView(m_ui->m_centralwidget);
-        view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        
-        view->setFixedSize(1400, 1200);
-        auto scene = new QGraphicsScene(view);
-        scene->setSceneRect(0, 0, 1400, 1200);
-        view->setScene(scene);
-        setGeometry(0, 0, 1400, 1200);
-
-        BlokusIA::Board b;
-        auto board = new Board(b);
-        board->setPos(25, 25);
-        scene->addItem(board);
-
-        auto pieces = BlokusIA::Helpers::getAllPieces();
-
-        // Test pieces
-        board->addPiece(pieces[5], BlokusIA::Slot::P0, { 0, 0 });
-        board->addPiece(pieces[7].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P1, { BlokusIA::Board::BoardSize - 2, 0 });
-        board->addPiece(pieces[9].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P2, { BlokusIA::Board::BoardSize - 1, BlokusIA::Board::BoardSize - 5 });
-        board->addPiece(pieces[11].rotate(BlokusIA::Rotation::Rot_270), BlokusIA::Slot::P3, { 0, BlokusIA::Board::BoardSize - 3 });
-        board->addPiece(pieces[13], BlokusIA::Slot::P0, { 2, 2 });
-        
-        
-        //scene->addItem(new Piece(p, slot, 50, board));
-
-        /*u32 x = 50;
-        u32 y = 50;
-        auto pieces = BlokusIA::Helpers::getAllPieces();
-        BlokusIA::Slot slot = BlokusIA::Slot::P0;
-        for (const auto& p : pieces)
-        {
-            auto piece = new Piece(p, slot);
-            
-            if (slot == BlokusIA::Slot::P0)
-                slot = BlokusIA::Slot::P1;
-            else if (slot == BlokusIA::Slot::P1)
-                slot = BlokusIA::Slot::P2;
-            else if (slot == BlokusIA::Slot::P2)
-                slot = BlokusIA::Slot::P3;
-            else if (slot == BlokusIA::Slot::P3)
-                slot = BlokusIA::Slot::P0;
-            
-            piece->setPos(x, y);
-            scene->addItem(piece);
-
-            x += 210;
-            if (x + 210 > 1200)
-            {
-                y += 160;
-                x = 50;
-            }
-        }*/
     }
 
     MainWindow::~MainWindow()

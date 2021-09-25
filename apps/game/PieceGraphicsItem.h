@@ -9,10 +9,10 @@
 
 namespace blokusUi
 {
-    class Piece : public QGraphicsItem, public IThemeable
+    class PieceGraphicsItem : public QGraphicsItem, public IThemeable
     {
     public:
-        Piece(
+        PieceGraphicsItem(
             const BlokusIA::Piece& _piece,
             const BlokusIA::Slot& _player,
             f32 _tileSize,

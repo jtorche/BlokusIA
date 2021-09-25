@@ -8,6 +8,8 @@ QT_END_NAMESPACE
 
 namespace blokusUi
 {
+    class GameView;
+
     class MainWindow : public QMainWindow
     {
         Q_OBJECT
@@ -31,5 +33,6 @@ namespace blokusUi
 
     private:
         Ui::MainWindow* m_ui;
+        GameView* m_gameView;
     };
 }
