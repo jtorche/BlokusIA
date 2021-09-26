@@ -16,6 +16,8 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
+option(BUILD_UI "Check it to generate the Blokus UI projects." OFF)
+
 # Libraries code
 add_subdirectory(src)
 

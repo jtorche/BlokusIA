@@ -2,43 +2,19 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Blokus DESCRIPTION "Blokus Game" LANGUAGES CXX)
 
-option(BUILD_UI "Check it to generate the Blokus game project." OFF)
 if (BUILD_UI)
-    set(qt_major_version 5)
-    option(USE_QT_CREATOR "Check it if you use QtCreator as IDE." OFF)
+    include("${CMAKE_SOURCE_DIR}/cmake/QtHelpers.cmake")
 
     # The QtWidgets module find its own dependencies (QtCore and QtGui)
     find_package(Qt${qt_major_version} COMPONENTS Widgets QUIET)
 
     # Create the target project only if Qt was found
     if (DEFINED Qt${qt_major_version}Widgets_FOUND AND Qt${qt_major_version}Widgets_FOUND)
-        # Get Qt installation folder
-        if (TARGET Qt${qt_major_version}::qmake)
-            get_target_property(qt_qmake_location Qt${qt_major_version}::qmake IMPORTED_LOCATION)
+        get_qt_installation_folder(${qt_major_version})
 
-            execute_process(
-                COMMAND "${qt_qmake_location}" -query QT_INSTALL_PREFIX
-                RESULT_VARIABLE return_code
-                OUTPUT_VARIABLE qt_installation_prefix
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-        endif()
-
-        # Determine windeployqt for Windows platform
-        if (NOT USE_QT_CREATOR AND WIN32 AND DEFINED qt_installation_prefix AND NOT TARGET Qt${qt_major_version}::windeployqt)
-            set(imported_win_deploy_qt_location "${qt_installation_prefix}/bin/windeployqt.exe")
-
-            if (EXISTS ${imported_win_deploy_qt_location})
-                add_executable(Qt${qt_major_version}::windeployqt IMPORTED)
-
-                set_target_properties(Qt${qt_major_version}::windeployqt PROPERTIES IMPORTED_LOCATION ${imported_win_deploy_qt_location})
-            endif()
-
-            # Check VCINSTALLDIR environment variable is present
-            IF(DEFINED ENV{VCINSTALLDIR})
-                set(VC_INSTALL_DIR $ENV{VCINSTALLDIR})
-            else()
-                set(VC_INSTALL_DIR "" CACHE PATH "Visual Studio VC installation path (example: C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC")
-            endif()
+        # Setup windeployqt target for Windows platform
+        if (NOT USE_QT_CREATOR AND WIN32 AND NOT TARGET Qt${qt_major_version}::windeployqt)
+            setup_windeployqt_target(${qt_major_version} ${qt_installation_folder})
         endif()
 
         # IDE filter for generated files
@@ -74,10 +50,7 @@ if (BUILD_UI)
             add_executable(${PROJECT_NAME} ${app_sources})
         endif()
 
-        # Add CAExcludePath to avoid warnings that comes from Qt external library
-        if (MSVC AND DEFINED qt_installation_prefix)
-            set_target_properties(${PROJECT_NAME} PROPERTIES VS_GLOBAL_CAExcludePath "${qt_installation_prefix}/include;$(CAExcludePath)")
-        endif()
+        avoid_qt_warnings(${PROJECT_NAME} ${qt_installation_folder})
 
         # Enabled warnings
         target_compile_options(${PROJECT_NAME} PRIVATE
@@ -95,35 +68,13 @@ if (BUILD_UI)
         option(GENERATE_TRANSLATIONS "Check it to generate/update the Blokus UI translation files." ON)
         find_package(Qt${qt_major_version} COMPONENTS LinguistTools QUIET)
         if (GENERATE_TRANSLATIONS AND DEFINED Qt${qt_major_version}LinguistTools_FOUND AND Qt${qt_major_version}LinguistTools_FOUND)
-            # Function to generate/update ts and qm files searching recursively in SRC_DIR
-            function(generate_app_translations CUSTOM_TARGET TS_DIR TS_FILES SRC_DIR)
-                set(update_ts_target_name ${CUSTOM_TARGET}_update_ts)
-                set(update_qm_target_name ${CUSTOM_TARGET}_update_qm)
-
-                add_custom_target(${update_ts_target_name}
-                    COMMAND ${Qt5_LUPDATE_EXECUTABLE} -recursive ${SRC_DIR} -ts ${TS_FILES}
-                    WORKING_DIRECTORY ${TS_DIR})
-
-                add_custom_target(${update_qm_target_name}
-                    COMMAND ${Qt5_LRELEASE_EXECUTABLE} ${TS_FILES}
-                    WORKING_DIRECTORY ${TS_DIR})
-
-                add_dependencies(${update_qm_target_name} ${update_ts_target_name})
-                add_dependencies(${CUSTOM_TARGET} ${update_qm_target_name})
-            endfunction()
-
             set(ts_dir "${CMAKE_CURRENT_SOURCE_DIR}/i18n")
             set(ts_files "${ts_dir}/blokus_fr.ts")
 
             generate_app_translations(${PROJECT_NAME} ${ts_dir} ${ts_files} ${CMAKE_CURRENT_SOURCE_DIR})
         endif()
 
-        # Post build step to deploy needed stuff in output directory under Windows
-        if (TARGET Qt${qt_major_version}::windeployqt)
-            add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND set VCINSTALLDIR=${VC_INSTALL_DIR}
-                COMMAND Qt${qt_major_version}::windeployqt $<TARGET_FILE:${PROJECT_NAME}>)
-        endif()
+        add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} ${VC_INSTALL_DIR})
 
         # For nicer IDE views
         source_group(
