@@ -8,7 +8,7 @@
 #include "interfaces/IThemeable.h"
 #include "interfaces/ITranslatable.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     void BlokusGraphicsView::changeEvent(QEvent* _event)
     {

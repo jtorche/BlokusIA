@@ -4,7 +4,7 @@
 
 #include "game/BoardGraphicsItem.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     GameView::GameView(QWidget* _parent)
         : BlokusGraphicsView(_parent)

@@ -4,7 +4,7 @@
 
 #include "game/GameConstants.h"
 
-namespace blokusUi
+namespace blokusUI
 {
 	void DrawUtils::drawTile(QPainter& _painter, const QColor& _color)
 	{

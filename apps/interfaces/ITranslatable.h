@@ -1,6 +1,6 @@
 #pragma once
 
-namespace blokusUi
+namespace blokusUI
 {
 	class ITranslatable
 	{

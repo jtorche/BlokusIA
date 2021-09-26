@@ -14,7 +14,7 @@ namespace blokusAI
     enum class Slot : ubyte;
 }
 
-namespace blokusUi
+namespace blokusUI
 {
     class PieceGraphicsItem;
 

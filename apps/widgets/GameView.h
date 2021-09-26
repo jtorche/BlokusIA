@@ -4,7 +4,7 @@
 
 #include "widgets/BlokusGraphicsView.h"
 
-namespace blokusUi
+namespace blokusUI
 {
 	class BoardGraphicsItem;
 

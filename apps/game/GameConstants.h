@@ -2,7 +2,7 @@
 
 #include "Core/type.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     struct GameConstants
     {

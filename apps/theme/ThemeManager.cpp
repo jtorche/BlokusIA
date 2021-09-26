@@ -8,7 +8,7 @@
 
 #include "utils/XmlConfigReader.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     static bool windowsIsInDarkTheme()
     {

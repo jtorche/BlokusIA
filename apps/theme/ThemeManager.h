@@ -7,9 +7,9 @@ class QString;
 class QPixmap;
 class QIcon;
 
-namespace blokusUi
+namespace blokusUI
 {
-    #define THEME_MANAGER blokusUi::ThemeManager::getInstance()
+    #define THEME_MANAGER blokusUI::ThemeManager::getInstance()
 
 	class ThemeManager
 	{

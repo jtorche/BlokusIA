@@ -4,7 +4,7 @@
 
 #include "Core/Common.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     struct XmlConfigReader
 	{

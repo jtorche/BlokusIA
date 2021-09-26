@@ -18,7 +18,7 @@
     <normaloff>:/icons/icons/blokus.png</normaloff>:/icons/icons/blokus.png</iconset>
   </property>
   <widget class="QWidget" name="m_centralwidget">
-   <layout class="QVBoxLayout" name="m_mainLayout"/>
+   <layout class="QHBoxLayout" name="m_mainLayout"/>
   </widget>
   <widget class="QMenuBar" name="m_menuBar">
    <property name="geometry">

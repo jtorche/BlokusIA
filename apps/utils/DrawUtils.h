@@ -4,7 +4,7 @@ class QBrush;
 class QColor;
 class QPainter;
 
-namespace blokusUi
+namespace blokusUI
 {
     struct DrawUtils
 	{

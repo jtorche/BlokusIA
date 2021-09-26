@@ -5,7 +5,7 @@
 
 #include<QDebug>
 
-namespace blokusUi
+namespace blokusUI
 {
     core::flat_hash_map<std::string, std::string> XmlConfigReader::loadConfiguration(
         const std::string& _resourcePath,

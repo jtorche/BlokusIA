@@ -7,7 +7,7 @@
 #include "game/GameConstants.h"
 #include "utils/DrawUtils.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     PieceGraphicsItem::PieceGraphicsItem(
         const blokusAI::Piece& _piece,

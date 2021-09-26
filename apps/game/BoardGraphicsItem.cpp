@@ -10,7 +10,7 @@
 #include "game/GameConstants.h"
 #include "utils/DrawUtils.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     BoardGraphicsItem::BoardGraphicsItem(blokusAI::Board* _board, QGraphicsItem* _parent)
         : QGraphicsItem(_parent)

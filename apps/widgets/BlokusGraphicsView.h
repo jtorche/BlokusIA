@@ -2,7 +2,7 @@
 
 #include <QGraphicsView>
 
-namespace blokusUi
+namespace blokusUI
 {
     class BlokusGraphicsView : public QGraphicsView
 	{

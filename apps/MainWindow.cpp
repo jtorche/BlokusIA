@@ -9,7 +9,7 @@
 
 #include "widgets/GameView.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     MainWindow::MainWindow(QWidget* _parent)
         : QMainWindow(_parent)

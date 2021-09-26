@@ -3,9 +3,9 @@
 #include <QLocale>
 #include <QTranslator>
 
-namespace blokusUi
+namespace blokusUI
 {
-    #define TRANSLATION_MANAGER blokusUi::TranslationManager::getInstance()
+    #define TRANSLATION_MANAGER blokusUI::TranslationManager::getInstance()
 
 	class TranslationManager
 	{

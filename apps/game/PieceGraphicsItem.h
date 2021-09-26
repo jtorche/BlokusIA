@@ -7,7 +7,7 @@
 
 #include "interfaces/IThemeable.h"
 
-namespace blokusUi
+namespace blokusUI
 {
     class PieceGraphicsItem : public QGraphicsItem, public IThemeable
     {

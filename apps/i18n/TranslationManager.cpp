@@ -2,7 +2,7 @@
 
 #include <QCoreApplication>
 
-namespace blokusUi
+namespace blokusUI
 {
     TranslationManager::TranslationManager()
     {

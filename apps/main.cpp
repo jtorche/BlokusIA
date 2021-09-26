@@ -14,7 +14,7 @@ int main(int _argc, char* _argv[])
     TRANSLATION_MANAGER;
     THEME_MANAGER;
 
-    blokusUi::MainWindow window;
+    blokusUI::MainWindow window;
     window.show();
     return app.exec();
 }
