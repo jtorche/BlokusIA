@@ -1,4 +1,4 @@
-#include "IA/BlokusGameHelpers.h"
+#include "AI/BlokusGameHelpers.h"
 
 namespace BlokusIA
 {

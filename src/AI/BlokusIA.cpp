@@ -1,7 +1,8 @@
-#include "IA/BlokusIA.h"
-#include "IA/BlokusGameHelpers.h"
-#include "IA/Cache.h"
 #include <numeric>
+
+#include "AI/BlokusIA.h"
+#include "AI/BlokusGameHelpers.h"
+#include "AI/Cache.h"
 
 namespace BlokusIA
 {

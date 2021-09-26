@@ -1,6 +1,6 @@
 #include "widgets/GameView.h"
 
-#include "IA/BlokusGameHelpers.h"
+#include "AI/BlokusGameHelpers.h"
 
 #include "game/BoardGraphicsItem.h"
 

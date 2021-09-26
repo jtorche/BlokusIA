@@ -1,10 +1,10 @@
 #include <array>
 #include <iostream>
 
-#include "IA/FourPlayerMaxN_IA.h"
-#include "IA/ParanoidFourPlayer_IA.h"
-#include "IA/IterativeIA.h"
-#include "IA/Cache.h"
+#include "AI/FourPlayerMaxN_IA.h"
+#include "AI/ParanoidFourPlayer_IA.h"
+#include "AI/IterativeIA.h"
+#include "AI/Cache.h"
 
 void runTest();
 

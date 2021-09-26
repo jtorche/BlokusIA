@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/flat_hash_map.h"
-#include "IA/BlokusIA.h"
+#include "AI/BlokusIA.h"
 
 namespace BlokusIA
 {
@@ -25,5 +25,4 @@ namespace BlokusIA
     {
         return _gameState.computeBoardScoreInner(_player, _heuristic);
     }
-    
 }

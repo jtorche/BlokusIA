@@ -3,7 +3,7 @@
 #include <QBrush>
 #include <QGraphicsItem>
 
-#include "IA/BlokusGame.h"
+#include "AI/BlokusGame.h"
 
 #include "interfaces/IThemeable.h"
 

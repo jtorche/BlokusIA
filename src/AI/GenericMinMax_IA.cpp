@@ -1,6 +1,6 @@
-#include "IA/GenericMinMax_IA.h"
-#include "IA/TwoPlayerMinMax_IA.h"
-#include "IA/ParanoidFourPlayer_IA.h"
+#include "AI/GenericMinMax_IA.h"
+#include "AI/TwoPlayerMinMax_IA.h"
+#include "AI/ParanoidFourPlayer_IA.h"
 
 namespace BlokusIA
 {

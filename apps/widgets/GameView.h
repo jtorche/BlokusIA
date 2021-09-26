@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IA/BlokusGame.h"
+#include "AI/BlokusGame.h"
 
 #include "widgets/BlokusGraphicsView.h"
 
