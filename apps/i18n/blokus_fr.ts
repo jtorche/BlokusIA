@@ -9,80 +9,80 @@
         <translation>Blokus</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="28"/>
+        <location filename="../MainWindow.ui" line="34"/>
         <source>&amp;Help</source>
         <translation>&amp;Aide</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="35"/>
+        <location filename="../MainWindow.ui" line="41"/>
         <source>&amp;Language</source>
         <translation>&amp;Langue</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="44"/>
+        <location filename="../MainWindow.ui" line="50"/>
         <source>&amp;Game</source>
         <translation>&amp;Jeu</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="50"/>
+        <location filename="../MainWindow.ui" line="56"/>
         <source>&amp;Theme</source>
         <translation>&amp;Thème</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="63"/>
+        <location filename="../MainWindow.ui" line="73"/>
         <source>&amp;About</source>
         <translation>&amp;A Propos</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="72"/>
+        <location filename="../MainWindow.ui" line="82"/>
         <source>About &amp;Qt</source>
         <translation>A Propos de &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="83"/>
+        <location filename="../MainWindow.ui" line="93"/>
         <source>System language</source>
         <translation>Langue du système</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="95"/>
+        <location filename="../MainWindow.ui" line="105"/>
         <source>&amp;English</source>
         <translation>&amp;Anglais</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="107"/>
+        <location filename="../MainWindow.ui" line="117"/>
         <source>&amp;French</source>
         <translation>&amp;Français</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="116"/>
+        <location filename="../MainWindow.ui" line="122"/>
         <source>&amp;Quit</source>
         <translation>&amp;Fermer</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="124"/>
+        <location filename="../MainWindow.ui" line="130"/>
         <source>&amp;Dark</source>
         <translation>&amp;Sombre</translation>
     </message>
     <message>
-        <location filename="../MainWindow.ui" line="132"/>
+        <location filename="../MainWindow.ui" line="138"/>
         <source>&amp;Light</source>
         <translation>&amp;Clair</translation>
     </message>
 </context>
 <context>
-    <name>blokusUi::MainWindow</name>
+    <name>blokusUI::MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="96"/>
+        <location filename="../MainWindow.cpp" line="116"/>
         <source>About</source>
         <translation>A Propos</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="98"/>
+        <location filename="../MainWindow.cpp" line="118"/>
         <source>Version: </source>
         <translation>Version : </translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="99"/>
+        <location filename="../MainWindow.cpp" line="119"/>
         <source>A graphical application for the Blokus game.</source>
         <translation>Une application graphique pour le jeu Blokus.</translation>
     </message>
