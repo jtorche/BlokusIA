@@ -6,7 +6,7 @@
 #include "theme/ThemeManager.h"
 
 #include "game/GameConstants.h"
-#include "game/PieceGraphicsItem.h"
+#include "utils/DrawUtils.h"
 
 namespace blokusUi
 {
@@ -24,42 +24,37 @@ namespace blokusUi
 
     QRectF BoardGraphicsItem::boundingRect() const
     {
-        qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio * 2) * GameConstants::TileSizeScale;
+        constexpr qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio * 2) * GameConstants::TileSizeScale;
         return QRectF{ 0, 0, size, size };
     }
 
     void BoardGraphicsItem::setBoard(BlokusIA::Board* _board)
     {
+        DEBUG_ASSERT(_board != nullptr);
         m_board = _board;
 
-        for (const auto& item : childItems())
-        {
-            scene()->removeItem(item);
-            delete item;
-        }
+        update();
     }
 
-    QPointF BoardGraphicsItem::getBoardOffset() const
+    constexpr QPointF BoardGraphicsItem::getBoardOffset()
     {
-        qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
+        constexpr qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
         return { cornerThickness, cornerThickness };
     }
 
-    void BoardGraphicsItem::setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const
+    constexpr QPointF BoardGraphicsItem::getTileOffset(u32 _x, u32 _y)
     {
-        QPointF offset{ getBoardOffset() };
-        _piece.setPos(
-            offset.x() + _pos.x * GameConstants::TileSizeScale,
-            offset.y() + _pos.y * GameConstants::TileSizeScale);
+        constexpr QPointF baseOffset{ getBoardOffset() };
+        return QPointF{
+            baseOffset.x() + _x * GameConstants::TileSizeScale,
+            baseOffset.y() + _y * GameConstants::TileSizeScale };
     }
 
     void BoardGraphicsItem::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
     {
         m_board->addPiece(_player, _piece, _pos);
 
-        auto piece = new PieceGraphicsItem(_piece, _player, this);
-        setPiecePosition(*piece, _pos);
-        scene()->addItem(piece);
+        update();
     }
 
     void BoardGraphicsItem::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
@@ -81,16 +76,16 @@ namespace blokusUi
 
     void BoardGraphicsItem::drawBoard(QPainter& _painter) const
     {
-        static qreal boardOutline = 0.03 * GameConstants::TileSizeScale;
+        static constexpr qreal boardOutline = 0.03 * GameConstants::TileSizeScale;
 
-        qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
+        static constexpr qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
         QPointF offset{ getBoardOffset() };
 
         // Translate to real board region
         _painter.translate(offset);
 
         // Draw board background
-        qreal boardLength = BlokusIA::Board::BoardSize * GameConstants::TileSizeScale;
+        static constexpr qreal boardLength = BlokusIA::Board::BoardSize * GameConstants::TileSizeScale;
         QPen pen{ m_boardBrush.color().darker(130), boardOutline };
         _painter.setPen(pen);
         _painter.setBrush(m_boardBrush);
@@ -111,8 +106,8 @@ namespace blokusUi
 
         // Draw board corners
         _painter.setPen(Qt::NoPen);
-        qreal cornerLength = boardLength / 2 + cornerThickness;
-        qreal fullBoardLength = cornerLength * 2;
+        static constexpr qreal cornerLength = boardLength / 2 + cornerThickness;
+        static constexpr qreal fullBoardLength = cornerLength * 2;
         for (u32 i = 0; i < 4; ++i)
         {
             QColor playerColor = m_playerBrushes[i].color();
@@ -133,6 +128,22 @@ namespace blokusUi
 
             _painter.translate(fullBoardLength, 0);
             _painter.rotate(90);
+        }
+
+        // Draw pieces tiles
+        for (u32 j = 0; j < BlokusIA::Board::BoardSize; ++j)
+        {
+            for (u32 i = 0; i < BlokusIA::Board::BoardSize; ++i)
+            {
+                BlokusIA::Slot slot = m_board->getSlot(i, j);
+                if (slot == BlokusIA::Slot::Empty)
+                    continue;
+
+                const QPointF tileOffset{ getTileOffset(i, j) };
+                _painter.translate(tileOffset);
+                DrawUtils::drawTile(_painter, m_playerBrushes[u32(slot) - 1]);
+                _painter.translate(-tileOffset);
+            }
         }
     }
 }

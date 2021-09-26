@@ -13,18 +13,18 @@ namespace blokusUi
 	
 	void DrawUtils::drawTile(QPainter& _painter, const QBrush& _brush)
 	{
-        static qreal topAndLeftOutline = 0.04 * GameConstants::TileSizeScale;
-        static qreal semiTopAndLeftOutline = topAndLeftOutline / 2;
+        static constexpr qreal topAndLeftOutline = 0.04 * GameConstants::TileSizeScale;
+        static constexpr qreal semiTopAndLeftOutline = topAndLeftOutline / 2;
 
-        static qreal bottomAndRightOutline = 0.08 * GameConstants::TileSizeScale;
-        static qreal semiBottomAndRightOutline = bottomAndRightOutline / 2;
+        static constexpr qreal bottomAndRightOutline = 0.08 * GameConstants::TileSizeScale;
+        static constexpr qreal semiBottomAndRightOutline = bottomAndRightOutline / 2;
 
         QBrush darkenBrush{ _brush.color().darker(150) };
         QPen pen{ _brush, topAndLeftOutline };
         QPen darkenPen{ darkenBrush, bottomAndRightOutline };
 
         // Draw bottom and right lines
-        const qreal darkerOutlineLength = GameConstants::TileSizeScale - semiBottomAndRightOutline;
+        static constexpr qreal darkerOutlineLength = GameConstants::TileSizeScale - semiBottomAndRightOutline;
         QPointF topRight{ darkerOutlineLength, semiBottomAndRightOutline };
         QPointF bottomLeft{ semiBottomAndRightOutline, darkerOutlineLength };
         QPointF bottomRight{ darkerOutlineLength, darkerOutlineLength };
@@ -34,7 +34,7 @@ namespace blokusUi
         _painter.drawLine(bottomRight, bottomLeft);
 
         // Draw top and left lines
-        const qreal outlineLength = GameConstants::TileSizeScale - semiTopAndLeftOutline;
+        static constexpr qreal outlineLength = GameConstants::TileSizeScale - semiTopAndLeftOutline;
         QPointF topLeft{ semiTopAndLeftOutline, semiTopAndLeftOutline };
         topRight = { outlineLength - bottomAndRightOutline, semiTopAndLeftOutline };
         bottomLeft = { semiTopAndLeftOutline, outlineLength - bottomAndRightOutline };
@@ -45,7 +45,7 @@ namespace blokusUi
 
         // Draw center gradient
         topLeft = { topAndLeftOutline, topAndLeftOutline };
-        qreal gradientLength = GameConstants::TileSizeScale - (topAndLeftOutline + bottomAndRightOutline);
+        static constexpr qreal gradientLength = GameConstants::TileSizeScale - (topAndLeftOutline + bottomAndRightOutline);
         QLinearGradient gradient{ 0, 0, 0, GameConstants::TileSizeScale };
         gradient.setColorAt(0.0, darkenBrush.color());
         gradient.setColorAt(1.0, _brush.color());

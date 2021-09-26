@@ -39,8 +39,8 @@ namespace blokusUi
         void assignBrushes();
         void drawBoard(QPainter& _painter) const;
 
-        QPointF getBoardOffset() const;
-        void setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const;
+        static constexpr QPointF getBoardOffset();
+        static constexpr QPointF getTileOffset(u32 _x, u32 _y);
 
     private:
         BlokusIA::Board* m_board;
