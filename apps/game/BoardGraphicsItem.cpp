@@ -3,6 +3,8 @@
 #include <QGraphicsScene>
 #include <QPainter>
 
+#include "IA/BlokusGame.h"
+
 #include "theme/ThemeManager.h"
 
 #include "game/GameConstants.h"

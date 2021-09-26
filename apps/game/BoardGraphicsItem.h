@@ -5,9 +5,14 @@
 #include <QBrush>
 #include <QGraphicsItem>
 
-#include "IA/BlokusGame.h"
-
 #include "interfaces/IThemeable.h"
+
+namespace BlokusIA
+{
+    class Board;
+    class Piece;
+    enum class Slot : ubyte;
+}
 
 namespace blokusUi
 {
