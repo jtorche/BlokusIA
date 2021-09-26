@@ -309,7 +309,7 @@ namespace BlokusIA
     
         _allMoves.resize(_numMoves);
 
-        if (getTurnCount() < g_NumTurnToRushCenter * 4 && !_allMoves.empty())
+        if (getTurnCount() < s_NumTurnToRushCenter * 4 && !_allMoves.empty())
         {
             // only keep best move to rush center
             auto it = std::find_if(_allMoves.begin(), _allMoves.end(), [&](const auto& val)
@@ -358,13 +358,14 @@ namespace BlokusIA
                 tilePos += vec2(_move.position.x, _move.position.y);
                 closestDistToCenter = std::min(closestDistToCenter, linalg::length2(boardCenter - tilePos) / (2 * Board::BoardSize * Board::BoardSize));
             }
-            distToCenterHeuristic = 1.f - closestDistToCenter;
+            distToCenterHeuristic = 1.f - closestDistToCenter; // [0 - 1]
             DEBUG_ASSERT(distToCenterHeuristic <= 1);
         }
 
         if(_moveHeuristic == MoveHeuristic::TileCount)
 		    return _move.piece.getNumTiles() + distToCenterHeuristic;
-        else if (_moveHeuristic == MoveHeuristic::ReachableSpace)
+        else if (_moveHeuristic == MoveHeuristic::WeightedReachableSpace || 
+                 _moveHeuristic == MoveHeuristic::ExtendingReachableSpace)
         {
             ubyte clusterIndex = m_reachableSlotsCache[getPlayerTurn()].m_clusters[_playablePos.x][_playablePos.y];
             u32 clusterCategory = std::min<u32>(m_reachableSlotsCache[getPlayerTurn()].m_numPlayableSlotsPerCluster[clusterIndex - 1], 4);
@@ -381,15 +382,24 @@ namespace BlokusIA
             case 4:
                 factor = 1; break;
             }
-            float score = float(factor) * m_reachableSlotsCache[getPlayerTurn()].m_clusterSize[clusterIndex - 1];
-            return score + distToCenterHeuristic;
-        }
-        else if (_moveHeuristic == MoveHeuristic::JuicyCorner)
-        {
-            JuicyCorner juicyCorner = computeJuicyCornerHeuristic(playerToMove, _move, _playablePos);
-            if (!juicyCorner.m_hasJuicyCorner1 && !juicyCorner.m_hasJuicyCorner2)
-                return -1000.f + float(_move.piece.getNumTiles()) + distToCenterHeuristic;
-            return juicyCorner.m_hasJuicyCorner1*10.f + juicyCorner.m_hasJuicyCorner2 * 100.f + float(_move.piece.getNumTiles()) + distToCenterHeuristic;
+
+            // Max is 8*BoardSize*BoardSize
+            float weightedReachableSpace = float(factor) * m_reachableSlotsCache[getPlayerTurn()].m_clusterSize[clusterIndex - 1];
+            weightedReachableSpace /= (8 * Board::BoardSize * Board::BoardSize);
+            weightedReachableSpace = 1.f + weightedReachableSpace * 9; // [1 - 10]
+
+            if (_moveHeuristic == MoveHeuristic::ExtendingReachableSpace && getTurnCount() >= s_NumTurnToRushCenter * 4)
+            {
+                GameState nextState = play(_move);
+                // Max is BoardSize*BoardSize
+                float extendingReachableSpace = nextState.computeFreeSpaceHeuristic(playerToMove, 0) - computeFreeSpaceHeuristic(playerToMove, 0);
+                extendingReachableSpace = std::max(0.f, extendingReachableSpace);
+                extendingReachableSpace /= (Board::BoardSize * Board::BoardSize);
+                extendingReachableSpace = 10.f + extendingReachableSpace * 90; // [10 - 100]
+                return extendingReachableSpace + weightedReachableSpace + distToCenterHeuristic; // [11 - 111]
+            }
+            else
+                return weightedReachableSpace + distToCenterHeuristic;
         }
 
         DEBUG_ASSERT(0);
@@ -447,11 +457,13 @@ namespace BlokusIA
             case BoardHeuristic::ReachableEmptySpaceWeightedOnly:
                 powFactor = 1; break;
             case BoardHeuristic::ReachableEmptySpaceWeighted2:
+            case BoardHeuristic::ReachableEmptySpaceWeighted2Only:
                 powFactor = 2; break;
             }
 
             if (_heuristicType == BoardHeuristic::ReachableEmptySpaceOnly ||
-                _heuristicType == BoardHeuristic::ReachableEmptySpaceWeightedOnly)
+                _heuristicType == BoardHeuristic::ReachableEmptySpaceWeightedOnly ||
+                _heuristicType == BoardHeuristic::ReachableEmptySpaceWeighted2Only)
             {
                 // We sum the m_numBorderTileCache to make sure playing big pieces is better than playing small pieces
                 // Because playing big pieces also loose some free space
@@ -487,115 +499,11 @@ namespace BlokusIA
         for (u32 i = 0; i < m_reachableSlotsCache[playerIndex].m_numClusters; ++i)
         {
             u32 numPlayableInCluster = m_reachableSlotsCache[playerIndex].m_numPlayableSlotsPerCluster[i];
-            float weight = powf(float(numPlayableInCluster) / (numPlayableInCluster + 1), _weightCluster);
+            float weight = _weightCluster > 0 ? powf(float(numPlayableInCluster) / (numPlayableInCluster + 1), _weightCluster) : 1;
             numReachables += m_reachableSlotsCache[playerIndex].m_clusterSize[i] * weight;
         }
 
         return numReachables;
-    }
-
-    //-------------------------------------------------------------------------------------------------
-    GameState::JuicyCorner GameState::computeJuicyCornerHeuristic(Slot _player, const Move& _move, ubyte2 /*_playablePos*/) const
-    {
-        ubyte playerIndexMask = ubyte(1) << (ubyte(convertToIndex(_player)));
-        auto notEmptyAndNotPlayer = [_player](Slot s) { return s != Slot::Empty && s != _player; };
-
-        JuicyCorner result = {};
-        auto updateResult = [&result](bool _x1, bool _x2, bool _type1, bool _type2)
-        {
-            if (_type1)
-            {
-                result.m_hasJuicyCorner1 |= _x1 && _x2;
-                result.m_hasSemiJuicyCorner1 |= _x1 || _x2;
-            }
-            else if (_type2)
-            {
-                result.m_hasJuicyCorner2 |= _x1 && _x2;
-            }
-        };
-    
-
-        for (u32 i = 0; i < _move.piece.getNumTiles(); ++i)
-        {
-            Piece::Tile tile = _move.piece.getTile(i);
-            if (tile == 0)
-                break;
-
-            ubyte corners[4];
-            _move.piece.getCorners(i, corners);
-            {
-                int tileX = int(Piece::getTileX(tile) + _move.position.x);
-                int tileY = int(Piece::getTileY(tile) + _move.position.y);
-
-                // check if the piece is connected to another slot through a "juicy corner"
-
-                // X4
-                // ?X
-                if (corners[3])
-                {
-                    Slot opposite = m_board.getSlotSafe<-1, 1>(tileX, tileY);
-                    bool isType1 = opposite == _player;
-                    bool isType2 = opposite == Slot::Empty && (m_board.getContactRuleCacheSafe<-1, 1>(tileX, tileY) & playerIndexMask);
-
-                    if (isType1 || isType2)
-                    {
-                        bool X1 = notEmptyAndNotPlayer(m_board.getSlotSafe<-1, 0>(tileX, tileY));
-                        bool X2 = notEmptyAndNotPlayer(m_board.getSlotSafe<0, 1>(tileX, tileY));
-                        updateResult(X1, X2, isType1, isType2);
-                    }
-                }
-
-                // X?
-                // 2X
-                else if (corners[1])
-                {
-                    Slot opposite = m_board.getSlotSafe<1, -1>(tileX, tileY);
-                    bool isType1 = opposite == _player;
-                    bool isType2 = opposite == Slot::Empty && (m_board.getContactRuleCacheSafe<1, -1>(tileX, tileY) & playerIndexMask);
-
-                    if (isType1 || isType2)
-                    {
-                        bool X1 = notEmptyAndNotPlayer(m_board.getSlotSafe<0, -1>(tileX, tileY));
-                        bool X2 = notEmptyAndNotPlayer(m_board.getSlotSafe<1, 0>(tileX, tileY));
-                        updateResult(X1, X2, isType1, isType2);
-                    }
-                }
-
-                // 3X
-                // X?
-                if (corners[2])
-                {
-                    Slot opposite = m_board.getSlotSafe<1, 1>(tileX, tileY);
-                    bool isType1 = opposite == _player;
-                    bool isType2 = opposite == Slot::Empty && (m_board.getContactRuleCacheSafe<1, -1>(tileX, tileY) & playerIndexMask);
-
-                    if (isType1 || isType2)
-                    {
-                        bool X1 = notEmptyAndNotPlayer(m_board.getSlotSafe<1, 0>(tileX, tileY));
-                        bool X2 = notEmptyAndNotPlayer(m_board.getSlotSafe<0, 1>(tileX, tileY));
-                        updateResult(X1, X2, isType1, isType2);
-                    }
-                }
-
-                // ?X
-                // X1
-                if (corners[0])
-                {
-                    Slot opposite = m_board.getSlotSafe<-1, -1>(tileX, tileY);
-                    bool isType1 = opposite == _player;
-                    bool isType2 = opposite == Slot::Empty && (m_board.getContactRuleCacheSafe<1, -1>(tileX, tileY) & playerIndexMask);
-
-                    if (isType1 || isType2)
-                    {
-                        bool X1 = notEmptyAndNotPlayer(m_board.getSlotSafe<0, -1>(tileX, tileY));
-                        bool X2 = notEmptyAndNotPlayer(m_board.getSlotSafe<-1, 0>(tileX, tileY));
-                        updateResult(X1, X2, isType1, isType2);
-                    }
-                }
-            }
-        }
-
-        return result;
     }
 
     //-------------------------------------------------------------------------------------------------

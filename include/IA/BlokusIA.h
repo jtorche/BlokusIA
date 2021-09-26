@@ -37,14 +37,15 @@ namespace BlokusIA
         ReachableEmptySpaceWeighted2,
         ReachableEmptySpaceOnly,
         ReachableEmptySpaceWeightedOnly,
+        ReachableEmptySpaceWeighted2Only,
         BoardHeuristic_Count,
     };
 
     enum class MoveHeuristic
     {
         TileCount,
-        ReachableSpace,
-        JuicyCorner,
+        WeightedReachableSpace,
+        ExtendingReachableSpace,
     };
 
 	//-------------------------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ namespace BlokusIA
 	class GameState
 	{
 	public:
-        static const u32 g_NumTurnToRushCenter = 3;
+        static const u32 s_NumTurnToRushCenter = 3;
         static const float s_endGameScore;
 
 		GameState();
@@ -102,14 +103,6 @@ namespace BlokusIA
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
         float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
-
-        struct JuicyCorner
-        {
-            bool m_hasJuicyCorner1 :     1;
-            bool m_hasSemiJuicyCorner1 : 1;
-            bool m_hasJuicyCorner2 :     1;
-        };
-        JuicyCorner computeJuicyCornerHeuristic(Slot _player, const Move& _move, ubyte2 _playablePos) const;
 
         void updatePlayablePositions(Slot _player, const Move& _move);
 
