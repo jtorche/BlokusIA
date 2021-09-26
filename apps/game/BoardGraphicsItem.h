@@ -17,11 +17,12 @@ namespace blokusUi
     {
     public:
         BoardGraphicsItem(
-            const BlokusIA::Board& _board,
+            BlokusIA::Board* _board,
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
 
+        void setBoard(BlokusIA::Board* _board);
         void addPiece(
             const BlokusIA::Piece& _piece,
             const BlokusIA::Slot& _player,
@@ -42,7 +43,7 @@ namespace blokusUi
         void setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const;
 
     private:
-        BlokusIA::Board m_board;
+        BlokusIA::Board* m_board;
         QBrush m_boardBrush;
         std::array<QBrush, 4> m_playerBrushes;
 

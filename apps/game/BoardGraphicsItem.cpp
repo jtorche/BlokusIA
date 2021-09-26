@@ -10,7 +10,7 @@
 
 namespace blokusUi
 {
-    BoardGraphicsItem::BoardGraphicsItem(const BlokusIA::Board& _board, QGraphicsItem* _parent)
+    BoardGraphicsItem::BoardGraphicsItem(BlokusIA::Board* _board, QGraphicsItem* _parent)
         : QGraphicsItem(_parent)
         , m_board(_board)
     {
@@ -26,6 +26,40 @@ namespace blokusUi
     {
         qreal size = (BlokusIA::Board::BoardSize + BorderWidthRatio * 2) * GameConstants::TileSizeScale;
         return QRectF{ 0, 0, size, size };
+    }
+
+    void BoardGraphicsItem::setBoard(BlokusIA::Board* _board)
+    {
+        m_board = _board;
+
+        for (const auto& item : childItems())
+        {
+            scene()->removeItem(item);
+            delete item;
+        }
+    }
+
+    QPointF BoardGraphicsItem::getBoardOffset() const
+    {
+        qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
+        return { cornerThickness, cornerThickness };
+    }
+
+    void BoardGraphicsItem::setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const
+    {
+        QPointF offset{ getBoardOffset() };
+        _piece.setPos(
+            offset.x() + _pos.x * GameConstants::TileSizeScale,
+            offset.y() + _pos.y * GameConstants::TileSizeScale);
+    }
+
+    void BoardGraphicsItem::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
+    {
+        m_board->addPiece(_player, _piece, _pos);
+
+        auto piece = new PieceGraphicsItem(_piece, _player, this);
+        setPiecePosition(*piece, _pos);
+        scene()->addItem(piece);
     }
 
     void BoardGraphicsItem::paint(QPainter* _painter, const QStyleOptionGraphicsItem*, QWidget*)
@@ -100,28 +134,5 @@ namespace blokusUi
             _painter.translate(fullBoardLength, 0);
             _painter.rotate(90);
         }
-    }
-
-    QPointF BoardGraphicsItem::getBoardOffset() const
-    {
-        qreal cornerThickness = BorderWidthRatio * GameConstants::TileSizeScale;
-        return { cornerThickness, cornerThickness };
-    }
-
-    void BoardGraphicsItem::setPiecePosition(PieceGraphicsItem& _piece, ubyte2 _pos) const
-    {
-        QPointF offset{ getBoardOffset() };
-        _piece.setPos(
-            offset.x() + _pos.x * GameConstants::TileSizeScale,
-            offset.y() + _pos.y * GameConstants::TileSizeScale);
-    }
-
-    void BoardGraphicsItem::addPiece(const BlokusIA::Piece& _piece, const BlokusIA::Slot& _player, ubyte2 _pos)
-    {
-        m_board.addPiece(_player, _piece, _pos);
-
-        auto piece = new PieceGraphicsItem(_piece, _player, this);
-        setPiecePosition(*piece, _pos);
-        scene()->addItem(piece);
     }
 }

@@ -16,7 +16,7 @@ namespace blokusUi
         setScene(scene);
 
         BlokusIA::Board boardModel;
-        m_board = new BoardGraphicsItem(boardModel);
+        m_board = new BoardGraphicsItem(&boardModel);
         scene->addItem(m_board);
 
         // Test pieces
