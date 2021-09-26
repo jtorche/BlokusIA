@@ -25,6 +25,8 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${a
 target_link_libraries(${PROJECT_NAME} PRIVATE Core)
 
 # For nicer IDE views
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "libs")
+
 source_group(
   TREE ${CMAKE_SOURCE_DIR}/include/AI
   PREFIX "Header Files"

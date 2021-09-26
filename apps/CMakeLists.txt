@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Blokus_UI DESCRIPTION "Blokus Game UI" LANGUAGES CXX)
+project(Blokus DESCRIPTION "Blokus Game" LANGUAGES CXX)
 
-option(BUILD_UI "Check it to generate the Blokus UI project." OFF)
+option(BUILD_UI "Check it to generate the Blokus game project." OFF)
 if (BUILD_UI)
     set(qt_major_version 5)
     option(USE_QT_CREATOR "Check it if you use QtCreator as IDE." OFF)

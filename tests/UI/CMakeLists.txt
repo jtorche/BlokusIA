@@ -21,6 +21,8 @@ if (BUILD_TESTING)
     target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
 
     # For nicer IDE views
+    set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "tests")
+
     source_group(
       TREE ${CMAKE_CURRENT_SOURCE_DIR}
       PREFIX "Header Files"
