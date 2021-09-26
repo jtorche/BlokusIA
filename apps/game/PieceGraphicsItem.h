@@ -28,7 +28,6 @@ namespace blokusUi
 
     private:
         void assignBrush();
-        void drawTile(QPainter& _painter, const BlokusIA::Piece::Tile& tile) const;
 
     private:
         BlokusIA::Slot m_player;
