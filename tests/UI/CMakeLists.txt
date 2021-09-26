@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(UI_Tests DESCRIPTION "Graphic application to easily test Blokus IA" LANGUAGES CXX)
+project(UI_Tests DESCRIPTION "Graphic application to easily test Blokus AI" LANGUAGES CXX)
 
 if (BUILD_TESTING)
     file(GLOB_RECURSE ui_tests_headers *.h)
@@ -18,7 +18,7 @@ if (BUILD_TESTING)
     target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ui_tests_precompile_header}>")
 
     # Linked libraries
-    target_link_libraries(${PROJECT_NAME} PRIVATE Core IA)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
 
     # For nicer IDE views
     source_group(
