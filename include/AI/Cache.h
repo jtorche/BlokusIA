@@ -3,7 +3,7 @@
 #include "Core/flat_hash_map.h"
 #include "AI/BlokusAI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     class GameStateCache
     {

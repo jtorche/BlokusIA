@@ -2,11 +2,11 @@
 #include "AI/TwoPlayerMinMax_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-    std::pair<Move, float> GenericMinMax_IA<Strategy>::findBestMove(const GameState& _gameState)
+    std::pair<Move, float> GenericMinMax_AI<Strategy>::findBestMove(const GameState& _gameState)
 	{
         start();
 
@@ -48,13 +48,13 @@ namespace BlokusIA
 
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-	float GenericMinMax_IA<Strategy>::evalPositionRec(Slot _maxPlayer, const GameState& _gameState, u32 _depth, vec2 _a_b)
+	float GenericMinMax_AI<Strategy>::evalPositionRec(Slot _maxPlayer, const GameState& _gameState, u32 _depth, vec2 _a_b)
 	{
         m_numNodesExplored++;
 
         bool isMaxPlayerTurn = Strategy::isMaxPlayerTurn(_maxPlayer, _gameState);
 
-		if (_depth >= m_maxDepth || m_stopIA)
+		if (_depth >= m_maxDepth || m_stopAI)
 			return computeScore(_maxPlayer, _gameState);
 
         auto moves = _gameState.enumerateMoves(m_moveHeuristic);
@@ -98,6 +98,6 @@ namespace BlokusIA
         }
 	}
 
-    template class GenericMinMax_IA<TwoPlayerMinMaxStrategy>;
-    template class GenericMinMax_IA<ParanoidStrategy>;
+    template class GenericMinMax_AI<TwoPlayerMinMaxStrategy>;
+    template class GenericMinMax_AI<ParanoidStrategy>;
 }

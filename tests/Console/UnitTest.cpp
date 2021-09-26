@@ -1,7 +1,7 @@
 #include "AI/BlokusGame.h"
 #include "AI/BlokusGameHelpers.h"
 
-using namespace BlokusIA;
+using namespace blokusAI;
 
 void cornerTest()
 {

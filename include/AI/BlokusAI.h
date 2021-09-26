@@ -8,12 +8,12 @@
 #include "BlokusGameHelpers.h"
 #include "Core/thread_pool.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	extern PieceSymetries s_allPieces;
     extern u32 s_totalPieceTileCount;
     extern thread_pool s_threadPool;
-	void initBlokusIA();
+	void initBlokusAI();
     void printAllPieces();
 
     class GameStateCache;
@@ -106,14 +106,14 @@ namespace BlokusIA
 
         void updatePlayablePositions(Slot _player, const Move& _move);
 
-        friend struct std::hash<BlokusIA::GameState>;
+        friend struct std::hash<blokusAI::GameState>;
         friend class GameStateCache;
 	};
 
     //-------------------------------------------------------------------------------------------------
-    struct BaseIA
+    struct BaseAI
     {
-        std::atomic<bool> m_stopIA = false;
+        std::atomic<bool> m_stopAI = false;
 
         std::atomic<u32> m_numNodesExplored = 0;
         std::atomic<u32> m_numHeuristicEvaluated = 0;
@@ -133,9 +133,9 @@ namespace BlokusIA
 //-------------------------------------------------------------------------------------------------
 namespace std
 {
-    template<> struct hash<BlokusIA::GameState>
+    template<> struct hash<blokusAI::GameState>
     {
-        size_t operator()(const BlokusIA::GameState& _key) const
+        size_t operator()(const blokusAI::GameState& _key) const
         {
             size_t h = 0;
             core::hash_combine(h, _key.getTurnCount());

@@ -8,7 +8,7 @@
 #include "Core/hash.h"
 #include "Core/type.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	enum class Slot : ubyte
 	{
@@ -154,7 +154,7 @@ namespace BlokusIA
         template<bool callGetContactRuleCache, int OffsetX, int OffsetY>
         ubyte getSafe(i32 _x, i32 _y) const;
 
-        friend std::hash<BlokusIA::Board>;
+        friend std::hash<blokusAI::Board>;
 	};
 
 	//-------------------------------------------------------------------------------------------------
@@ -260,12 +260,12 @@ namespace BlokusIA
 //-------------------------------------------------------------------------------------------------
 namespace std
 {
-	template<> struct hash<BlokusIA::Piece>
+	template<> struct hash<blokusAI::Piece>
 	{
-		size_t operator()(const BlokusIA::Piece& _key) const
+		size_t operator()(const blokusAI::Piece& _key) const
 		{
 			size_t h = 0;
-			for (u32 i = 0; i < BlokusIA::Piece::MaxTile; ++i)
+			for (u32 i = 0; i < blokusAI::Piece::MaxTile; ++i)
 			{
 				core::hash_combine(h, _key.getTile(i));
 				if (_key.getTile(i) == 0)
@@ -275,9 +275,9 @@ namespace std
 		}
 	};
 
-    template<> struct hash<BlokusIA::Board>
+    template<> struct hash<blokusAI::Board>
     {
-        size_t operator()(const BlokusIA::Board& _key) const
+        size_t operator()(const blokusAI::Board& _key) const
         {
             size_t h = 0;
             for(u32 dat : _key.m_board)

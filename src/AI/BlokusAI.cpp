@@ -4,7 +4,7 @@
 #include "AI/BlokusGameHelpers.h"
 #include "AI/Cache.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	PieceSymetries s_allPieces = {};
     u32 s_totalPieceTileCount = 0;
@@ -20,7 +20,7 @@ namespace BlokusIA
     const float GameState::s_endGameScore = 1000000.f;
 
 	//-------------------------------------------------------------------------------------------------
-	void initBlokusIA()
+	void initBlokusAI()
 	{
 		s_allPieces = Helpers::getAllPieceSymetries();
         s_totalPieceTileCount = 0;
@@ -589,31 +589,31 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    u32 BaseIA::maxMoveToLookAt(const GameState&) const
+    u32 BaseAI::maxMoveToLookAt(const GameState&) const
     {
         return 16;
     }
 
     //-------------------------------------------------------------------------------------------------
-    void BaseIA::start()
+    void BaseAI::start()
     {
         m_numHeuristicEvaluated = 0;
         m_numNodesExplored = 0;
         m_start = std::chrono::steady_clock::now();
     }
 
-    void BaseIA::stop()
+    void BaseAI::stop()
     {
         std::chrono::duration<float> diff = std::chrono::steady_clock::now() - m_start;
         m_timeInSecond = diff.count();
     }
 
-    float BaseIA::nodePerSecond() const
+    float BaseAI::nodePerSecond() const
     {
         return m_numNodesExplored / m_timeInSecond;
     }
 
-    u32 BaseIA::getNumNodeExplored() const
+    u32 BaseAI::getNumNodeExplored() const
     {
         return m_numNodesExplored;
     }

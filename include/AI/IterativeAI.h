@@ -4,7 +4,7 @@
 
 #include "BlokusAI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     //-------------------------------------------------------------------------------------------------
     struct BestMove
@@ -15,11 +15,11 @@ namespace BlokusIA
     };
 
     //-------------------------------------------------------------------------------------------------
-    template<typename IA_t>
-    class IterativeIA
+    template<typename AI_t>
+    class IterativeAI
     {
     public:
-        IterativeIA() = default;
+        IterativeAI() = default;
         void startComputation(BoardHeuristic, MoveHeuristic, GameState);
         void stopComputation();
 
@@ -33,7 +33,7 @@ namespace BlokusIA
         std::chrono::steady_clock::time_point m_startClock;
 
         std::thread * m_thread = nullptr;
-        IA_t* m_runningIA = nullptr;
-        std::atomic<bool> m_stopIA = false;
+        AI_t* m_runningAI = nullptr;
+        std::atomic<bool> m_stopAI = false;
     };
 }

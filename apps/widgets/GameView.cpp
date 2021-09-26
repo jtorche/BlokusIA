@@ -18,12 +18,12 @@ namespace blokusUi
         scene->addItem(m_boardViewer);
 
         // Test pieces
-        auto pieces = BlokusIA::Helpers::getAllPieces();
-        m_boardViewer->addPiece(pieces[5], BlokusIA::Slot::P0, { 0, 0 });
-        m_boardViewer->addPiece(pieces[7].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P1, { BlokusIA::Board::BoardSize - 2, 0 });
-        m_boardViewer->addPiece(pieces[9].rotate(BlokusIA::Rotation::Rot_90), BlokusIA::Slot::P2, { BlokusIA::Board::BoardSize - 1, BlokusIA::Board::BoardSize - 5 });
-        m_boardViewer->addPiece(pieces[11].rotate(BlokusIA::Rotation::Rot_270), BlokusIA::Slot::P3, { 0, BlokusIA::Board::BoardSize - 3 });
-        m_boardViewer->addPiece(pieces[13], BlokusIA::Slot::P0, { 2, 2 });
+        auto pieces = blokusAI::Helpers::getAllPieces();
+        m_boardViewer->addPiece(pieces[5], blokusAI::Slot::P0, { 0, 0 });
+        m_boardViewer->addPiece(pieces[7].rotate(blokusAI::Rotation::Rot_90), blokusAI::Slot::P1, { blokusAI::Board::BoardSize - 2, 0 });
+        m_boardViewer->addPiece(pieces[9].rotate(blokusAI::Rotation::Rot_90), blokusAI::Slot::P2, { blokusAI::Board::BoardSize - 1, blokusAI::Board::BoardSize - 5 });
+        m_boardViewer->addPiece(pieces[11].rotate(blokusAI::Rotation::Rot_270), blokusAI::Slot::P3, { 0, blokusAI::Board::BoardSize - 3 });
+        m_boardViewer->addPiece(pieces[13], blokusAI::Slot::P0, { 2, 2 });
     }
 
     void GameView::resizeEvent(QResizeEvent* _event)
@@ -33,7 +33,7 @@ namespace blokusUi
         BlokusGraphicsView::resizeEvent(_event);
     }
 
-    void GameView::setBoard(const BlokusIA::Board& _board)
+    void GameView::setBoard(const blokusAI::Board& _board)
     { 
         m_board = _board;
         m_boardViewer->setBoard(&m_board);

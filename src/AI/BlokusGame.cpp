@@ -2,7 +2,7 @@
 
 #include "AI/BlokusGame.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	//-------------------------------------------------------------------------------------------------
 	Piece::Piece(Tile _t0, Tile _t1, Tile _t2, Tile _t3, Tile _t4)

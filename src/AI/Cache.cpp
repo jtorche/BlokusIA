@@ -1,7 +1,7 @@
 #include "AI/Cache.h"
 #include "AI/BlokusAI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 #if 0
     float GameStateCache::computeBoardScore(const GameState& _gameState, Slot _player, BoardHeuristic _heuristic)

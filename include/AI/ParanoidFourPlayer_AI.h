@@ -2,7 +2,7 @@
 
 #include "GenericMinMax_AI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     struct ParanoidStrategy
     {
@@ -20,5 +20,5 @@ namespace BlokusIA
         }
     };
 
-    using ParanoidFourPlayer_IA = GenericMinMax_IA<ParanoidStrategy>;
+    using ParanoidFourPlayer_AI = GenericMinMax_AI<ParanoidStrategy>;
 }

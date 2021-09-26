@@ -6,7 +6,7 @@
 
 #include "BlokusGame.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	//-------------------------------------------------------------------------------------------------
 	// For each piece, all possibles symetries to play the piece

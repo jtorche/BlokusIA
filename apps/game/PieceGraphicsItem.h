@@ -13,8 +13,8 @@ namespace blokusUi
     {
     public:
         PieceGraphicsItem(
-            const BlokusIA::Piece& _piece,
-            const BlokusIA::Slot& _player,
+            const blokusAI::Piece& _piece,
+            const blokusAI::Slot& _player,
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
@@ -30,8 +30,8 @@ namespace blokusUi
         void assignBrush();
 
     private:
-        BlokusIA::Slot m_player;
-        BlokusIA::Piece m_piece;
+        blokusAI::Slot m_player;
+        blokusAI::Piece m_piece;
         QBrush m_brush;
     };
 }

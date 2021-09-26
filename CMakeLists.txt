@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(BlokusIA DESCRIPTION "Blokus Artificial Intelligence project" LANGUAGES CXX)
+project(BlokusAI DESCRIPTION "Blokus Artificial Intelligence project" LANGUAGES CXX)
 
 # Only do these if this is the main project, and not if it is included through
 # add_subdirectory

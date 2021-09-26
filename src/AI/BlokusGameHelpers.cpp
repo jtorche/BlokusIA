@@ -1,6 +1,6 @@
 #include "AI/BlokusGameHelpers.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	//-------------------------------------------------------------------------------------------------
 	std::array<Piece, BlokusGame::PiecesCount> Helpers::getAllPieces()

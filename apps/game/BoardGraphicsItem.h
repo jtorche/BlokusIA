@@ -7,7 +7,7 @@
 
 #include "interfaces/IThemeable.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     class Board;
     class Piece;
@@ -22,15 +22,15 @@ namespace blokusUi
     {
     public:
         BoardGraphicsItem(
-            BlokusIA::Board* _board,
+            blokusAI::Board* _board,
             QGraphicsItem* _parent = nullptr);
 
         virtual void updateThemedResources() override;
 
-        void setBoard(BlokusIA::Board* _board);
+        void setBoard(blokusAI::Board* _board);
         void addPiece(
-            const BlokusIA::Piece& _piece,
-            const BlokusIA::Slot& _player,
+            const blokusAI::Piece& _piece,
+            const blokusAI::Slot& _player,
             ubyte2 _pos);
 
     protected:
@@ -48,7 +48,7 @@ namespace blokusUi
         static constexpr QPointF getTileOffset(u32 _x, u32 _y);
 
     private:
-        BlokusIA::Board* m_board;
+        blokusAI::Board* m_board;
         QBrush m_boardBrush;
         std::array<QBrush, 4> m_playerBrushes;
 

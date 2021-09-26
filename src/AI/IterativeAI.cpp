@@ -3,33 +3,33 @@
 #include "AI/FourPlayerMaxN_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
-    template<typename IA_t>
-    void IterativeIA<IA_t>::startComputation(BoardHeuristic _heuristic, MoveHeuristic _moveHeuristic,  GameState _gameState)
+    template<typename AI_t>
+    void IterativeAI<AI_t>::startComputation(BoardHeuristic _heuristic, MoveHeuristic _moveHeuristic,  GameState _gameState)
     {
         DEBUG_ASSERT(m_thread == nullptr);
 
         m_bestMove = {};
-        m_stopIA = false;
+        m_stopAI = false;
 
         m_thread = new std::thread([this, _heuristic, _moveHeuristic, _gameState]()
         {
             u32 maxDepth = 1;
-            m_runningIA = new IA_t(maxDepth, _heuristic, _moveHeuristic);
+            m_runningAI = new AI_t(maxDepth, _heuristic, _moveHeuristic);
 
-            while (m_stopIA == false)
+            while (m_stopAI == false)
             {
                 m_startClock = std::chrono::steady_clock::now();
-                auto[move, score] = m_runningIA->findBestMove(_gameState);
-                if (m_stopIA == false)
+                auto[move, score] = m_runningAI->findBestMove(_gameState);
+                if (m_stopAI == false)
                 {
                     std::lock_guard _{ m_mutex };
 
                     m_bestMove = { move, score, maxDepth };
-                    m_nodePerSecond = m_runningIA->nodePerSecond();
-                    delete m_runningIA;
-                    m_runningIA = new IA_t(++maxDepth, _heuristic, _moveHeuristic);
+                    m_nodePerSecond = m_runningAI->nodePerSecond();
+                    delete m_runningAI;
+                    m_runningAI = new AI_t(++maxDepth, _heuristic, _moveHeuristic);
 
                     // avoid infinite depth
                     if (maxDepth == 100)
@@ -39,38 +39,38 @@ namespace BlokusIA
         });
     }
 
-    template<typename IA_t>
-    void IterativeIA<IA_t>::stopComputation()
+    template<typename AI_t>
+    void IterativeAI<AI_t>::stopComputation()
     {
         DEBUG_ASSERT(m_thread);
         {
             std::lock_guard _{ m_mutex };
-            m_runningIA->m_stopIA = true;
-            m_stopIA = true;
+            m_runningAI->m_stopAI = true;
+            m_stopAI = true;
         }
 
         m_thread->join();
         delete m_thread;
-        delete m_runningIA;
+        delete m_runningAI;
         m_thread = nullptr;
-        m_runningIA = nullptr;
+        m_runningAI = nullptr;
     }
 
-    template<typename IA_t>
-    float IterativeIA<IA_t>::nodePerSecond()
+    template<typename AI_t>
+    float IterativeAI<AI_t>::nodePerSecond()
     {
         std::lock_guard _{ m_mutex };
-        if (m_runningIA)
+        if (m_runningAI)
         {
             std::chrono::duration<float> timeSinceStart = std::chrono::steady_clock::now() - m_startClock;
-            return float(m_runningIA->getNumNodeExplored()) / timeSinceStart.count();
+            return float(m_runningAI->getNumNodeExplored()) / timeSinceStart.count();
         }
         else
             return m_nodePerSecond;
     }
 
-    template<typename IA_t>
-    BestMove IterativeIA<IA_t>::getBestMove()
+    template<typename AI_t>
+    BestMove IterativeAI<AI_t>::getBestMove()
     {
         {
             std::lock_guard _{ m_mutex };
@@ -78,6 +78,6 @@ namespace BlokusIA
         }
     }
 
-    template class IterativeIA<FourPlayerMaxN_IA>;
-    template class IterativeIA<ParanoidFourPlayer_IA>;
+    template class IterativeAI<FourPlayerMaxN_AI>;
+    template class IterativeAI<ParanoidFourPlayer_AI>;
 }

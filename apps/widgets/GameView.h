@@ -13,13 +13,13 @@ namespace blokusUi
 	public:
 		GameView(QWidget* _parent = nullptr);
 
-		void setBoard(const BlokusIA::Board& _board);
+		void setBoard(const blokusAI::Board& _board);
 
 	protected:
 		virtual void resizeEvent(QResizeEvent* _event) override;
 
 	private:
-		BlokusIA::Board m_board;
+		blokusAI::Board m_board;
 		BoardGraphicsItem* m_boardViewer;
 	};
 }

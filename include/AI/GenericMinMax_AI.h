@@ -2,14 +2,14 @@
 
 #include "BlokusAI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
 	//-------------------------------------------------------------------------------------------------
     template<typename Strategy>
-	class GenericMinMax_IA : public BaseIA
+	class GenericMinMax_AI : public BaseAI
 	{
 	public:
-        GenericMinMax_IA(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles, MoveHeuristic _moveHeuristic = MoveHeuristic::TileCount)
+        GenericMinMax_AI(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles, MoveHeuristic _moveHeuristic = MoveHeuristic::TileCount)
             : m_maxDepth{ _maxDepth }
             , m_heuristic{ _heuristic }
             , m_moveHeuristic{ _moveHeuristic }

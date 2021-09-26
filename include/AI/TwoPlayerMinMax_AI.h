@@ -2,7 +2,7 @@
 
 #include "GenericMinMax_AI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     struct TwoPlayerMinMaxStrategy
     {
@@ -21,5 +21,5 @@ namespace BlokusIA
         }
     };
 
-    using TwoPlayerMinMax_IA = GenericMinMax_IA<TwoPlayerMinMaxStrategy>;
+    using TwoPlayerMinMax_AI = GenericMinMax_AI<TwoPlayerMinMaxStrategy>;
 }

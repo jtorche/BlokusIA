@@ -1,9 +1,9 @@
 #include "AI/FourPlayerMaxN_AI.h"
 
-namespace BlokusIA
+namespace blokusAI
 {
     //-------------------------------------------------------------------------------------------------
-    std::pair<Move, float> FourPlayerMaxN_IA::findBestMove(const GameState& _gameState)
+    std::pair<Move, float> FourPlayerMaxN_AI::findBestMove(const GameState& _gameState)
     {
         start();
         auto moves = _gameState.enumerateMoves(m_moveHeuristic);
@@ -37,11 +37,11 @@ namespace BlokusIA
     }
 
     //-------------------------------------------------------------------------------------------------
-    FourPlayerMaxN_IA::Score FourPlayerMaxN_IA::evalPositionRec(const GameState& _gameState, u32 _depth)
+    FourPlayerMaxN_AI::Score FourPlayerMaxN_AI::evalPositionRec(const GameState& _gameState, u32 _depth)
     {
         m_numNodesExplored++;
 
-        if (_depth >= m_maxDepth || m_stopIA)
+        if (_depth >= m_maxDepth || m_stopAI)
             return computeScore(_gameState);
 
         auto moves = _gameState.enumerateMoves(m_moveHeuristic);

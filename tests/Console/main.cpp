@@ -8,11 +8,11 @@
 
 void runTest();
 
-using namespace BlokusIA;
+using namespace blokusAI;
 
 int main()
 {
-	initBlokusIA();
+    initBlokusAI();
     printAllPieces();
 
 	// run some unit test
@@ -23,11 +23,11 @@ int main()
     const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
     const MoveHeuristic moveHeuristic = MoveHeuristic::ExtendingReachableSpace;
 
-    IterativeIA<FourPlayerMaxN_IA> IA;
+    IterativeAI<FourPlayerMaxN_AI> AI;
     u32 numTurn = 0;
     while (1)
     {
-        IA.startComputation(heuristic, moveHeuristic, gameState);
+        AI.startComputation(heuristic, moveHeuristic, gameState);
 
         u32 thinking = 1;
         while (thinking)
@@ -35,14 +35,14 @@ int main()
             std::cout << "\nContinue ? ";
             std::cin >> thinking;
 
-            std::cout << "Cur depth:" << IA.getBestMove().depth << std::endl;
-            std::cout << "Stats: " << IA.nodePerSecond() << " node/sec, curMoveScore: " << IA.getBestMove().playerScore << std::endl;
+            std::cout << "Cur depth:" << AI.getBestMove().depth << std::endl;
+            std::cout << "Stats: " << AI.nodePerSecond() << " node/sec, curMoveScore: " << AI.getBestMove().playerScore << std::endl;
         }
 
-        IA.stopComputation();
+        AI.stopComputation();
         getGlobalCache().resetStats();
 
-        Move move = IA.getBestMove().move;
+        Move move = AI.getBestMove().move;
         if (move.isValid())
             gameState = gameState.play(move);
         else
