@@ -1,4 +1,4 @@
-#include "PieceGraphicsItem.h"
+#include "game/PieceGraphicsItem.h"
 
 #include <QPainter>
 

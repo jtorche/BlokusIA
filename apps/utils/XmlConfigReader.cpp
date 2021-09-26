@@ -1,9 +1,7 @@
-#include "XmlConfigReader.h"
+#include "utils/XmlConfigReader.h"
 
 #include <QFile>
 #include <QXmlStreamReader>
-
-#include<QDebug>
 
 namespace blokusUI
 {

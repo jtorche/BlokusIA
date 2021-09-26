@@ -1,4 +1,4 @@
-#include "BoardGraphicsItem.h"
+#include "game/BoardGraphicsItem.h"
 
 #include <QGraphicsScene>
 #include <QPainter>
