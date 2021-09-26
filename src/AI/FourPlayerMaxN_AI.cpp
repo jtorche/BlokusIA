@@ -1,4 +1,4 @@
-#include "AI/FourPlayerMaxN_IA.h"
+#include "AI/FourPlayerMaxN_AI.h"
 
 namespace BlokusIA
 {

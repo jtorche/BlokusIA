@@ -1,7 +1,8 @@
 #pragma once
 
-#include "BlokusIA.h"
 #include <chrono>
+
+#include "BlokusAI.h"
 
 namespace BlokusIA
 {

@@ -1,7 +1,7 @@
-#include "AI/IterativeIA.h"
+#include "AI/IterativeAI.h"
 
-#include "AI/FourPlayerMaxN_IA.h"
-#include "AI/ParanoidFourPlayer_IA.h"
+#include "AI/FourPlayerMaxN_AI.h"
+#include "AI/ParanoidFourPlayer_AI.h"
 
 namespace BlokusIA
 {

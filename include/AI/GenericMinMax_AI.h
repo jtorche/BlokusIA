@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BlokusIA.h"
+#include "BlokusAI.h"
 
 namespace BlokusIA
 {

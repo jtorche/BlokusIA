@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GenericMinMax_IA.h"
+#include "GenericMinMax_AI.h"
 
 namespace BlokusIA
 {

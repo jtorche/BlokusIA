@@ -1,6 +1,6 @@
 #include <numeric>
 
-#include "AI/BlokusIA.h"
+#include "AI/BlokusAI.h"
 #include "AI/BlokusGameHelpers.h"
 #include "AI/Cache.h"
 

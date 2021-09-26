@@ -1,5 +1,5 @@
 #include "AI/Cache.h"
-#include "AI/BlokusIA.h"
+#include "AI/BlokusAI.h"
 
 namespace BlokusIA
 {
