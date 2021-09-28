@@ -49,7 +49,7 @@ if (BUILD_UI AND BUILD_TESTING)
         target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${qt_major_version}::Widgets)
 
-        add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} ${VC_INSTALL_DIR})
+        add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} "${VC_INSTALL_DIR}")
 
         # For nicer IDE views
         set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "tests")

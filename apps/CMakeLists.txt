@@ -74,7 +74,7 @@ if (BUILD_UI)
             generate_app_translations(${PROJECT_NAME} ${ts_dir} ${ts_files} ${CMAKE_CURRENT_SOURCE_DIR})
         endif()
 
-        add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} ${VC_INSTALL_DIR})
+        add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} "${VC_INSTALL_DIR}")
 
         # For nicer IDE views
         source_group(
