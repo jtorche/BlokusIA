@@ -16,8 +16,6 @@ namespace blokusAI
 
 namespace blokusUI
 {
-    class PieceGraphicsItem;
-
     class BoardGraphicsItem : public QGraphicsItem, public IThemeable
     {
     public:
@@ -42,16 +40,10 @@ namespace blokusUI
 
     private:
         void assignBrushes();
-        void drawBoard(QPainter& _painter) const;
-
-        static constexpr QPointF getBoardOffset();
-        static constexpr QPointF getTileOffset(u32 _x, u32 _y);
 
     private:
         blokusAI::Board* m_board;
         QBrush m_boardBrush;
         std::array<QBrush, 4> m_playerBrushes;
-
-        static constexpr f32 BorderWidthRatio = 1/f32(3);
     };
 }

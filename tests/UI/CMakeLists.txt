@@ -46,7 +46,7 @@ if (BUILD_UI AND BUILD_TESTING)
         target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ui_tests_precompile_header}>")
 
         # Linked libraries
-        target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Core AI UI)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${qt_major_version}::Widgets)
 
         add_windeployqt_postbuild(${PROJECT_NAME} ${qt_major_version} "${VC_INSTALL_DIR}")

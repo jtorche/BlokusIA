@@ -61,7 +61,7 @@ if (BUILD_UI)
         target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ui_precompile_header}>")
 
         # Linked libraries
-        target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
+        target_link_libraries(${PROJECT_NAME} PRIVATE Core AI UI)
         target_link_libraries(${PROJECT_NAME} PRIVATE Qt${qt_major_version}::Widgets)
 
         # Linguist tools module

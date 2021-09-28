@@ -2,10 +2,10 @@
 
 #include <QPainter>
 
-#include "theme/ThemeManager.h"
+#include "UI/game/GameConstants.h"
+#include "UI/utils/DrawUtils.h"
 
-#include "game/GameConstants.h"
-#include "utils/DrawUtils.h"
+#include "theme/ThemeManager.h"
 
 namespace blokusUI
 {
