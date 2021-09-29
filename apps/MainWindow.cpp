@@ -9,6 +9,11 @@
 
 #include "widgets/GameView.h"
 
+
+
+
+#include "game/PlayerPiecesGraphicsItem.h"
+
 namespace blokusUI
 {
     MainWindow::MainWindow(QWidget* _parent)
@@ -18,6 +23,14 @@ namespace blokusUI
         m_ui->setupUi(this);
         m_gameView = new GameView(m_ui->m_centralwidget);
         m_ui->m_mainLayout->addWidget(m_gameView);
+
+        auto view = new BlokusGraphicsView(this);
+        view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        auto scene = new QGraphicsScene(view);
+        scene->addItem(new PlayerPiecesGraphicsItem(blokusAI::Slot::P0));
+        view->setScene(scene);
+        m_ui->m_mainLayout->addWidget(view);
 
         setupActions();
         setupConnections();
