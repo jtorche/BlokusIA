@@ -10,10 +10,13 @@ namespace blokusAI
         if(moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
-        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
+        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves);
 
         if (moves.empty())
+        {
+            stop();
             return {};
+        }
 
         std::vector<std::future<float>> asyncScores(moves.size());
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
@@ -48,7 +51,7 @@ namespace blokusAI
         if (moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
-        _gameState.findCandidatMoves(maxMoveToLookAt(_gameState), moves);
+        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves);
 
         if (moves.empty())
         {

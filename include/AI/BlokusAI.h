@@ -135,7 +135,6 @@ namespace blokusAI
 
         float nodePerSecond() const;
         u32 getNumNodeExplored() const;
-        u32 maxMoveToLookAt(const GameState& _state) const;
     };
 }
 

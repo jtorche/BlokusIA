@@ -579,7 +579,7 @@ namespace blokusAI
                         if (m_board.isValidPlayableSlot(_player, pos))
                         {
                             DEBUG_ASSERT(m_numPlayablePos[playerIndex] < Board::MaxPlayableCorners);
-                            if(insertSorted(m_numPlayablePos[playerIndex], m_playablePositions[playerIndex], pos))
+                            if (insertSorted(m_numPlayablePos[playerIndex], m_playablePositions[playerIndex], pos))
                                 m_numPlayablePos[playerIndex]++;
                         }
                     }
@@ -587,12 +587,7 @@ namespace blokusAI
             }
         }
     }
-
-    //-------------------------------------------------------------------------------------------------
-    u32 BaseAI::maxMoveToLookAt(const GameState&) const
-    {
-        return 16;
-    }
+       
 
     //-------------------------------------------------------------------------------------------------
     void BaseAI::start()
