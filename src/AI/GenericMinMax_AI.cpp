@@ -10,7 +10,7 @@ namespace blokusAI
 	{
         start();
 
-        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
         if (moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
@@ -54,10 +54,10 @@ namespace blokusAI
 
         bool isMaxPlayerTurn = Strategy::isMaxPlayerTurn(_maxPlayer, _gameState);
 
-		if (_depth >= m_maxDepth || m_stopAI)
+		if (_depth >= m_params.maxDepth || m_stopAI)
 			return computeScore(_maxPlayer, _gameState);
 
-        auto moves = _gameState.enumerateMoves(m_moveHeuristic);
+        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
         if (moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 

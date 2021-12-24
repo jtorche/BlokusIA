@@ -2,21 +2,23 @@
 
 #include "AI/FourPlayerMaxN_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
+#include "AI/TwoPlayerMinMax_AI.h"
 
 namespace blokusAI
 {
     template<typename AI_t>
-    void IterativeAI<AI_t>::startComputation(BoardHeuristic _heuristic, MoveHeuristic _moveHeuristic,  GameState _gameState)
+    void IterativeAI<AI_t>::startComputation(const BaseAI::Parameters& _parameters,  GameState _gameState)
     {
         DEBUG_ASSERT(m_thread == nullptr);
 
         m_bestMove = {};
         m_stopAI = false;
 
-        m_thread = new std::thread([this, _heuristic, _moveHeuristic, _gameState]()
+        m_thread = new std::thread([this, parameter = _parameters, _gameState]() mutable
         {
-            u32 maxDepth = 1;
-            m_runningAI = new AI_t(maxDepth, _heuristic, _moveHeuristic);
+            u32& maxDepth = parameter.maxDepth;
+            maxDepth = 1;
+            m_runningAI = new AI_t(parameter);
 
             while (m_stopAI == false)
             {
@@ -29,7 +31,8 @@ namespace blokusAI
                     m_bestMove = { move, score, maxDepth };
                     m_nodePerSecond = m_runningAI->nodePerSecond();
                     delete m_runningAI;
-                    m_runningAI = new AI_t(++maxDepth, _heuristic, _moveHeuristic);
+                    ++maxDepth;
+                    m_runningAI = new AI_t(parameter);
 
                     // avoid infinite depth
                     if (maxDepth == 100)
@@ -80,4 +83,5 @@ namespace blokusAI
 
     template class IterativeAI<FourPlayerMaxN_AI>;
     template class IterativeAI<ParanoidFourPlayer_AI>;
+    template class IterativeAI<TwoPlayerMinMax_AI>;
 }

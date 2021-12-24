@@ -20,7 +20,7 @@ namespace blokusAI
     {
     public:
         IterativeAI() = default;
-        void startComputation(BoardHeuristic, MoveHeuristic, GameState);
+        void startComputation(const BaseAI::Parameters&, GameState);
         void stopComputation();
 
         float nodePerSecond();

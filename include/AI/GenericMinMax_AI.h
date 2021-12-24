@@ -9,10 +9,8 @@ namespace blokusAI
 	class GenericMinMax_AI : public BaseAI
 	{
 	public:
-        GenericMinMax_AI(u32 _maxDepth, BoardHeuristic _heuristic = BoardHeuristic::RemainingTiles, MoveHeuristic _moveHeuristic = MoveHeuristic::TileCount)
-            : m_maxDepth{ _maxDepth }
-            , m_heuristic{ _heuristic }
-            , m_moveHeuristic{ _moveHeuristic }
+        GenericMinMax_AI(const BaseAI::Parameters& _parameters)
+            : BaseAI{ _parameters }
         {}
 
         std::pair<Move, float> findBestMove(const GameState& _gameState);
@@ -20,14 +18,10 @@ namespace blokusAI
 		float computeScore(Slot _maxPlayer, const GameState& _gameState)
 		{
             m_numHeuristicEvaluated++;
-            return Strategy::computeScore(_maxPlayer, m_heuristic, _gameState);
+            return Strategy::computeScore(_maxPlayer, m_params.heuristic, _gameState);
 		}
 
 	private:
 		float evalPositionRec(Slot _maxPlayer, const GameState& _gameState, u32 _depth, vec2 _a_b);
-
-		u32 m_maxDepth = 0;
-        BoardHeuristic m_heuristic;
-        MoveHeuristic m_moveHeuristic;
 	};
 }

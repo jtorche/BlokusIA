@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "AI/FourPlayerMaxN_AI.h"
+#include "AI/TwoPlayerMinMax_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
 #include "AI/IterativeAI.h"
 #include "AI/Cache.h"
@@ -19,15 +20,18 @@ int main()
 	runTest();
 
 	GameState gameState;
-    //const BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceOnly;
-    const BoardHeuristic heuristic = BoardHeuristic::RemainingTiles;
-    const MoveHeuristic moveHeuristic = MoveHeuristic::ExtendingReachableSpace;
+    BaseAI::Parameters parameters = 
+    {
+        1, 16,
+        BoardHeuristic::ReachableEmptySpaceWeighted,
+        MoveHeuristic::TileCount
+    };
 
-    IterativeAI<FourPlayerMaxN_AI> AI;
+    IterativeAI<ParanoidFourPlayer_AI> AI;
     u32 numTurn = 0;
     while (1)
     {
-        AI.startComputation(heuristic, moveHeuristic, gameState);
+        AI.startComputation(parameters, gameState);
 
         u32 thinking = 1;
         while (thinking)
@@ -70,7 +74,7 @@ int main()
 		gameState.getBoard().print();
 
         for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
-            std::cout << u32(s) << "(" << gameState.getPlayedPieceTiles(s) << ") :" << gameState.computeBoardScore(s, heuristic) << std::endl;
+            std::cout << u32(s) << "(" << gameState.getPlayedPieceTiles(s) << ") :" << gameState.computeBoardScore(s, parameters.heuristic) << std::endl;
 	
         system("pause");
     }

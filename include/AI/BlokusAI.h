@@ -113,6 +113,15 @@ namespace blokusAI
     //-------------------------------------------------------------------------------------------------
     struct BaseAI
     {
+        struct Parameters
+        {
+            u32 maxDepth = 1;
+            u32 maxMoveToLookAt = 16;
+            BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+            MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+        };
+        Parameters m_params;
+
         std::atomic<bool> m_stopAI = false;
 
         std::atomic<u32> m_numNodesExplored = 0;
