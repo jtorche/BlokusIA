@@ -18,19 +18,21 @@ namespace blokusAI
             return {};
         }
 
+        auto evalPosLambda = [&](const auto& _move) { return evalPositionRec(_gameState.play(_move.first), 1)[_gameState.getPlayerTurn()]; };
+
         std::vector<std::future<float>> asyncScores(moves.size());
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
             [&](const auto& move) -> std::future<float>
         {
-            auto evalPosLambda = [&]() { return evalPositionRec(_gameState.play(move.first), 1)[_gameState.getPlayerTurn()]; };
+            
             if (m_params.monothread)
             { 
                 std::promise<float> scorePromise;
-                scorePromise.set_value(evalPosLambda());
+                scorePromise.set_value(evalPosLambda(move));
                 return scorePromise.get_future();
             }             
             else
-                return s_threadPool.submit([&]() -> float { return evalPosLambda(); });
+                return s_threadPool.submit([&]() -> float { return evalPosLambda(move); });
         });
 
         std::vector<float> scores(asyncScores.size());

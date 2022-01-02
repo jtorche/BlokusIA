@@ -28,7 +28,9 @@ namespace blokusAI
         {
             s_totalPieceTileCount += _pieces.begin()->getNumTiles();
         }
-        srand((u32)time(nullptr));
+        u32 seed = (u32)time(nullptr);
+        std::cout << "Seed:" << seed << std::endl;
+        srand(seed);
 	}
 
     //-------------------------------------------------------------------------------------------------
@@ -237,8 +239,17 @@ namespace blokusAI
             computeReachableSlots(convertToSlot(i), expander);
         }
 
-		newGameState.m_turn = m_turn + 1;
+        // find if no move left
+        bool hasAnyMove = false;
+        newGameState.visitMoves(MoveHeuristic::TileCount, [&](Move, float) 
+        { 
+            hasAnyMove = true;
+            return false; 
+        });
+        if(!hasAnyMove)
+            newGameState.m_remainingPieces[turn].set(BlokusGame::PiecesCount);
 
+		newGameState.m_turn = m_turn + 1;
 		return newGameState;
 	}
 
@@ -246,7 +257,6 @@ namespace blokusAI
     GameState GameState::skip() const
     {
         GameState newGameState = *this;
-        newGameState.m_remainingPieces[getPlayerTurn()].set(BlokusGame::PiecesCount);
         newGameState.m_turn = m_turn + 1;
 
         return newGameState;
@@ -255,41 +265,10 @@ namespace blokusAI
 	//-------------------------------------------------------------------------------------------------
 	std::vector<std::pair<Move, float>> GameState::enumerateMoves(MoveHeuristic _moveHeuristic) const
 	{
-        if (m_remainingPieces[getPlayerTurn()].test(BlokusGame::PiecesCount))
-            return {};
-
 		std::vector<std::pair<Move, float>> moves;
         moves.reserve(512);
 
-		Slot playerToMove = convertToSlot(getPlayerTurn());
-
-		const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
-        u32 numSlots = m_numPlayablePos[getPlayerTurn()];
-
-        for (u32 i = 0; i < numSlots; ++i)
-        {
-            for (auto it = s_allPieces.rbegin(); it != s_allPieces.rend(); ++it)
-            {
-                u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
-                if (m_remainingPieces[getPlayerTurn()].test(piece))
-                {
-                    for (const Piece& p : *it)
-                    {
-                        std::array<ubyte2, Piece::MaxPlayableCorners> pieceMoves;
-                        u32 numMoveForPiece = m_board.getPiecePlayablePositions(playerToMove, p, slots[i], pieceMoves, m_turn < 4);
-
-                        for (u32 j = 0; j < numMoveForPiece; ++j)
-                        {
-                            Move move = { p, piece, pieceMoves[j] };
-                            float moveHeuristic = computeHeuristic(move, slots[i], _moveHeuristic);
-
-                            if (moveHeuristic >= 0)
-                                moves.push_back({ move, moveHeuristic });
-                        }
-                    }
-                }
-            }
-        }
+        visitMoves(_moveHeuristic, [&](Move _move, float _score) { moves.push_back({ _move,_score }); return true; });
 
 		return moves;
 	}
@@ -347,6 +326,9 @@ namespace blokusAI
 	//-------------------------------------------------------------------------------------------------
 	float GameState::computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic _moveHeuristic) const
 	{
+        if (_moveHeuristic == MoveHeuristic::TileCount)
+            return _move.piece.getNumTiles();
+
         Slot playerToMove = convertToSlot(getPlayerTurn());
 
         float distToCenterHeuristic = 0;
@@ -363,7 +345,7 @@ namespace blokusAI
             DEBUG_ASSERT(distToCenterHeuristic <= 1);
         }
 
-        if(_moveHeuristic == MoveHeuristic::TileCount)
+        if(_moveHeuristic == MoveHeuristic::TileCount_DistCenter)
 		    return _move.piece.getNumTiles() + distToCenterHeuristic;
         else if (_moveHeuristic == MoveHeuristic::WeightedReachableSpace || 
                  _moveHeuristic == MoveHeuristic::ExtendingReachableSpace)
@@ -422,25 +404,18 @@ namespace blokusAI
     //-------------------------------------------------------------------------------------------------
     float GameState::computeBoardScoreInner(Slot _player, BoardHeuristic _heuristicType) const
     {
-        float winOrLooseScore = 0; // first place means score = 1e6, second place means score = -1e6, third = -2e6, ...
         u32 numOpponentsDefeated = 0;
         for (u32 i = 0; i < 4; ++i)
         {
             if (convertToSlot(i) != _player)
             {
-                if (noMoveLeft(_player) && getPlayedPieceTiles(_player) < getPlayedPieceTiles(convertToSlot(i)))
-                    winOrLooseScore -= s_endGameScore;
-                else if (noMoveLeft(convertToSlot(i)) && getPlayedPieceTiles(_player) >= getPlayedPieceTiles(convertToSlot(i)))
+                if (noMoveLeft(convertToSlot(i)) && getPlayedPieceTiles(_player) >= getPlayedPieceTiles(convertToSlot(i)))
                     numOpponentsDefeated++;
             }
         }
 
         if (numOpponentsDefeated == 3)
-            winOrLooseScore = s_endGameScore;
-
-        // We detect an endgame, return an extrem score to avoid/force the scenario
-        if (winOrLooseScore != 0)
-            return winOrLooseScore;
+            return s_endGameScore;
 
         if (_heuristicType == BoardHeuristic::RemainingTiles)
             return (float)getPlayedPieceTiles(_player);

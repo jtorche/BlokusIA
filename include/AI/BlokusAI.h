@@ -44,6 +44,7 @@ namespace blokusAI
     enum class MoveHeuristic
     {
         TileCount,
+        TileCount_DistCenter,
         WeightedReachableSpace,
         ExtendingReachableSpace,
     };
@@ -74,6 +75,9 @@ namespace blokusAI
 		u32 getPlayerTurn() const { return m_turn % 4; }
 		u32 getTurnCount() const { return m_turn; }
         bool noMoveLeft(Slot _player) const { return m_remainingPieces[u32(_player) - u32(Slot::P0)].test(BlokusGame::PiecesCount); }
+
+        template<typename Functor>
+        void visitMoves(MoveHeuristic _moveHeuristic, Functor&&) const;
 
 		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic) const;
         void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves) const;
@@ -109,6 +113,46 @@ namespace blokusAI
         friend struct std::hash<blokusAI::GameState>;
         friend class GameStateCache;
 	};
+
+    template<typename Functor>
+    void GameState::visitMoves(MoveHeuristic _moveHeuristic, Functor&& _functor) const
+    {
+        if (m_remainingPieces[getPlayerTurn()].test(BlokusGame::PiecesCount))
+            return;
+
+        Slot playerToMove = convertToSlot(getPlayerTurn());
+
+        const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
+        u32 numSlots = m_numPlayablePos[getPlayerTurn()];
+
+        for (u32 i = 0; i < numSlots; ++i)
+        {
+            for (auto it = s_allPieces.rbegin(); it != s_allPieces.rend(); ++it)
+            {
+                u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
+                if (m_remainingPieces[getPlayerTurn()].test(piece))
+                {
+                    for (const Piece& p : *it)
+                    {
+                        std::array<ubyte2, Piece::MaxPlayableCorners> pieceMoves;
+                        u32 numMoveForPiece = m_board.getPiecePlayablePositions(playerToMove, p, slots[i], pieceMoves, m_turn < 4);
+
+                        for (u32 j = 0; j < numMoveForPiece; ++j)
+                        {
+                            Move move = { p, piece, pieceMoves[j] };
+                            float moveHeuristic = computeHeuristic(move, slots[i], _moveHeuristic);
+
+                            if (moveHeuristic >= 0)
+                            {
+                                if (!_functor(move, moveHeuristic))
+                                    return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     //-------------------------------------------------------------------------------------------------
     struct BaseAI

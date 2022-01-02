@@ -1,5 +1,6 @@
 #include <array>
 #include <iostream>
+#include <windows.h>
 
 #include "AI/FourPlayerMaxN_AI.h"
 #include "AI/TwoPlayerMinMax_AI.h"
@@ -22,64 +23,71 @@ int main()
 	runTest();
 
 	GameState gameState;
-    BaseAI::Parameters parameters = 
+    BaseAI::Parameters parameters =
     {
         1, 16,
         BoardHeuristic::ReachableEmptySpaceWeighted,
-        MoveHeuristic::TileCount,
+        MoveHeuristic::TileCount_DistCenter,
         false
     };
 
-    IterativeAI<AlonePlayer_AI> AI;
+    IterativeAI<ParanoidFourPlayer_AI> AI;
     u32 numTurn = 0;
     while (1)
     {
         AI.startComputation(parameters, gameState);
 
-        u32 thinking = 1;
-        while (thinking)
-        {
-            std::cout << "\nContinue ? ";
-            std::cin >> thinking;
+        //u32 thinking = 1;
+        //while (thinking)
+        //{
+        //    std::cout << "\nContinue ? ";
+        //    std::cin >> thinking;
+        //    
+        //
+        //    std::cout << "Cur depth:" << AI.getBestMove().depth << std::endl;
+        //    std::cout << "Stats: " << AI.nodePerSecond() << " node/sec, curMoveScore: " << AI.getBestMove().playerScore << std::endl;
+        //}
 
-            std::cout << "Cur depth:" << AI.getBestMove().depth << std::endl;
-            std::cout << "Stats: " << AI.nodePerSecond() << " node/sec, curMoveScore: " << AI.getBestMove().playerScore << std::endl;
-        }
+        Sleep(1000);
 
         AI.stopComputation();
+
+        std::cout << "----------------------------------\n";
+        std::cout << "Move depth:" << AI.getBestMove().depth << std::endl;
+        std::cout << "Stats: " << AI.nodePerSecond() << " node/sec, outcome: " << AI.getBestMove().playerScore << std::endl;
+
         getGlobalCache().resetStats();
 
         Move move = AI.getBestMove().move;
         if (move.isValid())
             gameState = gameState.play(move);
         else
-        {
             gameState = gameState.skip();
-            std::cout << "!! Player 1 has lost." << std::endl;
-            break;
-        }
 
         for (u32 i = 1; i < 4; ++i)
         {
-            auto moves = gameState.enumerateMoves(MoveHeuristic::TileCount);
-            gameState.findCandidatMoves(1, moves);
+            auto moves = gameState.enumerateMoves(MoveHeuristic::TileCount_DistCenter);
+            gameState.findCandidatMoves(8, moves);
             if (moves.empty())
-            {
                 gameState = gameState.skip();
-                std::cout << "!! Player " << i + 1 << " has lost." << std::endl;
-            }
             else
-                gameState = gameState.play(moves[0].first);
+                gameState = gameState.play(moves[u32(rand()) % moves.size()].first);
         }
 
 		numTurn++;
 
 		gameState.getBoard().print();
 
-        for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
-            std::cout << u32(s) << "(" << gameState.getPlayedPieceTiles(s) << ") :" << gameState.computeBoardScore(s, parameters.heuristic) << std::endl;
-	
-        system("pause");
+        u32 noMoveForPlayer = 0;
+        for (u32 i = 0; i < 4; ++i)
+        {
+            Slot p = Slot(u32(Slot::P0) + i);
+            std::cout << "Played tiles for player " << i + 1 << " : " << gameState.getPlayedPieceTiles(p) << "(" << !gameState.noMoveLeft(p) << ")" << std::endl;
+            noMoveForPlayer += gameState.noMoveLeft(p);
+        }
+
+        if (noMoveForPlayer == 4)
+            break;
     }
 	
 	std::cout << "NumTurn " << numTurn << "\n";
