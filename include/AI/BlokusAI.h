@@ -119,7 +119,12 @@ namespace blokusAI
             u32 maxMoveToLookAt = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+            bool monothread = true;
         };
+
+        BaseAI(const Parameters& _parameters) : m_params{ _parameters } {}
+        virtual ~BaseAI() = default;
+
         Parameters m_params;
 
         std::atomic<bool> m_stopAI = false;
@@ -135,6 +140,8 @@ namespace blokusAI
 
         float nodePerSecond() const;
         u32 getNumNodeExplored() const;
+
+        virtual std::pair<Move, float> findBestMove(const GameState& _gameState) = 0;
     };
 }
 

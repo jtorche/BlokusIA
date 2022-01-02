@@ -25,10 +25,11 @@ int main()
     {
         1, 16,
         BoardHeuristic::ReachableEmptySpaceWeighted,
-        MoveHeuristic::TileCount
+        MoveHeuristic::TileCount,
+        false
     };
 
-    IterativeAI<MoveHeuristicGuided_AI> AI;
+    IterativeAI<FourPlayerMaxN_AI> AI;
     u32 numTurn = 0;
     while (1)
     {

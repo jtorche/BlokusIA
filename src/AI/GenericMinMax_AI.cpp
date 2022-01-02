@@ -28,12 +28,21 @@ namespace blokusAI
         std::transform(moves.begin(), moves.end(), asyncScores.begin(),
             [&](const auto& move) -> std::future<float>
         {
-            return s_threadPool.submit([&]() -> float 
-            { 
+            auto evalPosLambda = [&]() 
+            {
                 float score = evalPositionRec(Slot(_gameState.getPlayerTurn() + u32(Slot::P0)), _gameState.play(move.first), 1, { -std::numeric_limits<float>::max(), b });
                 b.store(std::min(b.load(), score));
                 return score;
-            });
+            };
+
+            if (m_params.monothread)
+            {
+                std::promise<float> scorePromise;
+                scorePromise.set_value(evalPosLambda());
+                return scorePromise.get_future();
+            }
+            else
+                return s_threadPool.submit([&]() -> float { return evalPosLambda(); });
         });
 
         std::vector<float> scores(asyncScores.size());

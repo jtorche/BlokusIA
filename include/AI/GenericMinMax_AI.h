@@ -13,7 +13,7 @@ namespace blokusAI
             : BaseAI{ _parameters }
         {}
 
-        std::pair<Move, float> findBestMove(const GameState& _gameState);
+        std::pair<Move, float> findBestMove(const GameState& _gameState) override;
 
 		float computeScore(Slot _maxPlayer, const GameState& _gameState)
 		{
