@@ -4,6 +4,7 @@
 #include "AI/ParanoidFourPlayer_AI.h"
 #include "AI/TwoPlayerMinMax_AI.h"
 #include "AI/MoveHeuristicGuided_AI.h"
+#include "AI/AlonePlayer_AI.h"
 
 namespace blokusAI
 {
@@ -86,4 +87,5 @@ namespace blokusAI
     template class IterativeAI<ParanoidFourPlayer_AI>;
     template class IterativeAI<TwoPlayerMinMax_AI>;
     template class IterativeAI<MoveHeuristicGuided_AI>;
+    template class IterativeAI<AlonePlayer_AI>;
 }

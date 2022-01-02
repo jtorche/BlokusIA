@@ -5,6 +5,7 @@
 #include "AI/TwoPlayerMinMax_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
 #include "AI/MoveHeuristicGuided_AI.h"
+#include "AI/AlonePlayer_AI.h"
 #include "AI/IterativeAI.h"
 #include "AI/Cache.h"
 
@@ -29,7 +30,7 @@ int main()
         false
     };
 
-    IterativeAI<FourPlayerMaxN_AI> AI;
+    IterativeAI<AlonePlayer_AI> AI;
     u32 numTurn = 0;
     while (1)
     {
