@@ -15,7 +15,7 @@ struct Net : torch::nn::Module {
 
 int main()
 {
-  
+    
 
 	return 0;
 }

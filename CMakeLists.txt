@@ -18,6 +18,11 @@ endif()
 
 option(BUILD_UI "Check it to generate the Blokus UI projects." OFF)
 
+option(BUILD_ML_PROJECTS "Check it to generate the Blokus ML projects." ON)
+if(BUILD_ML_PROJECTS)
+	find_package(Torch REQUIRED)
+endif()
+
 # Libraries code
 add_subdirectory(src)
 

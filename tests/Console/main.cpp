@@ -5,7 +5,7 @@
 #include "AI/FourPlayerMaxN_AI.h"
 #include "AI/TwoPlayerMinMax_AI.h"
 #include "AI/ParanoidFourPlayer_AI.h"
-#include "AI/MoveHeuristicGuided_AI.h"
+#include "AI/Dummy_AI.h"
 #include "AI/AlonePlayer_AI.h"
 #include "AI/IterativeAI.h"
 #include "AI/Cache.h"
