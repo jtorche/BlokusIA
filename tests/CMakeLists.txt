@@ -1,4 +1,6 @@
 option(BUILD_TESTING "Check it to generate the Blokus tests projects." ON)
+option(BUILD_ML_TESTING "Check it to generate the Blokus ML tests projects." ON)
 
 add_subdirectory(Console)
 add_subdirectory(UI)
+add_subdirectory(ML)

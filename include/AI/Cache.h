@@ -8,7 +8,7 @@ namespace blokusAI
     class GameStateCache
     {
         std::mutex m_mutex;
-        ska::flat_hash_map<GameState, float> m_boardScore[u32(BoardHeuristic::BoardHeuristic_Count)][4];
+        core::flat_hash_map<GameState, float> m_boardScore[u32(BoardHeuristic::BoardHeuristic_Count)][4];
         u32 m_cacheMiss = 0;
         u32 m_cacheHit = 0;
 

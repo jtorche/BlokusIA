@@ -21,7 +21,7 @@
 #define SKA_NOINLINE(...) __VA_ARGS__ __attribute__((noinline))
 #endif
 
-namespace ska
+namespace core::ska
 {
     struct prime_number_hash_policy;
     struct power_of_two_hash_policy;
