@@ -10,7 +10,7 @@ namespace blokusAI
         if(moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
-        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves);
+        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves, m_params.numTurnToForceBestMoveHeuristic);
 
         if (moves.empty())
         {
@@ -61,7 +61,7 @@ namespace blokusAI
         if (moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
-        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves);
+        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves, m_params.numTurnToForceBestMoveHeuristic);
 
         if (moves.empty())
         {

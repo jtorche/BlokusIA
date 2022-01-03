@@ -80,7 +80,7 @@ namespace blokusAI
         void visitMoves(MoveHeuristic _moveHeuristic, u32 _playerTurn, Functor&&) const;
 
 		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic) const;
-        void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves) const;
+        void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuisitc) const;
         u32 getPlayedPieceTiles(Slot _player) const;
 
 		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
@@ -160,12 +160,12 @@ namespace blokusAI
     {
         struct Parameters
         {
-
             u32 maxMoveToLookAt = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
             u32 maxDepth = 1;
             u32 selectAmongNBestMoves = 1;
+            u32 numTurnToForceBestMoveHeuristic = 3;
             bool monothread = true;
         };
 

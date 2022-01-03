@@ -282,7 +282,7 @@ namespace blokusAI
 	}
 
     //-------------------------------------------------------------------------------------------------
-    void GameState::findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves) const
+    void GameState::findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuisitc) const
     {
         if (_allMoves.empty())
             return;
@@ -297,7 +297,7 @@ namespace blokusAI
     
         _allMoves.resize(_numMoves);
 
-        if (getTurnCount() < s_NumTurnToRushCenter * 4 && !_allMoves.empty())
+        if (getTurnCount() < _numTurnToForceBestMoveHeuisitc * 4 && !_allMoves.empty())
         {
             // only keep best move to rush center
             auto it = std::find_if(_allMoves.begin(), _allMoves.end(), [&](const auto& val)

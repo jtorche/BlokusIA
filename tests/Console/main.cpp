@@ -23,15 +23,12 @@ int main()
 	runTest();
 
 	GameState gameState;
-    BaseAI::Parameters parameters =
-    {
-        16,
-        BoardHeuristic::RemainingTiles ,
-        MoveHeuristic::TileCount_DistCenter,
-        1,2,
-        true
-    };
-
+    BaseAI::Parameters parameters;
+    parameters.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    parameters.heuristic = BoardHeuristic::RemainingTiles;
+    parameters.maxMoveToLookAt = 16;
+    parameters.selectAmongNBestMoves = 4;
+    
     IterativeAI<ParanoidFourPlayer_AI> AI;
     u32 numTurn = 0;
 
@@ -70,7 +67,7 @@ int main()
         for (u32 i = 1; i < 4; ++i)
         {
             auto moves = gameState.enumerateMoves(MoveHeuristic::TileCount_DistCenter);
-            gameState.findCandidatMoves(8, moves);
+            gameState.findCandidatMoves(8, moves, 3);
             if (moves.empty())
                 gameState = gameState.skip();
             else
