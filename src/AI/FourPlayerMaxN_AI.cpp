@@ -42,7 +42,7 @@ namespace blokusAI
             return _score.get();
         });
 
-        u32 bestMoveIndex = GameState::getBestMoveIndex(scores);
+        u32 bestMoveIndex = GameState::getBestMoveIndex(scores, m_params.selectAmongNBestMoves);
 
         stop();
 

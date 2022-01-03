@@ -37,7 +37,7 @@ namespace blokusAI
                     m_runningAI = new AI_t(parameter);
 
                     // avoid infinite depth
-                    if (maxDepth == 100)
+                    if (maxDepth == 64)
                         break;
                 }
             }

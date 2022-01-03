@@ -66,7 +66,7 @@ namespace blokusAI
         static const float s_endGameScore;
 
 		GameState();
-		GameState play(const Move&) const;
+		GameState play(const Move&, bool _computeReachableSlotCache = true) const;
         GameState skip() const;
 
         bool operator==(const GameState&) const;
@@ -77,7 +77,7 @@ namespace blokusAI
         bool noMoveLeft(Slot _player) const { return m_remainingPieces[u32(_player) - u32(Slot::P0)].test(BlokusGame::PiecesCount); }
 
         template<typename Functor>
-        void visitMoves(MoveHeuristic _moveHeuristic, Functor&&) const;
+        void visitMoves(MoveHeuristic _moveHeuristic, u32 _playerTurn, Functor&&) const;
 
 		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic) const;
         void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves) const;
@@ -86,7 +86,7 @@ namespace blokusAI
 		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
 		float computeBoardScore(Slot _player, BoardHeuristic) const;
 
-        static u32 getBestMoveIndex(const std::vector<float>&);
+        static u32 getBestMoveIndex(const std::vector<float>&, u32 _amongNBestMoves);
 
 	private:
 		Board m_board;
@@ -103,6 +103,7 @@ namespace blokusAI
 
         // Cache of reachable slots per players
         ReachableSlots m_reachableSlotsCache[4];
+        bool m_isReachableSlotCacheValid = true;
 
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
@@ -115,22 +116,22 @@ namespace blokusAI
 	};
 
     template<typename Functor>
-    void GameState::visitMoves(MoveHeuristic _moveHeuristic, Functor&& _functor) const
+    void GameState::visitMoves(MoveHeuristic _moveHeuristic, u32 _playerTurn, Functor&& _functor) const
     {
-        if (m_remainingPieces[getPlayerTurn()].test(BlokusGame::PiecesCount))
+        if (m_remainingPieces[_playerTurn].test(BlokusGame::PiecesCount))
             return;
 
-        Slot playerToMove = convertToSlot(getPlayerTurn());
+        Slot playerToMove = convertToSlot(_playerTurn);
 
-        const Board::PlayableSlots& slots = m_playablePositions[getPlayerTurn()];
-        u32 numSlots = m_numPlayablePos[getPlayerTurn()];
+        const Board::PlayableSlots& slots = m_playablePositions[_playerTurn];
+        u32 numSlots = m_numPlayablePos[_playerTurn];
 
         for (u32 i = 0; i < numSlots; ++i)
         {
             for (auto it = s_allPieces.rbegin(); it != s_allPieces.rend(); ++it)
             {
                 u32 piece = (u32)std::distance(s_allPieces.begin(), it.base()) - 1;
-                if (m_remainingPieces[getPlayerTurn()].test(piece))
+                if (m_remainingPieces[_playerTurn].test(piece))
                 {
                     for (const Piece& p : *it)
                     {
@@ -159,10 +160,12 @@ namespace blokusAI
     {
         struct Parameters
         {
-            u32 maxDepth = 1;
+
             u32 maxMoveToLookAt = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+            u32 maxDepth = 1;
+            u32 selectAmongNBestMoves = 1;
             bool monothread = true;
         };
 

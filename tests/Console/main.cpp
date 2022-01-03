@@ -25,14 +25,16 @@ int main()
 	GameState gameState;
     BaseAI::Parameters parameters =
     {
-        1, 16,
-        BoardHeuristic::ReachableEmptySpaceWeighted,
+        16,
+        BoardHeuristic::RemainingTiles ,
         MoveHeuristic::TileCount_DistCenter,
-        false
+        1,2,
+        true
     };
 
     IterativeAI<ParanoidFourPlayer_AI> AI;
     u32 numTurn = 0;
+
     while (1)
     {
         AI.startComputation(parameters, gameState);
@@ -48,7 +50,8 @@ int main()
         //    std::cout << "Stats: " << AI.nodePerSecond() << " node/sec, curMoveScore: " << AI.getBestMove().playerScore << std::endl;
         //}
 
-        Sleep(1000);
+        while(AI.getBestMove().depth == u32(-1))
+            Sleep(50);
 
         AI.stopComputation();
 

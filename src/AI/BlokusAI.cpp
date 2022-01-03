@@ -1,4 +1,5 @@
 #include <numeric>
+#include <limits>
 
 #include "AI/BlokusAI.h"
 #include "AI/BlokusGameHelpers.h"
@@ -17,7 +18,7 @@ namespace blokusAI
 
     GameStateCache g_cache;
 
-    const float GameState::s_endGameScore = 1000000.f;
+    const float GameState::s_endGameScore = std::numeric_limits<float>::max();
 
 	//-------------------------------------------------------------------------------------------------
 	void initBlokusAI()
@@ -214,7 +215,7 @@ namespace blokusAI
     }
 
 	//-------------------------------------------------------------------------------------------------
-	GameState GameState::play(const Move& _move) const
+	GameState GameState::play(const Move& _move, bool _computeReachableSlotCache) const
 	{
 		GameState newGameState = *this;
 
@@ -232,22 +233,29 @@ namespace blokusAI
         DEBUG_ASSERT(_move.piece.getNumTiles() <= 5);
         newGameState.m_pieceSpaceScoreCompensation[turn] += pieceSpaceCompensation[_move.piece.getNumTiles() - 1];
 
-        for (u32 i = 0; i < 4; ++i)
+        newGameState.m_isReachableSlotCacheValid = _computeReachableSlotCache;
+        if (_computeReachableSlotCache)
         {
-            newGameState.m_reachableSlotsCache[i] = {};
-            ExpandCluster expander(convertToSlot(i), newGameState.m_reachableSlotsCache[i], newGameState);
-            computeReachableSlots(convertToSlot(i), expander);
+            for (u32 i = 0; i < 4; ++i)
+            {
+                newGameState.m_reachableSlotsCache[i] = {};
+                ExpandCluster expander(convertToSlot(i), newGameState.m_reachableSlotsCache[i], newGameState);
+                computeReachableSlots(convertToSlot(i), expander);
+            }
         }
 
         // find if no move left
-        bool hasAnyMove = false;
-        newGameState.visitMoves(MoveHeuristic::TileCount, [&](Move, float) 
-        { 
-            hasAnyMove = true;
-            return false; 
-        });
-        if(!hasAnyMove)
-            newGameState.m_remainingPieces[turn].set(BlokusGame::PiecesCount);
+        for (u32 i = 0; i < 4; ++i)
+        {
+            bool hasAnyMove = false;
+            newGameState.visitMoves(MoveHeuristic::TileCount, i, [&](Move, float)
+            {
+                hasAnyMove = true;
+                return false;
+            });
+            if (!hasAnyMove)
+                newGameState.m_remainingPieces[i].set(BlokusGame::PiecesCount);
+        }
 
 		newGameState.m_turn = m_turn + 1;
 		return newGameState;
@@ -268,7 +276,7 @@ namespace blokusAI
 		std::vector<std::pair<Move, float>> moves;
         moves.reserve(512);
 
-        visitMoves(_moveHeuristic, [&](Move _move, float _score) { moves.push_back({ _move,_score }); return true; });
+        visitMoves(_moveHeuristic, getPlayerTurn(), [&](Move _move, float _score) { moves.push_back({ _move,_score }); return true; });
 
 		return moves;
 	}
@@ -303,24 +311,22 @@ namespace blokusAI
     }
 
     //-------------------------------------------------------------------------------------------------
-    u32 GameState::getBestMoveIndex(const std::vector<float>& _scores)
+    static thread_local std::vector<std::vector<float>::const_iterator> g_sortedScoreIterator;
+    u32 GameState::getBestMoveIndex(const std::vector<float>& _scores, u32 _amongNBestMoves)
     {
+        g_sortedScoreIterator.resize(0);
+
+        for (auto it = _scores.begin(); it != _scores.end(); ++it)
+            g_sortedScoreIterator.push_back(it);
+
         auto best = std::max_element(_scores.begin(), _scores.end());
-        size_t numBestScore = std::count_if(_scores.begin(), _scores.end(), [bestScore = *best](float val) { return val == bestScore; });
+        size_t numBestScores = std::count_if(_scores.begin(), _scores.end(), [bestScore = *best](float val) { return val == bestScore; });
+        numBestScores = std::max<size_t>(numBestScores, std::min<size_t>(_amongNBestMoves, _scores.size()));
+        std::partial_sort(std::begin(g_sortedScoreIterator), std::begin(g_sortedScoreIterator) + numBestScores, std::end(g_sortedScoreIterator),
+                          [](auto it1, auto it2) { return *it1 > *it2; });
 
-        u32 selectedMove = rand() % numBestScore;
-        u32 counter = 0;
-        for (u32 i = 0; i < _scores.size(); ++i)
-        {
-            if (_scores[i] == *best)
-            {
-                if (selectedMove == counter++)
-                    return i;
-            }
-        }
-
-        DEBUG_ASSERT(false);
-        return 0;
+        u32 selectedMove = rand() % numBestScores;
+        return (u32)std::distance(_scores.begin(), g_sortedScoreIterator[selectedMove]);
     }
 
 	//-------------------------------------------------------------------------------------------------
@@ -350,6 +356,7 @@ namespace blokusAI
         else if (_moveHeuristic == MoveHeuristic::WeightedReachableSpace || 
                  _moveHeuristic == MoveHeuristic::ExtendingReachableSpace)
         {
+            DEBUG_ASSERT(m_isReachableSlotCacheValid);
             ubyte clusterIndex = m_reachableSlotsCache[getPlayerTurn()].m_clusters[_playablePos.x][_playablePos.y];
             u32 clusterCategory = std::min<u32>(m_reachableSlotsCache[getPlayerTurn()].m_numPlayableSlotsPerCluster[clusterIndex - 1], 4);
             u32 factor = 1;
@@ -472,6 +479,7 @@ namespace blokusAI
         u32 playerIndex = convertToIndex(_player);
 
         float numReachables = 0;
+        DEBUG_ASSERT(m_isReachableSlotCacheValid);
         for (u32 i = 0; i < m_reachableSlotsCache[playerIndex].m_numClusters; ++i)
         {
             u32 numPlayableInCluster = m_reachableSlotsCache[playerIndex].m_numPlayableSlotsPerCluster[i];
@@ -514,6 +522,7 @@ namespace blokusAI
                     updatedPlayableSlots[numSlots++] = m_playablePositions[p][i];
                 }
             }
+            DEBUG_ASSERT(numSlots < 256);
             m_numPlayablePos[p] = ubyte(numSlots);
             memcpy(m_playablePositions[p].data(), updatedPlayableSlots.data(), numSlots * sizeof(ubyte2));
         }
