@@ -62,11 +62,10 @@ namespace blokusAI
 	class GameState
 	{
 	public:
-        static const u32 s_NumTurnToRushCenter = 3;
         static const float s_endGameScore;
 
 		GameState();
-		GameState play(const Move&, bool _computeReachableSlotCache = true) const;
+		GameState play(const Move&) const;
         GameState skip() const;
 
         bool operator==(const GameState&) const;
@@ -103,7 +102,6 @@ namespace blokusAI
 
         // Cache of reachable slots per players
         ReachableSlots m_reachableSlotsCache[4];
-        bool m_isReachableSlotCacheValid = true;
 
         float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;

@@ -1,30 +1,69 @@
-#include "Core/Common.h"
-#include <torch/torch.h>
+#include "ML/GameGenerator.h"
 
-// Define a new Module.
-struct Net : torch::nn::Module 
+namespace blokusAI
 {
-    Net() {
-        // Construct and register two Linear submodules.
-        fc1 = register_module("fc1", torch::nn::Linear(784, 64));
-        fc2 = register_module("fc2", torch::nn::Linear(64, 32));
-        fc3 = register_module("fc3", torch::nn::Linear(32, 10));
-    }
+	void GameGenerator::playGame(u32 _ia0, u32 _ia1, u32 _ia2, u32 _ia3)
+	{
+		std::vector<GameState> gameStates;
+		gameStates.reserve(22);
+		GameState gameState;
 
-    // Implement the Net's algorithm.
-    torch::Tensor forward(torch::Tensor x) {
-        // Use one of many tensor manipulation functions.
-        x = torch::relu(fc1->forward(x.reshape({ x.size(0), 784 })));
-        x = torch::dropout(x, /*p=*/0.5, /*train=*/is_training());
-        x = torch::relu(fc2->forward(x));
-        x = torch::log_softmax(fc3->forward(x), /*dim=*/1);
-        return x;
-    }
-    // Use one of many "standard library" modules.
-    torch::nn::Linear fc1{ nullptr }, fc2{ nullptr }, fc3{ nullptr };
-};
+		bool gameContinue = true;
+		u32 turn = 0;
+		u32 ias[4] = { _ia0, _ia1, _ia2, _ia3 };
+		while (gameContinue)
+		{
+			if (turn > 0 && turn % 4 == 0)
+				gameStates.push_back(gameState);
 
-int testFoo() 
-{ 
-	return 0; 
+			u32 iaIndex = turn % 4;
+			const auto& ai = m_allAIs[ias[iaIndex]]->m_ai;
+			auto move_score = ai->findBestMove(gameState);
+			
+			Move move = move_score.first;
+			if (move.isValid())
+				gameState = gameState.play(move);
+			else
+				gameState = gameState.skip();
+
+			u32 numPlayerStuck = 0;
+			for(u32 i=0 ; i<4 ; ++i)
+			{ 
+				if (gameState.noMoveLeft(Slot(i + u32(Slot::P0))))
+					numPlayerStuck++;
+			}
+
+			gameContinue = numPlayerStuck < 4;
+			turn++;
+		}
+
+		std::array<Slot, 4> iaRanking = { Slot::P0, Slot::P1, Slot::P2, Slot::P3 };
+		std::sort(std::begin(iaRanking), std::end(iaRanking), [&](Slot a, Slot b) { return gameState.getPlayedPieceTiles(a) > gameState.getPlayedPieceTiles(b); });
+		
+		float scorePerRank[4] = { 1, 0.5, 0.25, 0 };
+
+		{
+			std::lock_guard _(m_mutex);
+			for (u32 i = 0; i < 4; ++i)
+			{
+				u32 iaIndex = u32(iaRanking[i]) - u32(Slot::P0);
+				m_allAIs[ias[iaIndex]]->m_numMatchPlayed++;
+				m_allAIs[ias[iaIndex]]->m_score += scorePerRank[i];
+			}
+
+			// fill dataset
+			for (const auto& savedState : gameStates)
+			{
+				m_dataset.add(savedState, iaRanking);
+			}
+		}
+	}
+
+	void GameGenerator::printResult() const
+	{
+		for (const auto& ai : m_allAIs)
+		{
+			std::cout << ai->m_aiName << " : " << ai->m_score << " / " << ai->m_numMatchPlayed << std::endl;
+		}
+	}
 }

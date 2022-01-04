@@ -61,15 +61,15 @@ namespace blokusAI
         GameState state = _gameState;
         while (m_playerTurn != state.getPlayerTurn())
         {
-            auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
+            auto moves = state.enumerateMoves(m_params.moveHeuristic);
             if (moves.empty())
-                moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
+                moves = state.enumerateMoves(MoveHeuristic::TileCount);
 
             if (moves.empty())
                 state = state.skip();
             else
             {
-                _gameState.findCandidatMoves(1, moves, 0);
+                state.findCandidatMoves(1, moves, 0);
                 state = state.play(moves[0].first);
             }
         }

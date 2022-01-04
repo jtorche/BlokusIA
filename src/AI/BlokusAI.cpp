@@ -215,7 +215,7 @@ namespace blokusAI
     }
 
 	//-------------------------------------------------------------------------------------------------
-	GameState GameState::play(const Move& _move, bool _computeReachableSlotCache) const
+	GameState GameState::play(const Move& _move) const
 	{
 		GameState newGameState = *this;
 
@@ -233,15 +233,11 @@ namespace blokusAI
         DEBUG_ASSERT(_move.piece.getNumTiles() <= 5);
         newGameState.m_pieceSpaceScoreCompensation[turn] += pieceSpaceCompensation[_move.piece.getNumTiles() - 1];
 
-        newGameState.m_isReachableSlotCacheValid = _computeReachableSlotCache;
-        if (_computeReachableSlotCache)
+        for (u32 i = 0; i < 4; ++i)
         {
-            for (u32 i = 0; i < 4; ++i)
-            {
-                newGameState.m_reachableSlotsCache[i] = {};
-                ExpandCluster expander(convertToSlot(i), newGameState.m_reachableSlotsCache[i], newGameState);
-                computeReachableSlots(convertToSlot(i), expander);
-            }
+            newGameState.m_reachableSlotsCache[i] = {};
+            ExpandCluster expander(convertToSlot(i), newGameState.m_reachableSlotsCache[i], newGameState);
+            computeReachableSlots(convertToSlot(i), expander);
         }
 
         // find if no move left
@@ -320,6 +316,11 @@ namespace blokusAI
             g_sortedScoreIterator.push_back(it);
 
         auto best = std::max_element(_scores.begin(), _scores.end());
+
+        // If the ia detect a win, force it
+        if (*best > s_endGameScore * 0.5)
+            _amongNBestMoves = 1;
+
         size_t numBestScores = std::count_if(_scores.begin(), _scores.end(), [bestScore = *best](float val) { return val == bestScore; });
         numBestScores = std::max<size_t>(numBestScores, std::min<size_t>(_amongNBestMoves, _scores.size()));
         std::partial_sort(std::begin(g_sortedScoreIterator), std::begin(g_sortedScoreIterator) + numBestScores, std::end(g_sortedScoreIterator),
@@ -356,7 +357,6 @@ namespace blokusAI
         else if (_moveHeuristic == MoveHeuristic::WeightedReachableSpace || 
                  _moveHeuristic == MoveHeuristic::ExtendingReachableSpace)
         {
-            DEBUG_ASSERT(m_isReachableSlotCacheValid);
             ubyte clusterIndex = m_reachableSlotsCache[getPlayerTurn()].m_clusters[_playablePos.x][_playablePos.y];
             u32 clusterCategory = std::min<u32>(m_reachableSlotsCache[getPlayerTurn()].m_numPlayableSlotsPerCluster[clusterIndex - 1], 4);
             u32 factor = 1;
@@ -378,7 +378,7 @@ namespace blokusAI
             weightedReachableSpace /= (8 * Board::BoardSize * Board::BoardSize);
             weightedReachableSpace = 1.f + weightedReachableSpace * 9; // [1 - 10]
 
-            if (_moveHeuristic == MoveHeuristic::ExtendingReachableSpace && getTurnCount() >= s_NumTurnToRushCenter * 4)
+            if (_moveHeuristic == MoveHeuristic::ExtendingReachableSpace && getTurnCount() >= 12) // hardcoded 3 turn per player to only rush center
             {
                 GameState nextState = play(_move);
                 // Max is BoardSize*BoardSize
@@ -479,7 +479,6 @@ namespace blokusAI
         u32 playerIndex = convertToIndex(_player);
 
         float numReachables = 0;
-        DEBUG_ASSERT(m_isReachableSlotCacheValid);
         for (u32 i = 0; i < m_reachableSlotsCache[playerIndex].m_numClusters; ++i)
         {
             u32 numPlayableInCluster = m_reachableSlotsCache[playerIndex].m_numPlayableSlotsPerCluster[i];
