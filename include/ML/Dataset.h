@@ -2,6 +2,7 @@
 
 #include "Core/Common.h"
 #include "AI/BlokusAI.h"
+#include <torch/torch.h>
 
 namespace blokusAI
 {
@@ -23,6 +24,8 @@ namespace blokusAI
 
 		void serialize(std::string _path) const;
 		bool read(std::string _path);
+
+		std::vector<torch::Tensor> constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, bool _useReachableCluster = false) const;
 
 	private:
 		std::vector<Entry> m_data;

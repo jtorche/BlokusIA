@@ -137,6 +137,8 @@ namespace blokusAI
 
 		void print() const;
 
+        Board rotatedBoard(Rotation) const;
+
 	private:
 		static_assert((BoardSize*BoardSize) % 8 == 0);
 

@@ -1,6 +1,7 @@
 #include "ML/Dataset.h"
 
 #include <fstream>
+#include <filesystem>
 
 namespace blokusAI
 {
@@ -28,15 +29,63 @@ namespace blokusAI
 	bool Dataset::read(std::string _path)
 	{
 		std::ios_base::openmode mode = std::ios_base::binary;
-		std::ifstream file(_path);
-		if (file)
+
+		u32 filesize = std::filesystem::file_size(_path);
+		if (filesize > 0)
 		{
-			std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(file), {});
-			DEBUG_ASSERT(buffer.size() % sizeof(Entry) == 0);
-			m_data.resize(buffer.size() / sizeof(Entry));
-			memcpy(m_data.data(), buffer.data(), buffer.size());
+			DEBUG_ASSERT(filesize % sizeof(Entry) == 0);
+			std::ifstream file(_path);
+			m_data.resize(filesize / sizeof(Entry));
+			file.read((char*)m_data.data(), filesize);
 			return true;
+			
 		}
 		return false;
+	}
+
+	std::vector<torch::Tensor> Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster) const
+	{
+		std::vector<torch::Tensor> tensorData;
+
+		const u32 numSlice = 2 + (_useReachableCluster ? 1 : 0);
+		const u32 sliceStride = Board::BoardSize * Board::BoardSize; // in float count
+		
+		u32 globalIndex = 0;
+		float* blob = new float[_epochSize * sliceStride * numSlice];
+		float* blobCurData = blob;
+		
+		while(globalIndex < m_data.size() * 4)
+		{
+			u32 dataIndex = globalIndex / 4;
+			u32 playerIndex = globalIndex % 4;
+
+			if (m_data[dataIndex].turn >= _turnRange.x && m_data[dataIndex].turn <= _turnRange.y)
+			{
+				Board board = m_data[dataIndex].board.rotatedBoard(Rotation(u32(Rotation::Rot_0) + playerIndex));
+
+				for (u32 y = 0; y < Board::BoardSize; ++y)
+					for (u32 x = 0; x < Board::BoardSize; ++x)
+					{
+						Slot s = board.getSlot(x, y);
+						blobCurData[y * Board::BoardSize + x] = (s == Slot::P0) ? 1 : 0;
+						blobCurData[sliceStride + y * Board::BoardSize + x] = (s != Slot::P0 && s != Slot::Empty) ? 1 : 0;
+						DEBUG_ASSERT(!_useReachableCluster);
+					}
+
+				blobCurData += sliceStride * numSlice;
+			}
+
+			globalIndex++;
+
+			if (blob + u64(_epochSize * sliceStride * numSlice) == blobCurData)
+			{
+				tensorData.push_back(torch::from_blob(blob, { _epochSize, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone());
+				blobCurData = blob;
+			}
+			
+		}
+
+		delete[] blob;
+		return tensorData;
 	}
 }

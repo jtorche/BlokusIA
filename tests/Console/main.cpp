@@ -92,6 +92,12 @@ int main()
 	
 	std::cout << "NumTurn " << numTurn << "\n";
 	gameState.getBoard().print();
+    std::cout << "-------------------\n";
+    gameState.getBoard().rotatedBoard(Rotation::Rot_90).print();
+    std::cout << "-------------------\n";
+    gameState.getBoard().rotatedBoard(Rotation::Rot_180).print();
+    std::cout << "-------------------\n";
+    gameState.getBoard().rotatedBoard(Rotation::Rot_270).print();
 	system("pause");
 
 	return 0;

@@ -11,24 +11,107 @@
 #include "AI/Dummy_AI.h"
 #include "AI/AlonePlayer_AI.h"
 
-struct Net : torch::nn::Module {
-    Net(int64_t N, int64_t M) {
-        W = register_parameter("W", torch::randn({ N, M }));
-        b = register_parameter("b", torch::randn(M));
-    }
-    torch::Tensor forward(torch::Tensor input) {
-        return torch::addmm(b, input, W);
-    }
-    torch::Tensor W, b;
-};
+//struct Net : torch::nn::Module {
+//    Net(int64_t N, int64_t M) {
+//        W = register_parameter("W", torch::randn({ N, M }));
+//        b = register_parameter("b", torch::randn(M));
+//    }
+//    torch::Tensor forward(torch::Tensor input) {
+//        return torch::addmm(b, input, W);
+//    }
+//    torch::Tensor W, b;
+//};
 
 using namespace blokusAI;
+using namespace torch;
+
+struct NetJojo : torch::nn::Module 
+{
+    NetJojo()
+    {
+        conv1 = register_module("conv1", nn::Conv2d(nn::Conv2dOptions(1, 64, { 5,5 })));
+        conv2 = register_module("conv2", nn::Conv2d(nn::Conv2dOptions(1, 128, { 3,3 })));
+        //fc2 = register_module("fc2", torch::nn::Linear(64, 32));
+        //fc3 = register_module("fc3", torch::nn::Linear(32, 10));
+    }
+
+    // Implement the Net's algorithm.
+    torch::Tensor forward(torch::Tensor x) {
+        // Use one of many tensor manipulation functions.
+        //x = torch::relu(fc1->forward(x.reshape({ x.size(0), 784 })));
+        //x = torch::dropout(x, /*p=*/0.5, /*train=*/is_training());
+        //x = torch::relu(fc2->forward(x));
+        //x = torch::log_softmax(fc3->forward(x), /*dim=*/1);
+        return x;
+    }
+
+    torch::nn::Conv2d conv1 = nullptr, conv2 = nullptr;
+};
+
+int main2() 
+{
+    
+    using namespace torch::indexing;
+
+    
+    //torch::Tensor dat = torch::rand({ 11 });
+    nn::Conv2dImpl net(nn::Conv2dOptions(2, 1, { 5,5 }));
+
+    Dataset dataset;
+    dataset.read("D:\\Prog\\blokusDataset\\dataset0.bin");
+
+    auto tensors = dataset.constructTensors(64, { 0, 12 });
+    std::cout << tensors.size() << " : " << tensors[0].sizes() << std::endl;
+    auto slice = tensors[0].index({ Slice(0,1), Slice(0,2), Slice(), Slice() });
+    std::cout << slice << std::endl;
+    //torch::Tensor result = net.forward(slice);
+    //std::cout << result << std::endl;
+    
+#if 0
+    // Create a new Net.
+    auto net = std::make_shared<Net>();
+
+    // Create a multi-threaded data loader for the MNIST dataset.
+    auto data_loader = torch::data::make_data_loader(
+        torch::data::datasets::MNIST("./data").map(
+            torch::data::transforms::Stack<>()),
+        /*batch_size=*/64);
+
+    // Instantiate an SGD optimization algorithm to update our Net's parameters.
+    torch::optim::SGD optimizer(net->parameters(), /*lr=*/0.01);
+
+    for (size_t epoch = 1; epoch <= 10; ++epoch) {
+        size_t batch_index = 0;
+        // Iterate the data loader to yield batches from the dataset.
+        for (auto& batch : *data_loader) {
+            // Reset gradients.
+            optimizer.zero_grad();
+            // Execute the model on the input data.
+            torch::Tensor prediction = net->forward(batch.data);
+            // Compute a loss value to judge the prediction of our model.
+            torch::Tensor loss = torch::nll_loss(prediction, batch.target);
+            // Compute gradients of the loss w.r.t. the parameters of our model.
+            loss.backward();
+            // Update the parameters based on the calculated gradients.
+            optimizer.step();
+            // Output the loss and checkpoint every 100 batches.
+            if (++batch_index % 100 == 0) {
+                std::cout << "Epoch: " << epoch << " | Batch: " << batch_index
+                    << " | Loss: " << loss.item<float>() << std::endl;
+                // Serialize your model periodically as a checkpoint.
+                torch::save(net, "net.pt");
+            }
+        }
+    }
+#endif
+
+    return 0;
+}
 
 int main()
 {
     initBlokusAI();
     GameGenerator generator;
-    
     {
         BaseAI::Parameters paramFullRandom;
         paramFullRandom.heuristic = BoardHeuristic::RemainingTiles;
@@ -37,6 +120,7 @@ int main()
         paramFullRandom.numTurnToForceBestMoveHeuristic = 0;
         generator.addAI("FullRandom", new Dummy_AI(paramFullRandom));
     }
+#if 1
     {
         BaseAI::Parameters paramRushCenterThenRandom;
         paramRushCenterThenRandom.heuristic = BoardHeuristic::RemainingTiles;
@@ -106,6 +190,7 @@ int main()
         param.maxDepth = 2;
         generator.addAI("Paranoid_TileCount_Depth2", new ParanoidFourPlayer_AI(param));
     }
+#endif
 
     for (u32 epoch = 0; epoch < 100; ++epoch)
     {

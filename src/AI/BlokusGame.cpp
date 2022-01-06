@@ -436,4 +436,38 @@ namespace blokusAI
 
 		return numPosition;
 	}
+
+	Board Board::rotatedBoard(Rotation _rot) const
+	{
+		switch (_rot)
+		{
+			case Rotation::Rot_0:
+				return *this;
+			case Rotation::Rot_270:
+			{
+				Board rotBoard;
+				for (int i = i32(BoardSize) - 1; i >= 0; --i)
+				{
+					for (u32 j = 0; j < i32(BoardSize); ++j)
+					{
+						if (getSlot(i, j) != Slot::Empty)
+						{
+							u32 index = u32(getSlot(i, j)) - u32(Slot::P0);
+							index = (index + 1) % 4; // shift player due to rotation
+							rotBoard.setSlot(j, BoardSize - i - 1, Slot(index + u32(Slot::P0)));
+						}
+					}
+				}
+				return rotBoard;
+			}
+			case Rotation::Rot_180:
+				return rotatedBoard(Rotation::Rot_270).rotatedBoard(Rotation::Rot_270);
+			case Rotation::Rot_90:
+				return rotatedBoard(Rotation::Rot_180).rotatedBoard(Rotation::Rot_270);
+			case Rotation::Flip_X:
+			default:
+				DEBUG_ASSERT(0);
+				return {};
+		}
+	}
 }
