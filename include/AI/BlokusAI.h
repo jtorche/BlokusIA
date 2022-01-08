@@ -3,6 +3,7 @@
 #include <bitset>
 #include <chrono>
 #include <atomic>
+#include <random>
 
 #include "BlokusGame.h"
 #include "BlokusGameHelpers.h"
@@ -13,6 +14,7 @@ namespace blokusAI
 	extern PieceSymetries s_allPieces;
     extern u32 s_totalPieceTileCount;
     extern thread_pool s_threadPool;
+    extern std::default_random_engine s_rand;
 	void initBlokusAI();
     void printAllPieces();
 

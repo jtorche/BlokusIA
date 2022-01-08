@@ -23,9 +23,9 @@ namespace blokusAI
 		void clear() { m_data.clear(); }
 
 		void serialize(std::string _path) const;
-		bool read(std::string _path);
+		bool read(std::string _path, bool _shuffle = true);
 
-		std::vector<torch::Tensor> constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, bool _useReachableCluster = false) const;
+		std::vector<std::pair<torch::Tensor, torch::Tensor>> constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, bool _useReachableCluster = false, bool _labelAsScore = false) const;
 
 	private:
 		std::vector<Entry> m_data;

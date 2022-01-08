@@ -71,7 +71,7 @@ int main()
             if (moves.empty())
                 gameState = gameState.skip();
             else
-                gameState = gameState.play(moves[u32(rand()) % moves.size()].first);
+                gameState = gameState.play(moves[u32(s_rand()) % moves.size()].first);
         }
 
 		numTurn++;

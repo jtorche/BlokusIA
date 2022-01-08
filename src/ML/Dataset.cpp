@@ -1,7 +1,7 @@
 #include "ML/Dataset.h"
 
-#include <fstream>
 #include <filesystem>
+#include <random>
 
 namespace blokusAI
 {
@@ -21,31 +21,46 @@ namespace blokusAI
 
 	void Dataset::serialize(std::string _path) const
 	{
-		std::ios_base::openmode mode = std::ios_base::binary | std::ios_base::trunc;
-		std::ofstream file(_path, mode);
-		file.write((const char *)m_data.data(), m_data.size() * sizeof(Entry));
+		FILE* f = fopen(_path.c_str(), "wb+");
+		if (f)
+		{
+			fwrite(m_data.data(), sizeof(Entry), m_data.size(), f);
+			fclose(f);
+		}
 	}
 
-	bool Dataset::read(std::string _path)
+	bool Dataset::read(std::string _path, bool _shuffle)
 	{
 		std::ios_base::openmode mode = std::ios_base::binary;
 
 		u32 filesize = std::filesystem::file_size(_path);
 		if (filesize > 0)
 		{
-			DEBUG_ASSERT(filesize % sizeof(Entry) == 0);
-			std::ifstream file(_path);
-			m_data.resize(filesize / sizeof(Entry));
-			file.read((char*)m_data.data(), filesize);
-			return true;
-			
+			FILE* f = fopen(_path.c_str(), "rb");
+			if (f)
+			{
+				DEBUG_ASSERT(filesize % sizeof(Entry) == 0);
+				m_data.resize(filesize / sizeof(Entry));
+				fread(m_data.data(), sizeof(Entry), m_data.size(), f);
+				fclose(f);
+			}
+			else return false;
+
+			for (auto& d : m_data)
+				DEBUG_ASSERT(d.turn != 0);
 		}
-		return false;
+		else return false;
+
+		if (_shuffle)
+		{
+			std::shuffle(m_data.begin(), m_data.end(), s_rand);
+		}
+		return true;
 	}
 
-	std::vector<torch::Tensor> Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster) const
+	std::vector<std::pair<torch::Tensor, torch::Tensor>> Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster, bool _labelAsScore) const
 	{
-		std::vector<torch::Tensor> tensorData;
+		std::vector<std::pair<torch::Tensor, torch::Tensor>> tensorData;
 
 		const u32 numSlice = 2 + (_useReachableCluster ? 1 : 0);
 		const u32 sliceStride = Board::BoardSize * Board::BoardSize; // in float count
@@ -53,6 +68,7 @@ namespace blokusAI
 		u32 globalIndex = 0;
 		float* blob = new float[_epochSize * sliceStride * numSlice];
 		float* blobCurData = blob;
+		std::vector<float> labels;
 		
 		while(globalIndex < m_data.size() * 4)
 		{
@@ -73,14 +89,45 @@ namespace blokusAI
 					}
 
 				blobCurData += sliceStride * numSlice;
+				
+				u32 rankingLookup[4];
+				for (u32 i = 0; i < 4; ++i)
+					rankingLookup[u32(m_data[dataIndex].ranking[i]) - u32(Slot::P0)] = i;
+
+				if (_labelAsScore)
+				{
+					auto getScore = [&]() -> float
+					{
+						switch (rankingLookup[playerIndex])
+						{
+						case 0: return 1;
+						case 1: return 0.5;
+						case 2:
+						case 3: return 0;
+						}
+					};
+					labels.push_back(getScore());
+				}
+				else
+				{
+					labels.push_back(rankingLookup[playerIndex] == 0 ? 1 : 0); // first class to predict if first
+					labels.push_back(rankingLookup[playerIndex] <= 1 ? 1 : 0); // second class to predict if first or second
+				}
 			}
 
 			globalIndex++;
 
 			if (blob + u64(_epochSize * sliceStride * numSlice) == blobCurData)
 			{
-				tensorData.push_back(torch::from_blob(blob, { _epochSize, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone());
+				tensorData.push_back(
+				{
+					torch::from_blob(blob, { _epochSize, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone(),
+					_labelAsScore ? torch::from_blob(labels.data(), { _epochSize }, torch::TensorOptions(torch::ScalarType::Float)).clone() :
+									torch::from_blob(labels.data(), { _epochSize, 2 }, torch::TensorOptions(torch::ScalarType::Float)).clone()
+				});
+
 				blobCurData = blob;
+				labels.clear();
 			}
 			
 		}

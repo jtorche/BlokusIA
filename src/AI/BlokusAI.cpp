@@ -9,6 +9,7 @@ namespace blokusAI
 {
 	PieceSymetries s_allPieces = {};
     u32 s_totalPieceTileCount = 0;
+    std::default_random_engine s_rand;
 
 #ifdef _DEBUG
     thread_pool s_threadPool(1);
@@ -29,9 +30,10 @@ namespace blokusAI
         {
             s_totalPieceTileCount += _pieces.begin()->getNumTiles();
         }
+
         u32 seed = (u32)time(nullptr);
         std::cout << "Seed:" << seed << std::endl;
-        srand(seed);
+        s_rand = std::default_random_engine(seed);
 	}
 
     //-------------------------------------------------------------------------------------------------
@@ -326,7 +328,7 @@ namespace blokusAI
         std::partial_sort(std::begin(g_sortedScoreIterator), std::begin(g_sortedScoreIterator) + numBestScores, std::end(g_sortedScoreIterator),
                           [](auto it1, auto it2) { return *it1 > *it2; });
 
-        u32 selectedMove = rand() % numBestScores;
+        u32 selectedMove = s_rand() % numBestScores;
         return (u32)std::distance(_scores.begin(), g_sortedScoreIterator[selectedMove]);
     }
 

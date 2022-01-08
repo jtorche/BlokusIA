@@ -19,7 +19,7 @@ namespace blokusAI
 
         stop();
 
-        u32 bestMoveIndex = u32(rand()) % moves.size();
+        u32 bestMoveIndex = u32(s_rand()) % moves.size();
         return moves[bestMoveIndex];
     }
 }
