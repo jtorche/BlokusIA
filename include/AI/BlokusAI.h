@@ -33,6 +33,7 @@ namespace blokusAI
 
     enum class BoardHeuristic
     {
+        Custom,
         RemainingTiles,
         ReachableEmptySpace,
         ReachableEmptySpaceWeighted,
@@ -45,10 +46,19 @@ namespace blokusAI
 
     enum class MoveHeuristic
     {
+        Custom,
         TileCount,
         TileCount_DistCenter,
         WeightedReachableSpace,
         ExtendingReachableSpace,
+    };
+
+    class GameState;
+    struct Move;
+    struct CustomHeuristicInterface
+    {
+        virtual float moveHeuristic(const GameState&, const Move& _move, ubyte2 _playablePos) = 0;
+        virtual float boardHeuristic(const GameState&, Slot _player) = 0;
     };
 
 	//-------------------------------------------------------------------------------------------------
@@ -78,14 +88,14 @@ namespace blokusAI
         bool noMoveLeft(Slot _player) const { return m_remainingPieces[u32(_player) - u32(Slot::P0)].test(BlokusGame::PiecesCount); }
 
         template<typename Functor>
-        void visitMoves(MoveHeuristic _moveHeuristic, u32 _playerTurn, Functor&&) const;
+        void visitMoves(u32 _playerTurn, Functor&&) const;
 
-		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic) const;
+		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic, CustomHeuristicInterface * _customHeuristic = nullptr) const;
         void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuisitc) const;
         u32 getPlayedPieceTiles(Slot _player) const;
 
 		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
-		float computeBoardScore(Slot _player, BoardHeuristic) const;
+		float computeBoardScore(Slot _player, BoardHeuristic, CustomHeuristicInterface* _customHeuristic = nullptr) const;
 
         static u32 getBestMoveIndex(const std::vector<float>&, u32 _amongNBestMoves);
 
@@ -107,7 +117,7 @@ namespace blokusAI
         // Cache of reachable slots per players
         ReachableSlots m_reachableSlotsCache[4];
 
-        float computeBoardScoreInner(Slot _player, BoardHeuristic) const;
+        float computeBoardScoreInner(Slot _player, BoardHeuristic, CustomHeuristicInterface* _customHeuristic) const;
         void computeReachableSlots(Slot _player, ExpandCluster& _expander) const;
         float computeFreeSpaceHeuristic(Slot _player, float _weightCluster) const;
 
@@ -118,7 +128,7 @@ namespace blokusAI
 	};
 
     template<typename Functor>
-    void GameState::visitMoves(MoveHeuristic _moveHeuristic, u32 _playerTurn, Functor&& _functor) const
+    void GameState::visitMoves(u32 _playerTurn, Functor&& _functor) const
     {
         if (m_remainingPieces[_playerTurn].test(BlokusGame::PiecesCount))
             return;
@@ -143,13 +153,8 @@ namespace blokusAI
                         for (u32 j = 0; j < numMoveForPiece; ++j)
                         {
                             Move move = { p, piece, pieceMoves[j] };
-                            float moveHeuristic = computeHeuristic(move, slots[i], _moveHeuristic);
-
-                            if (moveHeuristic >= 0)
-                            {
-                                if (!_functor(move, moveHeuristic))
-                                    return;
-                            }
+                            if (!_functor(move, slots[i]))
+                                return;
                         }
                     }
                 }
@@ -162,6 +167,7 @@ namespace blokusAI
     {
         struct Parameters
         {
+            CustomHeuristicInterface* customHeuristic = nullptr;
             u32 maxMoveToLookAt = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;

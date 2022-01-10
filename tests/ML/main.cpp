@@ -1,80 +1,95 @@
-#include "ML/cxxopts.h"
+#include <windows.h>
 
-// Header
-int genDataset(std::string _outputFolder, std::string _datasetBaseName, u32 _numDataset, u32 _numGamePerDataset);
-int trainModel(std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
-int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName);
+#include "AI/FourPlayerMaxN_AI.h"
+#include "AI/TwoPlayerMinMax_AI.h"
+#include "AI/ParanoidFourPlayer_AI.h"
+#include "AI/Dummy_AI.h"
+#include "AI/AlonePlayer_AI.h"
+#include "AI/IterativeAI.h"
 
-int main(int argc, char * argv[]) 
+using namespace blokusAI;
+
+int main() 
 {
-    cxxopts::Options optionsBase("Blockus AI", "A program to generate blockus games and use it as a dataset to train a network.");
-    optionsBase.add_options()
-        ("g,genDataset", "Generate dataset")
-        ("t,train", "Train a model")
-        ("s,shuffle", "Shuffle multiple dataset");
+    initBlokusAI();
 
-    auto cmdArgParseRresult = optionsBase.parse(std::min(argc, 2), argv);
-    if (cmdArgParseRresult["genDataset"].as<bool>())
+    BaseAI::Parameters aiParam[4];
+
+    aiParam[0].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    aiParam[0].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    aiParam[0].maxMoveToLookAt = 16;
+    aiParam[0].selectAmongNBestMoves = 1;
+    IterativeAI<ParanoidFourPlayer_AI> AI1;
+
+    aiParam[1].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    aiParam[1].maxMoveToLookAt = 32;
+    aiParam[1].selectAmongNBestMoves = 1;
+    IterativeAI<ParanoidFourPlayer_AI> AI2;
+
+    aiParam[2].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    aiParam[2].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    aiParam[2].maxMoveToLookAt = 8;
+    aiParam[2].selectAmongNBestMoves = 1;
+    IterativeAI<ParanoidFourPlayer_AI> AI3;
+
+    aiParam[3].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    aiParam[3].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    aiParam[3].maxMoveToLookAt = 4;
+    aiParam[3].selectAmongNBestMoves = 1;
+    IterativeAI<ParanoidFourPlayer_AI> AI4;
+
+    for (auto& p : aiParam)
+        p.monothread = false;
+
+    GameState gameState;
+    u32 turn = 0;
+
+    auto playTurn = [&](auto& _ai, u32 _playerIndex) -> float
     {
-        cxxopts::Options optionsGen("Blockus AI", "Play random blockus games and generate a dataset.");
-        optionsGen.allow_unrecognised_options();
-        optionsGen.add_options()
-            ("folder", "Output folder", cxxopts::value<std::string>())
-            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
-            ("numDatasets", "Num dataset to generate", cxxopts::value<u32>()->default_value("64"))
-            ("numGames", "Num games to play per dataset", cxxopts::value<u32>()->default_value("5000"));
+        std::cout << "--------- Turn " << turn << " ------------\n";
+        std::cout << "Board at begining of turn " << turn << ", Player " << _playerIndex+1 << " to play\n";
+        gameState.getBoard().print();
 
-        auto parseResult = optionsGen.parse(argc, argv);
+        _ai.startComputation(aiParam[_playerIndex], gameState);
+        do { Sleep(1000); } while (_ai.getBestMove().depth == u32(-1));
+        _ai.stopComputation();
+        
+        std::cout << "Move depth:" << _ai.getBestMove().depth << std::endl;
+        std::cout << "Stats: " << _ai.nodePerSecond() << " node/sec, outcome: " << _ai.getBestMove().playerScore << std::endl;
+
+        Move move = _ai.getBestMove().move;
+        if (move.isValid())
+            gameState = gameState.play(move);
+        else
+            gameState = gameState.skip();
+
+        turn++;
+        return _ai.getBestMove().playerScore;
+
+    };
+
+    while (1)
+    {
+        float scores[4];
+        scores[0] = playTurn(AI1, turn%4);
+        scores[1] = playTurn(AI2, turn%4);
+        scores[2] = playTurn(AI3, turn%4);
+        scores[3] = playTurn(AI4, turn%4);
+
+        std::cout << std::endl;
+        u32 noMoveForPlayer = 0;
+        for (u32 i = 0; i < 4; ++i)
+        {
+            Slot p = Slot(u32(Slot::P0) + i);
+            std::cout << "Played tiles for player " << i + 1 << " : " << gameState.getPlayedPieceTiles(p) << "(" << !gameState.noMoveLeft(p) << "), Score=" << scores[i] << std::endl;
+            noMoveForPlayer += gameState.noMoveLeft(p);
+        }
 
         system("pause");
-        return genDataset(parseResult["folder"].as<std::string>(), 
-                          parseResult["name"].as<std::string>(),
-                          parseResult["numDatasets"].as<u32>(),
-                          parseResult["numGames"].as<u32>());
-    }
-    else if (cmdArgParseRresult["train"].as<bool>())
-    {
-        cxxopts::Options optionsTrain("Blockus AI", "Play random blockus games and generate a dataset.");
-        optionsTrain.allow_unrecognised_options();
-        optionsTrain.add_options()
-            ("folder", "Output folder", cxxopts::value<std::string>())
-            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
-            ("input", "Input model", cxxopts::value<std::string>()->default_value(""))
-            ("output", "Output model", cxxopts::value<std::string>())
-            ("offset", "Offset to skip some dataset before training", cxxopts::value<u32>()->default_value("0"))
-            ("lr", "Learning rate", cxxopts::value<float>()->default_value("0.02"))
-            ("turnRange", "Game position to select in turn range", cxxopts::value<std::vector<u32>>()->default_value("0,80"))
-            ("cluster", "Use cluster data to train");
 
-        auto parseResult = optionsTrain.parse(argc, argv);
-
-        std::vector<u32> turnRange = parseResult["turnRange"].as<std::vector<u32>>();
-        if (turnRange.size() < 2)
-            turnRange = { 0,80 };
-
-        system("pause");
-        return trainModel(parseResult["folder"].as<std::string>(),
-                          parseResult["name"].as<std::string>(),
-                          parseResult["input"].as<std::string>(),
-                          parseResult["output"].as<std::string>(),
-                          parseResult["offset"].as<u32>(),
-                          parseResult["lr"].as<float>(),
-                          uvec2(turnRange[0], turnRange[1]),
-                          parseResult["cluster"].as<bool>());
-
-    }
-    else if (cmdArgParseRresult["shuffle"].as<bool>())
-    {
-        cxxopts::Options optionsTrain("Blockus AI", "Shuffle datasets.");
-        optionsTrain.allow_unrecognised_options();
-        optionsTrain.add_options()
-            ("folder", "Output folder", cxxopts::value<std::string>())
-            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"));
-
-        auto parseResult = optionsTrain.parse(argc, argv);
-
-        system("pause");
-        return shuffleDataset(parseResult["folder"].as<std::string>(), parseResult["name"].as<std::string>());
+        if (noMoveForPlayer == 4)
+            break;
     }
 
     return 0;

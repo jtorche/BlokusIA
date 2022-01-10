@@ -242,7 +242,7 @@ namespace blokusAI
         for (u32 i = 0; i < 4; ++i)
         {
             bool hasAnyMove = false;
-            newGameState.visitMoves(MoveHeuristic::TileCount, i, [&](Move, float)
+            newGameState.visitMoves(i, [&](auto&&...)
             {
                 hasAnyMove = true;
                 return false;
@@ -265,12 +265,22 @@ namespace blokusAI
     }
 
 	//-------------------------------------------------------------------------------------------------
-	std::vector<std::pair<Move, float>> GameState::enumerateMoves(MoveHeuristic _moveHeuristic) const
+	std::vector<std::pair<Move, float>> GameState::enumerateMoves(MoveHeuristic _moveHeuristic, CustomHeuristicInterface* _customHeuristic) const
 	{
 		std::vector<std::pair<Move, float>> moves;
         moves.reserve(512);
 
-        visitMoves(_moveHeuristic, getPlayerTurn(), [&](Move _move, float _score) { moves.push_back({ _move,_score }); return true; });
+        visitMoves(getPlayerTurn(), [&](Move _move, ubyte2 _playablePos) 
+        { 
+            float heuristic = 0;
+            if (_moveHeuristic == MoveHeuristic::Custom)
+                heuristic = _customHeuristic->moveHeuristic(*this, _move, _playablePos);
+            else
+                heuristic = computeHeuristic(_move, _playablePos, _moveHeuristic);
+
+            moves.push_back({ _move, heuristic });
+            return true; 
+        });
 
 		return moves;
 	}
@@ -401,14 +411,17 @@ namespace blokusAI
     }
 
 	//-------------------------------------------------------------------------------------------------
-	float GameState::computeBoardScore(Slot _player, BoardHeuristic _heuristicType) const
+	float GameState::computeBoardScore(Slot _player, BoardHeuristic _heuristicType, CustomHeuristicInterface* _customHeuristic) const
 	{
-        return g_cache.computeBoardScore(*this, _player, _heuristicType);
+        return computeBoardScoreInner(_player, _heuristicType, _customHeuristic);
 	}
 
     //-------------------------------------------------------------------------------------------------
-    float GameState::computeBoardScoreInner(Slot _player, BoardHeuristic _heuristicType) const
+    float GameState::computeBoardScoreInner(Slot _player, BoardHeuristic _heuristicType, CustomHeuristicInterface * _customHeuristic) const
     {
+        if (_heuristicType == BoardHeuristic::Custom)
+            return _customHeuristic->boardHeuristic(*this, _player);
+
         u32 numOpponentsDefeated = 0;
         for (u32 i = 0; i < 4; ++i)
         {

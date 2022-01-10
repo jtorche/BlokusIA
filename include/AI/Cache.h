@@ -23,6 +23,6 @@ namespace blokusAI
 
     inline float GameStateCache::computeBoardScore(const GameState& _gameState, Slot _player, BoardHeuristic _heuristic)
     {
-        return _gameState.computeBoardScoreInner(_player, _heuristic);
+        return _gameState.computeBoardScoreInner(_player, _heuristic, nullptr);
     }
 }

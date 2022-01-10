@@ -8,7 +8,7 @@ namespace blokusAI
         m_playerTurn = _gameState.getPlayerTurn();
 
         start();
-        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
+        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic, m_params.customHeuristic);
         if(moves.empty())
             moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
 
