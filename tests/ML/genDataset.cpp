@@ -130,13 +130,13 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         for (u32 i = 0; i < numGames; ++i)
         {
             s_threadPool.push_task([&]()
-                {
-                    generator.playGame(s_rand() % n, s_rand() % n, s_rand() % n, s_rand() % n);
-                    u32 num = numGameComplete.fetch_add(1);
+            {
+                generator.playGame(s_rand() % n, s_rand() % n, s_rand() % n, s_rand() % n);
+                u32 num = numGameComplete.fetch_add(1);
 
-                    if (num % 100 == 0)
-                        std::cout << epoch << ": " << num << "/" << numGames << std::endl;
-                });
+                if (num % 100 == 0)
+                    std::cout << epoch << ": " << num << "/" << numGames << std::endl;
+            });
         }
         s_threadPool.wait_for_tasks();
 

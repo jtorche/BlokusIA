@@ -75,7 +75,7 @@ int main()
         }
 
 		numTurn++;
-
+        std::cout << "NumTurn " << numTurn*4 << "\n";
 		gameState.getBoard().print();
 
         u32 noMoveForPlayer = 0;
@@ -90,14 +90,8 @@ int main()
             break;
     }
 	
-	std::cout << "NumTurn " << numTurn << "\n";
+	std::cout << "NumTurn " << numTurn*4 << "\n";
 	gameState.getBoard().print();
-    std::cout << "-------------------\n";
-    gameState.getBoard().rotatedBoard(Rotation::Rot_90).print();
-    std::cout << "-------------------\n";
-    gameState.getBoard().rotatedBoard(Rotation::Rot_180).print();
-    std::cout << "-------------------\n";
-    gameState.getBoard().rotatedBoard(Rotation::Rot_270).print();
 	system("pause");
 
 	return 0;

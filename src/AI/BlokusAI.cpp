@@ -72,11 +72,11 @@ namespace blokusAI
     //-------------------------------------------------------------------------------------------------
     struct ExpandCluster
     {
-        ExpandCluster(Slot _player, ReachableSlots& _reachableSlots, const GameState& _state)
-            : m_state{ _state }, m_reachableSlots{ _reachableSlots },
+        ExpandCluster(Slot _player, ReachableSlots& _reachableSlots, const Board& _board)
+            : m_board{ _board }, m_reachableSlots{ _reachableSlots },
             m_player{ _player }, m_playerIndex{ ubyte(convertToIndex(_player)) } {}
 
-        const GameState& m_state;
+        const Board& m_board;
         ReachableSlots& m_reachableSlots;
         Slot m_player;
         ubyte m_playerIndex;
@@ -121,10 +121,10 @@ namespace blokusAI
             if (m_reachableSlots.m_clusters[x][y] != 0)
                 return;
 
-            if (m_state.getBoard().getSlot(x, y) != Slot::Empty)
+            if (m_board.getSlot(x, y) != Slot::Empty)
                 return;
 
-            if (m_state.getBoard().getContactRuleCache(x, y) & (ubyte(1) << m_playerIndex))
+            if (m_board.getContactRuleCache(x, y) & (ubyte(1) << m_playerIndex))
                 return;
 
             m_reachableSlots.m_clusters[x][y] = ubyte(-1);
@@ -236,11 +236,7 @@ namespace blokusAI
         newGameState.m_pieceSpaceScoreCompensation[turn] += pieceSpaceCompensation[_move.piece.getNumTiles() - 1];
 
         for (u32 i = 0; i < 4; ++i)
-        {
-            newGameState.m_reachableSlotsCache[i] = {};
-            ExpandCluster expander(convertToSlot(i), newGameState.m_reachableSlotsCache[i], newGameState);
-            computeReachableSlots(convertToSlot(i), expander);
-        }
+            computeReachableSlots(newGameState.m_reachableSlotsCache[i], convertToSlot(i), newGameState.getBoard(), m_playablePositions[i], m_numPlayablePos[i]);
 
         // find if no move left
         for (u32 i = 0; i < 4; ++i)
@@ -465,14 +461,13 @@ namespace blokusAI
     }
 
     //-------------------------------------------------------------------------------------------------
-    void GameState::computeReachableSlots(Slot _player, ExpandCluster& _expander) const
+    void GameState::computeReachableSlots(ReachableSlots& _result, Slot _player, const Board& _board, const Board::PlayableSlots& _playableSlots, u32 _numPlayableSlots)
     {
-        u32 playerIndex = convertToIndex(_player);
-        const Board::PlayableSlots& slots = m_playablePositions[playerIndex];
-        u32 numSlots = m_numPlayablePos[playerIndex];
+        _result = {};
 
-        for (u32 i = 0; i < numSlots; ++i)
-            _expander.expandFrom(slots[i]);
+        ExpandCluster expander(_player, _result, _board);
+        for (u32 i = 0; i < _numPlayableSlots; ++i)
+            expander.expandFrom(_playableSlots[i]);
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -572,7 +567,6 @@ namespace blokusAI
             }
         }
     }
-       
 
     //-------------------------------------------------------------------------------------------------
     void BaseAI::start()

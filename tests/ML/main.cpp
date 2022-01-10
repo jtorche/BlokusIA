@@ -2,14 +2,16 @@
 
 // Header
 int genDataset(std::string _outputFolder, std::string _datasetBaseName, u32 _numDataset, u32 _numGamePerDataset);
-int trainModel(std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, float _lr, uvec2 _turnRange, bool _useCluster);
+int trainModel(std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
+int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName);
 
 int main(int argc, char * argv[]) 
 {
     cxxopts::Options optionsBase("Blockus AI", "A program to generate blockus games and use it as a dataset to train a network.");
     optionsBase.add_options()
         ("g,genDataset", "Generate dataset")
-        ("t,train", "Train a model");
+        ("t,train", "Train a model")
+        ("s,shuffle", "Shuffle multiple dataset");
 
     auto cmdArgParseRresult = optionsBase.parse(std::min(argc, 2), argv);
     if (cmdArgParseRresult["genDataset"].as<bool>())
@@ -39,6 +41,7 @@ int main(int argc, char * argv[])
             ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
             ("input", "Input model", cxxopts::value<std::string>()->default_value(""))
             ("output", "Output model", cxxopts::value<std::string>())
+            ("offset", "Offset to skip some dataset before training", cxxopts::value<u32>()->default_value("0"))
             ("lr", "Learning rate", cxxopts::value<float>()->default_value("0.02"))
             ("turnRange", "Game position to select in turn range", cxxopts::value<std::vector<u32>>()->default_value("0,80"))
             ("cluster", "Use cluster data to train");
@@ -54,10 +57,24 @@ int main(int argc, char * argv[])
                           parseResult["name"].as<std::string>(),
                           parseResult["input"].as<std::string>(),
                           parseResult["output"].as<std::string>(),
+                          parseResult["offset"].as<u32>(),
                           parseResult["lr"].as<float>(),
                           uvec2(turnRange[0], turnRange[1]),
                           parseResult["cluster"].as<bool>());
 
+    }
+    else if (cmdArgParseRresult["shuffle"].as<bool>())
+    {
+        cxxopts::Options optionsTrain("Blockus AI", "Shuffle datasets.");
+        optionsTrain.allow_unrecognised_options();
+        optionsTrain.add_options()
+            ("folder", "Output folder", cxxopts::value<std::string>())
+            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"));
+
+        auto parseResult = optionsTrain.parse(argc, argv);
+
+        system("pause");
+        return shuffleDataset(parseResult["folder"].as<std::string>(), parseResult["name"].as<std::string>());
     }
 
     return 0;

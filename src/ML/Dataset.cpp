@@ -19,17 +19,18 @@ namespace blokusAI
 		m_data.emplace_back(entry);
 	}
 
-	void Dataset::serialize(std::string _path) const
+	void Dataset::serialize(std::string _path, u32 _offset, u32 _numElements) const
 	{
 		FILE* f = fopen(_path.c_str(), "wb+");
 		if (f)
 		{
-			fwrite(m_data.data(), sizeof(Entry), m_data.size(), f);
+			DEBUG_ASSERT(_numElements > 0 && _offset < m_data.size());
+			fwrite(m_data.data() + _offset, sizeof(Entry), std::min<u32>(m_data.size() - _offset, _numElements), f);
 			fclose(f);
 		}
 	}
 
-	bool Dataset::read(std::string _path, bool _shuffle)
+	bool Dataset::read(std::string _path)
 	{
 		std::ios_base::openmode mode = std::ios_base::binary;
 
@@ -51,18 +52,26 @@ namespace blokusAI
 		}
 		else return false;
 
-		if (_shuffle)
-		{
-			std::shuffle(m_data.begin(), m_data.end(), s_rand);
-		}
 		return true;
+	}
+
+	void Dataset::merge(Dataset&& _other)
+	{
+		for (const auto& dat : _other.m_data)
+			m_data.push_back(dat);
+		_other.clear();
+	}
+
+	void Dataset::shuffle()
+	{
+		std::shuffle(m_data.begin(), m_data.end(), s_rand);
 	}
 
 	std::vector<std::pair<torch::Tensor, torch::Tensor>> Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster, bool _labelAsScore) const
 	{
 		std::vector<std::pair<torch::Tensor, torch::Tensor>> tensorData;
 
-		const u32 numSlice = 2 + (_useReachableCluster ? 1 : 0);
+		const u32 numSlice = 2 + (_useReachableCluster ? 2 : 0);
 		const u32 sliceStride = Board::BoardSize * Board::BoardSize; // in float count
 		
 		u32 globalIndex = 0;
@@ -85,8 +94,27 @@ namespace blokusAI
 						Slot s = board.getSlot(x, y);
 						blobCurData[y * Board::BoardSize + x] = (s == Slot::P0) ? 1 : 0;
 						blobCurData[sliceStride + y * Board::BoardSize + x] = (s != Slot::P0 && s != Slot::Empty) ? 1 : 0;
-						DEBUG_ASSERT(!_useReachableCluster);
 					}
+
+				if (_useReachableCluster)
+				{
+					ReachableSlots reachableSlots[4];
+					for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
+					{
+						Board::PlayableSlots playable;
+						u32 numPlayable = board.computeValidSlotsForPlayer(s, playable);
+						GameState::computeReachableSlots(reachableSlots[u32(s) - u32(Slot::P0)], s, board, playable, numPlayable);
+					}
+
+					for (u32 y = 0; y < Board::BoardSize; ++y)
+						for (u32 x = 0; x < Board::BoardSize; ++x)
+						{
+							blobCurData[sliceStride * 2 + y * Board::BoardSize + x] = reachableSlots[0].m_clusters[x][y] > 0 ? 1 : 0;
+							blobCurData[sliceStride * 3 + y * Board::BoardSize + x] = (reachableSlots[1].m_clusters[x][y] > 0 || 
+																					   reachableSlots[2].m_clusters[x][y] > 0 || 
+																					   reachableSlots[3].m_clusters[x][y] > 0) ? 1 : 0;
+						}
+				}
 
 				blobCurData += sliceStride * numSlice;
 				

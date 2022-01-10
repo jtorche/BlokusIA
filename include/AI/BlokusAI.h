@@ -89,6 +89,8 @@ namespace blokusAI
 
         static u32 getBestMoveIndex(const std::vector<float>&, u32 _amongNBestMoves);
 
+        static void computeReachableSlots(ReachableSlots& _result, Slot _player, const Board& _board, const Board::PlayableSlots& _playableSlots, u32 _numPlayableSlots);
+
 	private:
 		Board m_board;
 		std::bitset<BlokusGame::PiecesCount + 1> m_remainingPieces[4]; // last bit to store if a player can't play anymore
