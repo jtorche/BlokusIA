@@ -6,6 +6,7 @@
 #include "AI/Dummy_AI.h"
 #include "AI/AlonePlayer_AI.h"
 #include "AI/IterativeAI.h"
+#include "ML/HeuristicImpl.h"
 
 using namespace blokusAI;
 
@@ -15,11 +16,19 @@ int main()
 
     BaseAI::Parameters aiParam[4];
 
-    aiParam[0].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
-    aiParam[0].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
-    aiParam[0].maxMoveToLookAt = 16;
+    CustomHeuristicImpl customHeuristic(
+        { { "D:/Prog/blokusDataset/model_0_16_cluster.pt", 16 },
+          { "D:/Prog/blokusDataset/model_17_40_cluster.pt", 40 },
+          { "D:/Prog/blokusDataset/model_41_84_cluster.pt", 84 } 
+        },
+          true
+    );
+    aiParam[0].moveHeuristic = MoveHeuristic::Custom;
+    aiParam[0].heuristic = BoardHeuristic::RemainingTiles;
+    aiParam[0].maxMoveToLookAt = 1;
     aiParam[0].selectAmongNBestMoves = 1;
-    IterativeAI<ParanoidFourPlayer_AI> AI1;
+    aiParam[0].customHeuristic = &customHeuristic;
+    IterativeAI<Dummy_AI> AI1;
 
     aiParam[1].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
@@ -52,7 +61,7 @@ int main()
         gameState.getBoard().print();
 
         _ai.startComputation(aiParam[_playerIndex], gameState);
-        do { Sleep(1000); } while (_ai.getBestMove().depth == u32(-1));
+        do { Sleep(300); } while (_ai.getBestMove().depth == u32(-1));
         _ai.stopComputation();
         
         std::cout << "Move depth:" << _ai.getBestMove().depth << std::endl;

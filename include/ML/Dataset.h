@@ -30,6 +30,9 @@ namespace blokusAI
 
 		std::vector<std::pair<torch::Tensor, torch::Tensor>> constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, bool _useReachableCluster = false, bool _labelAsScore = false) const;
 
+		static torch::Tensor fillInputTensorData(const Board& _board, u32 _playerIndex, bool _useReachableCluster, float* _data);
+		static u32 computeInputTensorDataSize(bool _useReachableCluster);
+
 	private:
 		std::vector<Entry> m_data;
 	};
