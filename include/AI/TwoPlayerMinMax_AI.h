@@ -6,13 +6,13 @@ namespace blokusAI
 {
     struct TwoPlayerMinMaxStrategy
     {
-        static float computeScore(Slot _maxPlayer, BoardHeuristic _heuristic, const GameState& _gameState)
+        static float computeScore(Slot _maxPlayer, BoardHeuristic _heuristic, const GameState& _gameState, CustomHeuristicInterface* _custom)
         {
             bool isP0P2_MaxPlayer = _maxPlayer == Slot::P0 || _maxPlayer == Slot::P2;
-            return (isP0P2_MaxPlayer ? 1 : -1) * (_gameState.computeBoardScore(Slot::P0, _heuristic) +
-                                                  _gameState.computeBoardScore(Slot::P2, _heuristic) -
-                                                  _gameState.computeBoardScore(Slot::P1, _heuristic) -
-                                                  _gameState.computeBoardScore(Slot::P3, _heuristic));
+            return (isP0P2_MaxPlayer ? 1 : -1) * (_gameState.computeBoardScore(Slot::P0, _heuristic, _custom) +
+                                                  _gameState.computeBoardScore(Slot::P2, _heuristic, _custom) -
+                                                  _gameState.computeBoardScore(Slot::P1, _heuristic, _custom) -
+                                                  _gameState.computeBoardScore(Slot::P3, _heuristic, _custom));
         }
 
         static bool isMaxPlayerTurn(Slot _maxPlayer, const GameState& _gameState)

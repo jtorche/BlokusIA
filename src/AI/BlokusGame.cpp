@@ -335,6 +335,43 @@ namespace blokusAI
 		return true;
 	}
 
+	// Assuming the piece can be played (ie. satisfy canAddPiece())
+	// _bridgeCategorie=false -> bridge going out, _bridgeCategorie=true -> bridge arriving in
+	bool Board::isPieceConnectedToBridge(Slot _player, const Piece& _piece, ubyte2 _pos, bool _bridgeCategorie) const
+	{
+		DEBUG_ASSERT(_player != Slot::Empty);
+		DEBUG_ASSERT(_pos.x < BoardSize&& _pos.y < BoardSize);
+
+		auto isOtherPlayer = [=](Slot _p) { return _p != Slot::Empty && _p != _player; };
+		auto isBridgeCategorie = [=](Slot _p) { return _bridgeCategorie ? _p == Slot::Empty : _p == _player; };
+
+		for (u32 i = 0; i < Piece::MaxTile; ++i)
+		{
+			if (_piece.getTile(i) == 0)
+				break;
+
+			// A tile that is not a corner cannot be a bridge
+			ubyte corners[4];
+			_piece.getCorners(i, corners);
+			if (*reinterpret_cast<u32*>(corners) == 0)
+				continue;
+
+			i32 tileX = i32(Piece::getTileX(_piece.getTile(i)) + _pos.x);
+			i32 tileY = i32(Piece::getTileY(_piece.getTile(i)) + _pos.y);
+
+			if (isOtherPlayer(getSlotSafe<-1, 0>(tileX, tileY)) && isOtherPlayer(getSlotSafe<0, -1>(tileX, tileY)) && isBridgeCategorie(getSlotSafe<-1, -1>(tileX, tileY)))
+				return true;
+			if (isOtherPlayer(getSlotSafe<1, 0>(tileX, tileY)) && isOtherPlayer(getSlotSafe<0, -1>(tileX, tileY)) && isBridgeCategorie(getSlotSafe<1, -1>(tileX, tileY)))
+				return true;
+			if (isOtherPlayer(getSlotSafe<-1, 0>(tileX, tileY)) && isOtherPlayer(getSlotSafe<0, 1>(tileX, tileY)) && isBridgeCategorie(getSlotSafe<-1, 1>(tileX, tileY)))
+				return true;
+			if (isOtherPlayer(getSlotSafe<1, 0>(tileX, tileY)) && isOtherPlayer(getSlotSafe<0, 1>(tileX, tileY)) && isBridgeCategorie(getSlotSafe<1, 1>(tileX, tileY)))
+				return true;
+		}
+
+		return false;
+	}
+
 	//-------------------------------------------------------------------------------------------------
 	void Board::addPiece(Slot _player, const Piece& _piece, ubyte2 _pos)
 	{

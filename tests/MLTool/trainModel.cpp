@@ -29,6 +29,8 @@ int trainModel(string _datasetFolder, string _datasetBaseName, string _inModelPa
     std::cout << "Num dataset : " << numDataset << std::endl;
 
     auto net = std::make_shared<blokusAI::NetJojo>(_useCluster ? 4 : 2, false);
+    // torch::NoGradGuard no_grad;
+
     if(std::filesystem::exists(_inModelPath))
         torch::load(net, _inModelPath);
 

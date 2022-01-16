@@ -46,11 +46,13 @@ namespace blokusAI
 
     enum class MoveHeuristic
     {
-        Custom,
         TileCount,
         TileCount_DistCenter,
         WeightedReachableSpace,
         ExtendingReachableSpace,
+        Custom,
+        MultiSource,
+        MultiSource_Custom,
     };
 
     class GameState;
@@ -69,6 +71,13 @@ namespace blokusAI
         ubyte m_clusters[Board::BoardSize][Board::BoardSize] = { {0} };
         ubyte m_numPlayableSlotsPerCluster[(Board::BoardSize * Board::BoardSize) / 4] = {};
         u16 m_clusterSize[(Board::BoardSize * Board::BoardSize) / 4] = {};
+    };
+
+    struct MultiSourceMoveHeuristicParam
+    {
+        u32 m_numPiecesWithBridgeIn = 12;
+        u32 m_numPiecesWithBridgeOut = 4;
+        u32 m_numPieceAtCenter = 16;
     };
 
 	class GameState
@@ -91,7 +100,10 @@ namespace blokusAI
         void visitMoves(u32 _playerTurn, Functor&&) const;
 
 		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic, CustomHeuristicInterface * _customHeuristic = nullptr) const;
-        void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuisitc) const;
+        void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuristic) const;
+        std::vector<std::pair<Move, float>> findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _numMoves, const MultiSourceMoveHeuristicParam * _multiSrcParam = nullptr, 
+                                                                                                           CustomHeuristicInterface* _customHeuristic = nullptr) const;
+
         u32 getPlayedPieceTiles(Slot _player) const;
 
 		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
@@ -171,6 +183,7 @@ namespace blokusAI
             u32 maxMoveToLookAt = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
+            MultiSourceMoveHeuristicParam multiSourceParam = {};
             u32 maxDepth = 1;
             u32 selectAmongNBestMoves = 1;
             u32 numTurnToForceBestMoveHeuristic = 3;

@@ -314,6 +314,97 @@ namespace blokusAI
         }
     }
 
+    std::vector<std::pair<Move, float>> GameState::findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _maxMoveToLookAt, const MultiSourceMoveHeuristicParam* _multiSrcParam, CustomHeuristicInterface* _customHeuristic) const
+    {
+        MoveHeuristic heuristic = _moveHeuristic == MoveHeuristic::MultiSource_Custom || _moveHeuristic == MoveHeuristic::MultiSource ? MoveHeuristic::TileCount : _moveHeuristic;
+
+        auto moves = enumerateMoves(heuristic);
+        if (moves.empty())
+            moves = enumerateMoves(MoveHeuristic::TileCount);
+
+        if (moves.empty())
+            return {};
+
+        if (_moveHeuristic == MoveHeuristic::MultiSource_Custom || _moveHeuristic == MoveHeuristic::MultiSource)
+        {
+            auto curBegin = moves.begin();
+
+            // Find move according to the bridge heuristic
+            auto bridgeHeuristic = [&](bool _categorie, u32 _numMoves)
+            {
+                std::for_each(curBegin, moves.end(), [&](auto& move_score)
+                {
+                    auto& [move, score] = move_score;
+                    score = getBoard().isPieceConnectedToBridge(convertToSlot(getPlayerTurn()), move.piece, move.position, _categorie) ? computeHeuristic(move, {}, MoveHeuristic::TileCount_DistCenter) : 0.f;
+                });
+
+                u32 numBridgeMove = std::min<u32>(_numMoves, u32(std::distance(curBegin, moves.end())));
+                std::partial_sort(curBegin, curBegin + numBridgeMove, std::end(moves),
+                                  [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+
+                // Find move according to the bridge heuristic
+                curBegin = std::remove_if(curBegin, curBegin + numBridgeMove, [&](auto& move_score) { return move_score.second == 0; });
+            };
+
+            bridgeHeuristic(true, _multiSrcParam->m_numPiecesWithBridgeIn);
+            bridgeHeuristic(false, _multiSrcParam->m_numPiecesWithBridgeOut);
+
+            // Find move according to the dist center
+            {
+                std::for_each(curBegin, moves.end(), [&](auto& move_score)
+                {
+                    auto& [move, score] = move_score;
+                    score = computeHeuristic(move, {}, MoveHeuristic::TileCount_DistCenter);
+                });
+
+                u32 numMoves = std::min<u32>(_multiSrcParam->m_numPieceAtCenter, u32(std::distance(curBegin, moves.end())));
+                std::partial_sort(curBegin, curBegin + numMoves, std::end(moves),
+                                  [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+
+                curBegin += numMoves;
+            }
+
+            // Find move according to the tile count heuristic (to fill remaining spot)
+            {
+                std::for_each(curBegin, moves.end(), [&](auto& move_score)
+                {
+                    auto& [move, score] = move_score;
+                    score = computeHeuristic(move, {}, MoveHeuristic::TileCount);
+                });
+
+                u32 totalMovesFromMultiSrc = _multiSrcParam->m_numPieceAtCenter + _multiSrcParam->m_numPiecesWithBridgeIn + _multiSrcParam->m_numPiecesWithBridgeOut;
+                const u32 remainingMoveToFind = u32(std::distance(moves.begin(), curBegin)) < totalMovesFromMultiSrc ? totalMovesFromMultiSrc - u32(std::distance(moves.begin(), curBegin)) : 0;
+                u32 numMoves = std::min<u32>(remainingMoveToFind, u32(std::distance(curBegin, moves.end())));
+                std::partial_sort(curBegin, curBegin + numMoves, std::end(moves),
+                    [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+
+                curBegin += numMoves;
+            }
+
+            moves.resize(std::distance(moves.begin(), curBegin));
+            if (_moveHeuristic == MoveHeuristic::MultiSource_Custom)
+            {
+                std::for_each(moves.begin(), moves.end(), [&](auto& move_score)
+                {
+                    auto& [move, score] = move_score;
+                    score = _customHeuristic->moveHeuristic(*this, move, {});
+                });
+
+                std::stable_sort(std::begin(moves), std::end(moves), [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+            }
+
+            if (moves.size() > _maxMoveToLookAt)
+                moves.resize(_maxMoveToLookAt);
+        }
+        else
+        {
+            const u32 numTurnBestHeuristic = 0;
+            findCandidatMoves(_maxMoveToLookAt, moves, numTurnBestHeuristic);
+        }
+
+        return moves;
+    }
+
     //-------------------------------------------------------------------------------------------------
     static thread_local std::vector<std::vector<float>::const_iterator> g_sortedScoreIterator;
     u32 GameState::getBestMoveIndex(const std::vector<float>& _scores, u32 _amongNBestMoves)

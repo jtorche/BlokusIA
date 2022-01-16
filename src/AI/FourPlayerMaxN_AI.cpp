@@ -6,12 +6,8 @@ namespace blokusAI
     std::pair<Move, float> FourPlayerMaxN_AI::findBestMove(const GameState& _gameState)
     {
         start();
-        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
-        if(moves.empty())
-            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
-
-        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves, m_params.numTurnToForceBestMoveHeuristic);
-
+        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, &m_params.multiSourceParam, m_params.customHeuristic);
+        
         if (moves.empty())
         {
             stop();
@@ -57,12 +53,8 @@ namespace blokusAI
         if (_depth >= m_params.maxDepth || m_stopAI)
             return computeScore(_gameState);
 
-        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic);
-        if (moves.empty())
-            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
-
-        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves, m_params.numTurnToForceBestMoveHeuristic);
-
+        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, &m_params.multiSourceParam, m_params.customHeuristic);
+        
         if (moves.empty())
         {
             return evalPositionRec(_gameState.skip(), _depth + 1);

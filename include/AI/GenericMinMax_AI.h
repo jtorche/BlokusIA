@@ -18,7 +18,7 @@ namespace blokusAI
 		float computeScore(Slot _maxPlayer, const GameState& _gameState)
 		{
             m_numHeuristicEvaluated++;
-            return Strategy::computeScore(_maxPlayer, m_params.heuristic, _gameState);
+            return Strategy::computeScore(_maxPlayer, m_params.heuristic, _gameState, m_params.customHeuristic);
 		}
 
 	private:

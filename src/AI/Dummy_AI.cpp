@@ -8,14 +8,15 @@ namespace blokusAI
         m_playerTurn = _gameState.getPlayerTurn();
 
         start();
-        auto moves = _gameState.enumerateMoves(m_params.moveHeuristic, m_params.customHeuristic);
-        if(moves.empty())
-            moves = _gameState.enumerateMoves(MoveHeuristic::TileCount);
-
-        _gameState.findCandidatMoves(m_params.maxMoveToLookAt, moves, m_params.numTurnToForceBestMoveHeuristic);
+        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, &m_params.multiSourceParam, m_params.customHeuristic);
 
         if (moves.empty())
             return {};
+
+        std::stable_sort(std::begin(moves), std::end(moves), [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+
+        if(moves.size() > m_params.selectAmongNBestMoves)
+            moves.resize(m_params.selectAmongNBestMoves);
 
         stop();
 

@@ -20,15 +20,18 @@ int main()
         { { "D:/Prog/blokusDataset/model_0_16_cluster.pt", 16 },
           { "D:/Prog/blokusDataset/model_17_40_cluster.pt", 40 },
           { "D:/Prog/blokusDataset/model_41_84_cluster.pt", 84 } 
-        },
-          true
+        }, true
     );
-    aiParam[0].moveHeuristic = MoveHeuristic::Custom;
-    aiParam[0].heuristic = BoardHeuristic::RemainingTiles;
-    aiParam[0].maxMoveToLookAt = 1;
+    aiParam[0].maxDepth = 4;
+    aiParam[0].moveHeuristic = MoveHeuristic::MultiSource_Custom;
+    aiParam[0].heuristic = BoardHeuristic::Custom;
+    aiParam[0].maxMoveToLookAt = 4;
     aiParam[0].selectAmongNBestMoves = 1;
     aiParam[0].customHeuristic = &customHeuristic;
-    IterativeAI<Dummy_AI> AI1;
+    aiParam[0].multiSourceParam.m_numPieceAtCenter = 16;
+    aiParam[0].multiSourceParam.m_numPiecesWithBridgeOut = 2;
+    aiParam[0].multiSourceParam.m_numPiecesWithBridgeIn = 14;
+    IterativeAI<ParanoidFourPlayer_AI> AI1;
 
     aiParam[1].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
@@ -61,7 +64,7 @@ int main()
         gameState.getBoard().print();
 
         _ai.startComputation(aiParam[_playerIndex], gameState);
-        do { Sleep(300); } while (_ai.getBestMove().depth == u32(-1));
+        do { Sleep(1000); } while (_ai.getBestMove().depth == u32(-1));
         _ai.stopComputation();
         
         std::cout << "Move depth:" << _ai.getBestMove().depth << std::endl;

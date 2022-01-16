@@ -85,6 +85,7 @@ namespace blokusAI
 
     template class IterativeAI<FourPlayerMaxN_AI>;
     template class IterativeAI<ParanoidFourPlayer_AI>;
+    template class IterativeAI<FastParanoidFourPlayer_AI>;
     template class IterativeAI<TwoPlayerMinMax_AI>;
     template class IterativeAI<Dummy_AI>;
     template class IterativeAI<AlonePlayer_AI>;

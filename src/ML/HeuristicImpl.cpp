@@ -36,8 +36,14 @@ namespace blokusAI
 		for (u32 i = 0; i < m_netPerTurn.size(); ++i)
 		{
 			if (_state.getTurnCount() <= m_netPerTurn[i])
+			{
 				result = m_networks[i]->forward(tensor);
+				break;
+			}
 		}
+
+		if(!result)
+			m_networks.back()->forward(tensor);
 
 		using namespace torch::indexing;
 		float probaFirst = result->accessor<float, 2>()[0][0];
