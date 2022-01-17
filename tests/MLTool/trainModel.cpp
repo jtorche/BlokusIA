@@ -12,13 +12,16 @@ using namespace torch;
 std::string getDatasetPath(string _outputFolder, string _datasetBaseName, u32 _index);
 u32 findNumDatasetOnDisk(string _outputFolder, string _datasetBaseName);
 
-int trainModel(string _datasetFolder, string _datasetBaseName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster)
+int trainModel(string _model, string _datasetFolder, string _datasetBaseName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster)
 {
     blokusAI::initBlokusAI();
 
     using namespace torch::indexing;
+    _inModelPath += "_" + _model + ".pt";
+    _outModelPath += "_" + _model + ".pt";
 
     std::cout << "Train model with param : " << std::endl;
+    std::cout << "Model : " << _model << std::endl;
     std::cout << "Folder : " << _datasetFolder << std::endl;
     std::cout << "Basename : " << _datasetBaseName << std::endl;
     std::cout << "Input model : " << _inModelPath << std::endl;
@@ -28,16 +31,22 @@ int trainModel(string _datasetFolder, string _datasetBaseName, string _inModelPa
     u32 numDataset = findNumDatasetOnDisk(_datasetFolder, _datasetBaseName);
     std::cout << "Num dataset : " << numDataset << std::endl;
 
-    auto net = std::make_shared<blokusAI::NetJojo>(_useCluster ? 4 : 2, false);
-    // torch::NoGradGuard no_grad;
+    std::shared_ptr<blokusAI::BlokusNet> net;
+    if(_model == "jojo")
+        net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_Jojo, _useCluster ? 4 : 2);
+    else
+        net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_Baseline, _useCluster ? 4 : 2);
 
-    if(std::filesystem::exists(_inModelPath))
+    if (std::filesystem::exists(_inModelPath))
+    {
         torch::load(net, _inModelPath);
+        std::cout << "Load model " << _inModelPath << std::endl;
+    }
 
     float labelWeights[2] = { 0.25, 0.5 };
     torch::Tensor weightsTensor = torch::from_blob(labelWeights, { 2 });
 
-    while (1)
+    // while (1)
     {
         for (u32 i = _datasetIndex; i < numDataset; ++i)
         {
@@ -53,7 +62,7 @@ int trainModel(string _datasetFolder, string _datasetBaseName, string _inModelPa
             {
                 optimizer.zero_grad();
                 torch::Tensor prediction = net->forward(batch_data);
-                torch::Tensor loss = net->outputScore ? torch::mse_loss(prediction.flatten(), batch_labels) : torch::binary_cross_entropy(prediction, batch_labels, weightsTensor);
+                torch::Tensor loss = torch::binary_cross_entropy(prediction, batch_labels, weightsTensor);
                 loss.backward();
                 optimizer.step();
 

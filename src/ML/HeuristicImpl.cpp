@@ -12,7 +12,7 @@ namespace blokusAI
 
 		for (const auto& [path, turn] : _netPathAndTurn)
 		{
-			m_networks.emplace_back(std::make_shared<NetJojo>(_useCluster ? 4:2, false));
+			m_networks.emplace_back(std::make_shared<BlokusNet>(BlokusNet::Model::Model_Jojo, _useCluster ? 4 : 2));
 			m_netPerTurn.push_back(turn);
 
 			torch::load(m_networks.back(), path);

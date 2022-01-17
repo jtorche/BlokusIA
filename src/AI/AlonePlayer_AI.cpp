@@ -8,7 +8,7 @@ namespace blokusAI
         m_playerTurn = _gameState.getPlayerTurn();
 
         start();
-        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, &m_params.multiSourceParam, m_params.customHeuristic);
+        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, m_params.numTurnToForceBestMoveHeuristic, &m_params.multiSourceParam, m_params.customHeuristic);
         
         if (moves.empty())
             return {};
@@ -70,7 +70,7 @@ namespace blokusAI
             }
         }
 
-        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, &m_params.multiSourceParam, m_params.customHeuristic);
+        auto moves = state.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, m_params.numTurnToForceBestMoveHeuristic, &m_params.multiSourceParam, m_params.customHeuristic);
 
         if (moves.empty())
         {

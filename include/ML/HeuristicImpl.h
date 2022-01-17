@@ -17,7 +17,7 @@ namespace blokusAI
 		float boardHeuristic(const GameState&, Slot _player) override;
 
 		vector<u32> m_netPerTurn;
-		vector<std::shared_ptr<NetJojo>> m_networks;
+		vector<std::shared_ptr<BlokusNet>> m_networks;
 		bool m_useCluster;
 	};
 }

@@ -60,55 +60,42 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         generator.addAI("FullCenter", new Dummy_AI(paramFullCenter));
     }
     {
-        BaseAI::Parameters paramReachSpace;
-        paramReachSpace.heuristic = BoardHeuristic::RemainingTiles;
-        paramReachSpace.moveHeuristic = MoveHeuristic::WeightedReachableSpace;
-        paramReachSpace.maxMoveToLookAt = 16;
-        paramReachSpace.numTurnToForceBestMoveHeuristic = 3;
-        generator.addAI("ReachSpace", new Dummy_AI(paramReachSpace));
-    }
-    {
         BaseAI::Parameters param;
         param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
         param.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         param.maxMoveToLookAt = 32;
-        param.selectAmongNBestMoves = 8;
         param.numTurnToForceBestMoveHeuristic = 3;
-        
-        param.maxDepth = 1;
-        generator.addAI("Alone_WReachSpace_Depth1", new AlonePlayer_AI(param));
+        param.selectAmongNBestMoves = 3;
         param.maxDepth = 2;
         generator.addAI("Alone_WReachSpace_Depth2", new AlonePlayer_AI(param));
         
-        param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted2;
-        param.maxDepth = 1;
-        generator.addAI("Alone_W2ReachSpace_Depth1", new AlonePlayer_AI(param));
-        param.maxDepth = 2;
-        generator.addAI("Alone_W2ReachSpace_Depth2", new AlonePlayer_AI(param));
-        
-        param.heuristic = BoardHeuristic::ReachableEmptySpace;
-        param.maxDepth = 1;
-        generator.addAI("Alone_ReachSpace_Depth1", new AlonePlayer_AI(param));
-        param.maxDepth = 2;
-        generator.addAI("Alone_ReachSpace_Depth2", new AlonePlayer_AI(param));
-        
-        param.selectAmongNBestMoves = 3;
-        param.maxMoveToLookAt = 32;
+        param.selectAmongNBestMoves = 2;
         param.maxDepth = 3;
         generator.addAI("Alone_WReachSpace_Depth3", new AlonePlayer_AI(param));
     }
     {
         BaseAI::Parameters param;
         param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+        param.moveHeuristic = MoveHeuristic::MultiSource;
+        param.selectAmongNBestMoves = 1;
+        param.numTurnToForceBestMoveHeuristic = 3;
+        param.maxDepth = 4;
+        param.maxMoveToLookAt = 10;
+        param.multiSourceParam.m_numPiecesWithBridgeOut = 0;
+        param.multiSourceParam.m_numPiecesWithBridgeIn = 4;
+        param.multiSourceParam.m_numPieceAtCenter = 6;
+        generator.addAI("Paranoid_MultiSrc_Depth4", new ParanoidFourPlayer_AI(param));
+    }
+    {
+        BaseAI::Parameters param;
+        param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
         param.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         param.maxMoveToLookAt = 32;
-        param.selectAmongNBestMoves = 4;
         param.numTurnToForceBestMoveHeuristic = 3;
-        param.selectAmongNBestMoves = 4;
+        param.selectAmongNBestMoves = 2;
+
         param.maxDepth = 3;
         generator.addAI("Paranoid_TileCount_Depth3", new ParanoidFourPlayer_AI(param));
-
-        param.maxMoveToLookAt = 32;
         param.maxDepth = 2;
         generator.addAI("Paranoid_TileCount_Depth2", new ParanoidFourPlayer_AI(param));
     }

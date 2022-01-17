@@ -314,7 +314,8 @@ namespace blokusAI
         }
     }
 
-    std::vector<std::pair<Move, float>> GameState::findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _maxMoveToLookAt, const MultiSourceMoveHeuristicParam* _multiSrcParam, CustomHeuristicInterface* _customHeuristic) const
+    std::vector<std::pair<Move, float>> GameState::findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _maxMoveToLookAt, u32 _numTurnToForceBestHeuristic, 
+                                                                     const MultiSourceMoveHeuristicParam* _multiSrcParam, CustomHeuristicInterface* _customHeuristic) const
     {
         MoveHeuristic heuristic = _moveHeuristic == MoveHeuristic::MultiSource_Custom || _moveHeuristic == MoveHeuristic::MultiSource ? MoveHeuristic::TileCount : _moveHeuristic;
 
@@ -398,8 +399,7 @@ namespace blokusAI
         }
         else
         {
-            const u32 numTurnBestHeuristic = 0;
-            findCandidatMoves(_maxMoveToLookAt, moves, numTurnBestHeuristic);
+            findCandidatMoves(_maxMoveToLookAt, moves, _numTurnToForceBestHeuristic);
         }
 
         return moves;

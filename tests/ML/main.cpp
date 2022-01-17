@@ -16,6 +16,13 @@ int main()
 
     BaseAI::Parameters aiParam[4];
 
+    aiParam[0].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
+    aiParam[0].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
+    aiParam[0].maxMoveToLookAt = 16;
+    aiParam[0].selectAmongNBestMoves = 1;
+    IterativeAI<ParanoidFourPlayer_AI> AI1;
+
+#if 0
     CustomHeuristicImpl customHeuristic(
         { { "D:/Prog/blokusDataset/model_0_16_cluster.pt", 16 },
           { "D:/Prog/blokusDataset/model_17_40_cluster.pt", 40 },
@@ -32,6 +39,7 @@ int main()
     aiParam[0].multiSourceParam.m_numPiecesWithBridgeOut = 2;
     aiParam[0].multiSourceParam.m_numPiecesWithBridgeIn = 14;
     IterativeAI<ParanoidFourPlayer_AI> AI1;
+#endif
 
     aiParam[1].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;

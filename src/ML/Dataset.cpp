@@ -86,9 +86,7 @@ namespace blokusAI
 
 			if (m_data[dataIndex].turn >= _turnRange.x && m_data[dataIndex].turn <= _turnRange.y)
 			{
-				Board board = m_data[dataIndex].board.rotatedBoard(Rotation(u32(Rotation::Rot_0) + playerIndex));
-
-				fillInputTensorData(board, playerIndex, _useReachableCluster, blobCurData);
+				fillInputTensorData(m_data[dataIndex].board, playerIndex, _useReachableCluster, blobCurData);
 				blobCurData += sliceStride * numSlice;
 				
 				u32 rankingLookup[4];

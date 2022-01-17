@@ -63,7 +63,7 @@ namespace blokusAI
 	{
 		for (const auto& ai : m_allAIs)
 		{
-			std::cout << ai->m_aiName << " : " << ai->m_score << " / " << ai->m_numMatchPlayed << std::endl;
+			std::cout << ai->m_aiName << " : " << ai->m_score << " / " << ai->m_numMatchPlayed << " = " << float(ai->m_score) / ai->m_numMatchPlayed << std::endl;
 		}
 	}
 }

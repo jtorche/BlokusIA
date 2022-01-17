@@ -101,8 +101,8 @@ namespace blokusAI
 
 		std::vector<std::pair<Move, float>> enumerateMoves(MoveHeuristic _moveHeuristic, CustomHeuristicInterface * _customHeuristic = nullptr) const;
         void findCandidatMoves(u32 _numMoves, std::vector<std::pair<Move, float>>& _allMoves, u32 _numTurnToForceBestMoveHeuristic) const;
-        std::vector<std::pair<Move, float>> findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _numMoves, const MultiSourceMoveHeuristicParam * _multiSrcParam = nullptr, 
-                                                                                                           CustomHeuristicInterface* _customHeuristic = nullptr) const;
+        std::vector<std::pair<Move, float>> findMovesToLookAt(MoveHeuristic _moveHeuristic, u32 _numMoves, u32 _numTurnToForceBestHeuristic,
+                                                              const MultiSourceMoveHeuristicParam * _multiSrcParam = nullptr, CustomHeuristicInterface* _customHeuristic = nullptr) const;
 
         u32 getPlayedPieceTiles(Slot _player) const;
 

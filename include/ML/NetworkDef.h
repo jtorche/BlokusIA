@@ -6,17 +6,40 @@
 
 namespace blokusAI
 {
-    struct NetJojo : torch::nn::Module
+    struct Baseline
     {
-        NetJojo(u32 _inChannelCount, bool _outputScore) : outputScore{ _outputScore }
+        Baseline(torch::nn::Module * _torchModule, u32 _inChannelCount) : channelCount{ _inChannelCount }
         {
             using namespace torch;
-            conv1 = register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 64, 5).padding(2).stride(2)));
-            conv2 = register_module("conv2", nn::Conv2d(nn::Conv2dOptions(64, 128, 3).padding(1)));
-            conv3 = register_module("conv3", nn::Conv2d(nn::Conv2dOptions(128, 256, 3).padding(1)));
-            maxPool = register_module("maxPool", nn::MaxPool2d(nn::MaxPool2dOptions(2)));
-            fully1 = register_module("fully1", nn::Linear(6400, 512));
-            fully2 = register_module("fully2", nn::Linear(512, _outputScore ? 1 : 2));
+            fully = _torchModule->register_module("fully", nn::Linear(_inChannelCount * Board::BoardSize * Board::BoardSize, 2));
+        }
+
+        // Implement the Net's algorithm.
+        torch::Tensor forward(torch::Tensor x)
+        {
+            using namespace torch::indexing;
+            
+            x = x.reshape({ x.sizes()[0], channelCount * Board::BoardSize * Board::BoardSize });
+            return  torch::sigmoid(fully->forward(x));
+
+            return x;
+        }
+
+        u32 channelCount;
+        torch::nn::Linear fully = nullptr;
+    };
+
+    struct NetJojo
+    {
+        NetJojo(torch::nn::Module * _torchModule, u32 _inChannelCount)
+        {
+            using namespace torch;
+            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 64, 5).padding(2).stride(2)));
+            conv2 = _torchModule->register_module("conv2", nn::Conv2d(nn::Conv2dOptions(64, 128, 3).padding(1)));
+            conv3 = _torchModule->register_module("conv3", nn::Conv2d(nn::Conv2dOptions(128, 256, 3).padding(1)));
+            maxPool = _torchModule->register_module("maxPool", nn::MaxPool2d(nn::MaxPool2dOptions(2)));
+            fully1 = _torchModule->register_module("fully1", nn::Linear(6400, 512));
+            fully2 = _torchModule->register_module("fully2", nn::Linear(512, 2));
         }
 
         // Implement the Net's algorithm.
@@ -29,24 +52,45 @@ namespace blokusAI
             x = x.flatten(1);
             x = torch::relu(fully1->forward(x));
             x = fully2->forward(x);
-
-            if (outputScore)
-            {
-                // the result is a score so we can use the linear outpput, however to help a bit we clamp the value as  it is always between 0-1
-                x = x.clamp(0, 1);
-            }
-            else
-            {
-                x = torch::sigmoid(x);
-            }
+            x = torch::sigmoid(x);
 
             return x;
         }
 
-        bool outputScore;
         torch::nn::Conv2d conv1 = nullptr, conv2 = nullptr, conv3 = nullptr;
         torch::nn::MaxPool2d maxPool = nullptr;
         torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
         torch::nn::BatchNorm2d batch_norm = nullptr;
+    };
+
+    struct BlokusNet : torch::nn::Module
+    {
+        enum class Model { Model_Baseline, Model_Jojo  };
+        BlokusNet(Model _model, u32 _inChannelCount) : m_model{ _model }
+        {
+            switch (_model)
+            {
+            case Model::Model_Baseline:
+                m_baseModel = std::make_unique<Baseline>(this, _inChannelCount); break;
+            case Model::Model_Jojo:
+                m_jojoModel = std::make_unique<NetJojo>(this, _inChannelCount); break;
+            }
+        }
+
+        torch::Tensor forward(torch::Tensor x)
+        {
+            switch (m_model)
+            {
+            default:
+            case Model::Model_Baseline:
+                return m_baseModel->forward(x);
+            case Model::Model_Jojo:
+                return m_jojoModel->forward(x);
+            }
+        }
+
+        Model m_model;
+        std::unique_ptr<Baseline> m_baseModel;
+        std::unique_ptr<NetJojo> m_jojoModel;
     };
 }

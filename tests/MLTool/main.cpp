@@ -2,7 +2,7 @@
 
 // Header
 int genDataset(std::string _outputFolder, std::string _datasetBaseName, u32 _numDataset, u32 _numGamePerDataset);
-int trainModel(std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
+int trainModel(std::string _model, std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
 int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName);
 
 int main(int argc, char * argv[]) 
@@ -37,6 +37,7 @@ int main(int argc, char * argv[])
         cxxopts::Options optionsTrain("Blockus AI", "Play random blockus games and generate a dataset.");
         optionsTrain.allow_unrecognised_options();
         optionsTrain.add_options()
+            ("model", "Model to use (baseline, jojo, fully)", cxxopts::value<std::string>()->default_value("baseline"))
             ("folder", "Output folder", cxxopts::value<std::string>())
             ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
             ("input", "Input model", cxxopts::value<std::string>()->default_value(""))
@@ -53,7 +54,8 @@ int main(int argc, char * argv[])
             turnRange = { 0,80 };
 
         system("pause");
-        return trainModel(parseResult["folder"].as<std::string>(),
+        return trainModel(parseResult["model"].as<std::string>(),
+                          parseResult["folder"].as<std::string>(),
                           parseResult["name"].as<std::string>(),
                           parseResult["input"].as<std::string>(),
                           parseResult["output"].as<std::string>(),
