@@ -27,6 +27,7 @@ int main()
     parameters.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     parameters.heuristic = BoardHeuristic::RemainingTiles;
     parameters.maxMoveToLookAt = 16;
+    parameters.maxMoveInRecursion = 16;
     parameters.selectAmongNBestMoves = 4;
     
     IterativeAI<ParanoidFourPlayer_AI> AI;

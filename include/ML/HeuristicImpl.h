@@ -11,7 +11,7 @@ namespace blokusAI
 
 	struct CustomHeuristicImpl final : CustomHeuristicInterface
 	{
-		CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, bool _useCluster);
+		CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, BlokusNet::Model _model, bool _useCluster);
 
 		float moveHeuristic(const GameState&, const Move& _move, ubyte2 _playablePos) override;
 		float boardHeuristic(const GameState&, Slot _player) override;

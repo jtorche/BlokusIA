@@ -53,7 +53,7 @@ namespace blokusAI
         if (_depth >= m_params.maxDepth || m_stopAI)
             return computeScore(_gameState);
 
-        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveToLookAt, m_params.numTurnToForceBestMoveHeuristic, &m_params.multiSourceParam, m_params.customHeuristic);
+        auto moves = _gameState.findMovesToLookAt(m_params.moveHeuristic, m_params.maxMoveInRecursion, m_params.numTurnToForceBestMoveHeuristic, &m_params.multiSourceParam, m_params.customHeuristic);
         
         if (moves.empty())
         {

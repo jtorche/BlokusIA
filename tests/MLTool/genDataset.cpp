@@ -64,6 +64,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
         param.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         param.maxMoveToLookAt = 32;
+        param.maxMoveInRecursion = 32;
         param.numTurnToForceBestMoveHeuristic = 3;
         param.selectAmongNBestMoves = 3;
         param.maxDepth = 2;
@@ -81,8 +82,8 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         param.numTurnToForceBestMoveHeuristic = 3;
         param.maxDepth = 4;
         param.maxMoveToLookAt = 10;
-        param.multiSourceParam.m_numPiecesWithBridgeOut = 0;
-        param.multiSourceParam.m_numPiecesWithBridgeIn = 4;
+        param.maxMoveInRecursion = 10;
+        param.multiSourceParam.m_numPiecesWithBridge = 4;
         param.multiSourceParam.m_numPieceAtCenter = 6;
         generator.addAI("Paranoid_MultiSrc_Depth4", new ParanoidFourPlayer_AI(param));
     }
@@ -91,6 +92,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
         param.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         param.maxMoveToLookAt = 32;
+        param.maxMoveInRecursion = 32;
         param.numTurnToForceBestMoveHeuristic = 3;
         param.selectAmongNBestMoves = 2;
 

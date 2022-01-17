@@ -29,7 +29,7 @@ float evalMeanLoss(const blokusAI::Dataset::Batches& _testset, std::shared_ptr<b
     return averageLoss / _testset.size();
 }
 
-int trainModel(string _model, string _datasetFolder, string _datasetBaseName, string _testsetName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster)
+int trainModel(string _model, string _datasetFolder, string _datasetBaseName, string _testsetName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster, bool _autoLr)
 {
     blokusAI::initBlokusAI();
 
@@ -56,6 +56,8 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_TwoLayers, _useCluster ? 4 : 2);
     else if (_model == "simplecnn")
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_SimpleCnn, _useCluster ? 4 : 2);
+    else if (_model == "simplecnn2")
+        net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_SimpleCnn2, _useCluster ? 4 : 2);
     else if(_model == "baseline")
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_Baseline, _useCluster ? 4 : 2);
     else
@@ -111,6 +113,7 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
                 constexpr u32 reportingInterval = 200;
                 if (++batchIndex % reportingInterval == 0)
                 {
+                    optimizer->zero_grad();
                     float testsetLoss = testBatches ? evalMeanLoss(*testBatches, net, weightsTensor) : 0;
                     averageTestLossOverDataset += testsetLoss;
                     epochIndex++;
@@ -128,14 +131,23 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
                 averageTestLossOverDataset = averageTestLossOverDataset / epochIndex;
                 if (averageTestLossOverDataset > prevAvgTestLossOverDataset)
                 {
-                    std::cout << "Avg loss on testset has decreased over this dataset, would you like to continue :";
-                    int continu = 0; std::cin >> continu;
-                    if(!continu)
-                        return 0;
+                    if (_autoLr)
+                    {
+                        _lr /= 4;
+                        std::cout << "Avg loss on testset has decreased over this dataset, new Lr: " << _lr << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Avg loss on testset has decreased over this dataset, would you like to continue :";
+                        int continu = 0; std::cin >> continu;
+                        if (!continu)
+                            return 0;
 
-                    std::cout << "Divide learning rate by : ";
-                    float devLr = 1; std::cin >> devLr;
-                    _lr /= devLr;
+                        std::cout << "Divide learning rate by : ";
+                        float devLr = 1; std::cin >> devLr;
+                        _lr /= devLr;
+                    }
+
                     optimizer = std::make_unique<OptimizerType>(net->parameters(), _lr);
                 }
                 prevAvgTestLossOverDataset = averageTestLossOverDataset;

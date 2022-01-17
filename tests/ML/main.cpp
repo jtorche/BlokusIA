@@ -16,46 +16,50 @@ int main()
 
     BaseAI::Parameters aiParam[4];
 
+#if 0
     aiParam[0].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[0].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[0].maxMoveToLookAt = 16;
     aiParam[0].selectAmongNBestMoves = 1;
     IterativeAI<ParanoidFourPlayer_AI> AI1;
-
-#if 0
+#endif
+#if 1
     CustomHeuristicImpl customHeuristic(
-        { { "D:/Prog/blokusDataset/model_0_16_cluster.pt", 16 },
-          { "D:/Prog/blokusDataset/model_17_40_cluster.pt", 40 },
-          { "D:/Prog/blokusDataset/model_41_84_cluster.pt", 84 } 
-        }, true
+        { { "D:/Prog/blokusDataset/model_0_16_baseline.pt", 16 },
+          { "D:/Prog/blokusDataset/model_17_40_baseline.pt", 40 },
+          { "D:/Prog/blokusDataset/model_41_84_baseline.pt", 84 } 
+        }, BlokusNet::Model::Model_Baseline, false
     );
     aiParam[0].maxDepth = 4;
     aiParam[0].moveHeuristic = MoveHeuristic::MultiSource_Custom;
     aiParam[0].heuristic = BoardHeuristic::Custom;
-    aiParam[0].maxMoveToLookAt = 4;
+    aiParam[0].maxMoveToLookAt = 16;
+    aiParam[0].maxMoveInRecursion = 4;
     aiParam[0].selectAmongNBestMoves = 1;
     aiParam[0].customHeuristic = &customHeuristic;
-    aiParam[0].multiSourceParam.m_numPieceAtCenter = 16;
-    aiParam[0].multiSourceParam.m_numPiecesWithBridgeOut = 2;
-    aiParam[0].multiSourceParam.m_numPiecesWithBridgeIn = 14;
-    IterativeAI<ParanoidFourPlayer_AI> AI1;
+    aiParam[0].multiSourceParam.m_numPieceAtCenter = 24;
+    aiParam[0].multiSourceParam.m_numPiecesWithBridge = 16;
+    IterativeAI<FastParanoidFourPlayer_AI> AI1;
 #endif
 
     aiParam[1].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[1].maxMoveToLookAt = 32;
+    aiParam[1].maxMoveInRecursion = 32;
     aiParam[1].selectAmongNBestMoves = 1;
     IterativeAI<ParanoidFourPlayer_AI> AI2;
 
     aiParam[2].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[2].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[2].maxMoveToLookAt = 8;
+    aiParam[2].maxMoveInRecursion = 8;
     aiParam[2].selectAmongNBestMoves = 1;
     IterativeAI<ParanoidFourPlayer_AI> AI3;
 
     aiParam[3].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[3].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[3].maxMoveToLookAt = 4;
+    aiParam[3].maxMoveInRecursion = 4;
     aiParam[3].selectAmongNBestMoves = 1;
     IterativeAI<ParanoidFourPlayer_AI> AI4;
 

@@ -5,14 +5,14 @@
 
 namespace blokusAI
 {
-	CustomHeuristicImpl::CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, bool _useCluster) : m_useCluster{ _useCluster }
+	CustomHeuristicImpl::CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, BlokusNet::Model _model, bool _useCluster) : m_useCluster{ _useCluster }
 	{
 		m_netPerTurn.reserve(_netPathAndTurn.size());
 		m_networks.reserve(_netPathAndTurn.size());
 
 		for (const auto& [path, turn] : _netPathAndTurn)
 		{
-			m_networks.emplace_back(std::make_shared<BlokusNet>(BlokusNet::Model::Model_Jojo, _useCluster ? 4 : 2));
+			m_networks.emplace_back(std::make_shared<BlokusNet>(_model, _useCluster ? 4 : 2));
 			m_netPerTurn.push_back(turn);
 
 			torch::load(m_networks.back(), path);
@@ -28,6 +28,8 @@ namespace blokusAI
 
 	float CustomHeuristicImpl::boardHeuristic(const GameState& _state, Slot _player)
 	{
+		torch::NoGradGuard _{};
+
 		u32 numFloats = Dataset::computeInputTensorDataSize(m_useCluster);
 		auto data = std::unique_ptr<float[]>(new float[numFloats]);
 		torch::Tensor tensor = Dataset::fillInputTensorData(_state.getBoard(), u32(_player) - u32(Slot::P0), m_useCluster, data.get());
@@ -43,7 +45,7 @@ namespace blokusAI
 		}
 
 		if(!result)
-			m_networks.back()->forward(tensor);
+			result = m_networks.back()->forward(tensor);
 
 		using namespace torch::indexing;
 		float probaFirst = result->accessor<float, 2>()[0][0];

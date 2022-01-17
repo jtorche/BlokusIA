@@ -126,7 +126,7 @@ namespace blokusAI
 		bool canAddPiece(Slot _player, const Piece& _piece, uvec2 _pos) const;
 		void addPiece(Slot _player, const Piece& _piece, ubyte2 _pos);
         // _bridgeCategorie=false -> bridge going out, _bridgeCategorie=true -> bridge arriving in
-        bool isPieceConnectedToBridge(Slot _player, const Piece& _piece, ubyte2 _pos, bool _bridgeCategorie) const;
+        bool isPieceConnectedToBridge(Slot _player, const Piece& _piece, ubyte2 _pos) const;
 
 		static ubyte2 getStartingPosition(Slot _player);
 

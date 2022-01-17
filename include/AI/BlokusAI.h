@@ -75,8 +75,7 @@ namespace blokusAI
 
     struct MultiSourceMoveHeuristicParam
     {
-        u32 m_numPiecesWithBridgeIn = 12;
-        u32 m_numPiecesWithBridgeOut = 4;
+        u32 m_numPiecesWithBridge = 16;
         u32 m_numPieceAtCenter = 16;
     };
 
@@ -181,6 +180,7 @@ namespace blokusAI
         {
             CustomHeuristicInterface* customHeuristic = nullptr;
             u32 maxMoveToLookAt = 16;
+            u32 maxMoveInRecursion = 16;
             BoardHeuristic heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
             MoveHeuristic moveHeuristic = MoveHeuristic::TileCount;
             MultiSourceMoveHeuristicParam multiSourceParam = {};

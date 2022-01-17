@@ -319,7 +319,7 @@ namespace blokusAI
     {
         MoveHeuristic heuristic = _moveHeuristic == MoveHeuristic::MultiSource_Custom || _moveHeuristic == MoveHeuristic::MultiSource ? MoveHeuristic::TileCount : _moveHeuristic;
 
-        auto moves = enumerateMoves(heuristic);
+        auto moves = enumerateMoves(heuristic, _customHeuristic);
         if (moves.empty())
             moves = enumerateMoves(MoveHeuristic::TileCount);
 
@@ -331,24 +331,18 @@ namespace blokusAI
             auto curBegin = moves.begin();
 
             // Find move according to the bridge heuristic
-            auto bridgeHeuristic = [&](bool _categorie, u32 _numMoves)
+            std::for_each(curBegin, moves.end(), [&](auto& move_score)
             {
-                std::for_each(curBegin, moves.end(), [&](auto& move_score)
-                {
-                    auto& [move, score] = move_score;
-                    score = getBoard().isPieceConnectedToBridge(convertToSlot(getPlayerTurn()), move.piece, move.position, _categorie) ? computeHeuristic(move, {}, MoveHeuristic::TileCount_DistCenter) : 0.f;
-                });
+                auto& [move, score] = move_score;
+                score = getBoard().isPieceConnectedToBridge(convertToSlot(getPlayerTurn()), move.piece, move.position) ? computeHeuristic(move, {}, MoveHeuristic::TileCount_DistCenter) : 0.f;
+            });
 
-                u32 numBridgeMove = std::min<u32>(_numMoves, u32(std::distance(curBegin, moves.end())));
-                std::partial_sort(curBegin, curBegin + numBridgeMove, std::end(moves),
-                                  [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
+            u32 numBridgeMove = std::min<u32>(_multiSrcParam->m_numPiecesWithBridge, u32(std::distance(curBegin, moves.end())));
+            std::partial_sort(curBegin, curBegin + numBridgeMove, std::end(moves),
+                              [](const auto& m1, const auto& m2) { return m1.second > m2.second; });
 
-                // Find move according to the bridge heuristic
-                curBegin = std::remove_if(curBegin, curBegin + numBridgeMove, [&](auto& move_score) { return move_score.second == 0; });
-            };
-
-            bridgeHeuristic(true, _multiSrcParam->m_numPiecesWithBridgeIn);
-            bridgeHeuristic(false, _multiSrcParam->m_numPiecesWithBridgeOut);
+            // Find move according to the bridge heuristic
+            curBegin = std::remove_if(curBegin, curBegin + numBridgeMove, [&](auto& move_score) { return move_score.second == 0; });
 
             // Find move according to the dist center
             {
@@ -373,7 +367,7 @@ namespace blokusAI
                     score = computeHeuristic(move, {}, MoveHeuristic::TileCount);
                 });
 
-                u32 totalMovesFromMultiSrc = _multiSrcParam->m_numPieceAtCenter + _multiSrcParam->m_numPiecesWithBridgeIn + _multiSrcParam->m_numPiecesWithBridgeOut;
+                u32 totalMovesFromMultiSrc = _multiSrcParam->m_numPieceAtCenter + _multiSrcParam->m_numPiecesWithBridge;
                 const u32 remainingMoveToFind = u32(std::distance(moves.begin(), curBegin)) < totalMovesFromMultiSrc ? totalMovesFromMultiSrc - u32(std::distance(moves.begin(), curBegin)) : 0;
                 u32 numMoves = std::min<u32>(remainingMoveToFind, u32(std::distance(curBegin, moves.end())));
                 std::partial_sort(curBegin, curBegin + numMoves, std::end(moves),

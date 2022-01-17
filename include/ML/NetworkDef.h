@@ -84,6 +84,33 @@ namespace blokusAI
         torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
     };
 
+    struct SimpleCnn2
+    {
+        SimpleCnn2(torch::nn::Module* _torchModule, u32 _inChannelCount)
+        {
+            using namespace torch;
+            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 64, 3).padding(1).stride(2)));
+            conv2 = _torchModule->register_module("conv2", nn::Conv2d(nn::Conv2dOptions(64, 128, 3).padding(1).stride(2)));
+            fully1 = _torchModule->register_module("fully1", nn::Linear(25*128, 64));
+            fully2 = _torchModule->register_module("fully2", nn::Linear(64, 2));
+        }
+
+        // Implement the Net's algorithm.
+        torch::Tensor forward(torch::Tensor x)
+        {
+            using namespace torch::indexing;
+
+            x = torch::relu(conv1->forward(x));
+            x = torch::relu(conv2->forward(x));
+            x = x.reshape({ x.sizes()[0], 25 * 128 });
+            x = torch::relu(fully1->forward(x));
+            return torch::sigmoid(fully2->forward(x));
+        }
+
+        torch::nn::Conv2d conv1 = nullptr, conv2 = nullptr;
+        torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
+    };
+
     struct NetJojo
     {
         NetJojo(torch::nn::Module * _torchModule, u32 _inChannelCount)
@@ -120,7 +147,7 @@ namespace blokusAI
 
     struct BlokusNet : torch::nn::Module
     {
-        enum class Model { Model_Baseline, Model_TwoLayers, Model_Jojo, Model_SimpleCnn  };
+        enum class Model { Model_Baseline, Model_TwoLayers, Model_Jojo, Model_SimpleCnn, Model_SimpleCnn2  };
         BlokusNet(Model _model, u32 _inChannelCount) : m_model{ _model }
         {
             switch (_model)
@@ -133,6 +160,8 @@ namespace blokusAI
                 m_jojoModel = std::make_unique<NetJojo>(this, _inChannelCount); break;
             case Model::Model_SimpleCnn:
                 m_simpleCnnModel = std::make_unique<SimpleCnn>(this, _inChannelCount); break;
+            case Model::Model_SimpleCnn2:
+                m_simpleCnn2Model = std::make_unique<SimpleCnn2>(this, _inChannelCount); break;
             }
         }
 
@@ -149,6 +178,8 @@ namespace blokusAI
                 return m_jojoModel->forward(x);
             case Model::Model_SimpleCnn:
                 return m_simpleCnnModel->forward(x);
+            case Model::Model_SimpleCnn2:
+                return m_simpleCnn2Model->forward(x);
             }
         }
 
@@ -157,5 +188,6 @@ namespace blokusAI
         std::unique_ptr<TwoLayers> m_twoLayersModel;
         std::unique_ptr<NetJojo> m_jojoModel;
         std::unique_ptr<SimpleCnn> m_simpleCnnModel;
+        std::unique_ptr<SimpleCnn2> m_simpleCnn2Model;
     };
 }
