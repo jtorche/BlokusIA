@@ -67,7 +67,7 @@ namespace blokusAI
 		std::shuffle(m_data.begin(), m_data.end(), s_rand);
 	}
 
-	std::vector<std::pair<torch::Tensor, torch::Tensor>> Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster, bool _labelAsScore) const
+	Dataset::Batches Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster, bool _labelAsScore) const
 	{
 		std::vector<std::pair<torch::Tensor, torch::Tensor>> tensorData;
 

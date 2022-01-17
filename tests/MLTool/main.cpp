@@ -2,7 +2,7 @@
 
 // Header
 int genDataset(std::string _outputFolder, std::string _datasetBaseName, u32 _numDataset, u32 _numGamePerDataset);
-int trainModel(std::string _model, std::string _datasetFolder, std::string _datasetBaseName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
+int trainModel(std::string _model, std::string _datasetFolder, std::string _datasetBaseName, std::string _testsetName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster);
 int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName);
 
 int main(int argc, char * argv[]) 
@@ -40,6 +40,7 @@ int main(int argc, char * argv[])
             ("model", "Model to use (baseline, jojo, fully)", cxxopts::value<std::string>()->default_value("baseline"))
             ("folder", "Output folder", cxxopts::value<std::string>())
             ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
+            ("testset", "filename for a testset", cxxopts::value<std::string>()->default_value("testset"))
             ("input", "Input model", cxxopts::value<std::string>()->default_value(""))
             ("output", "Output model", cxxopts::value<std::string>())
             ("offset", "Offset to skip some dataset before training", cxxopts::value<u32>()->default_value("0"))
@@ -57,6 +58,7 @@ int main(int argc, char * argv[])
         return trainModel(parseResult["model"].as<std::string>(),
                           parseResult["folder"].as<std::string>(),
                           parseResult["name"].as<std::string>(),
+                          parseResult["testset"].as<std::string>(),
                           parseResult["input"].as<std::string>(),
                           parseResult["output"].as<std::string>(),
                           parseResult["offset"].as<u32>(),

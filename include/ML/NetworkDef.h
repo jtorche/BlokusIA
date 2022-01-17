@@ -29,6 +29,61 @@ namespace blokusAI
         torch::nn::Linear fully = nullptr;
     };
 
+    struct TwoLayers
+    {
+        TwoLayers(torch::nn::Module* _torchModule, u32 _inChannelCount) : channelCount{ _inChannelCount }
+        {
+            using namespace torch;
+            fully1 = _torchModule->register_module("fully1", nn::Linear(_inChannelCount * Board::BoardSize * Board::BoardSize, 64));
+            fully2 = _torchModule->register_module("fully2", nn::Linear(64, 2));
+        }
+
+        // Implement the Net's algorithm.
+        torch::Tensor forward(torch::Tensor x)
+        {
+            using namespace torch::indexing;
+
+            x = x.reshape({ x.sizes()[0], channelCount * Board::BoardSize * Board::BoardSize });
+            x  = torch::relu(fully1->forward(x));
+            return torch::sigmoid(fully2->forward(x));
+
+            return x;
+        }
+
+        u32 channelCount;
+        torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
+    };
+
+    struct SimpleCnn
+    {
+        SimpleCnn(torch::nn::Module* _torchModule, u32 _inChannelCount)
+        {
+            using namespace torch;
+            const u32 cnnNumFilter = 64;
+            cnnOuputSize = (cnnNumFilter / 4) * Board::BoardSize * Board::BoardSize;
+            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, cnnNumFilter, 5).padding(2).stride(2)));
+            fully1 = _torchModule->register_module("fully1", nn::Linear(cnnOuputSize, 64));
+            fully2 = _torchModule->register_module("fully2", nn::Linear(64, 2));
+        }
+
+        // Implement the Net's algorithm.
+        torch::Tensor forward(torch::Tensor x)
+        {
+            using namespace torch::indexing;
+
+            x = torch::relu(conv1->forward(x));
+            x = x.reshape({ x.sizes()[0], cnnOuputSize });
+            x = torch::relu(fully1->forward(x));
+            return torch::sigmoid(fully2->forward(x));
+
+            return x;
+        }
+
+        u32 cnnOuputSize;
+        torch::nn::Conv2d conv1 = nullptr;
+        torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
+    };
+
     struct NetJojo
     {
         NetJojo(torch::nn::Module * _torchModule, u32 _inChannelCount)
@@ -65,15 +120,19 @@ namespace blokusAI
 
     struct BlokusNet : torch::nn::Module
     {
-        enum class Model { Model_Baseline, Model_Jojo  };
+        enum class Model { Model_Baseline, Model_TwoLayers, Model_Jojo, Model_SimpleCnn  };
         BlokusNet(Model _model, u32 _inChannelCount) : m_model{ _model }
         {
             switch (_model)
             {
             case Model::Model_Baseline:
                 m_baseModel = std::make_unique<Baseline>(this, _inChannelCount); break;
+            case Model::Model_TwoLayers:
+                m_twoLayersModel = std::make_unique<TwoLayers>(this, _inChannelCount); break;
             case Model::Model_Jojo:
                 m_jojoModel = std::make_unique<NetJojo>(this, _inChannelCount); break;
+            case Model::Model_SimpleCnn:
+                m_simpleCnnModel = std::make_unique<SimpleCnn>(this, _inChannelCount); break;
             }
         }
 
@@ -84,13 +143,19 @@ namespace blokusAI
             default:
             case Model::Model_Baseline:
                 return m_baseModel->forward(x);
+            case Model::Model_TwoLayers:
+                return m_twoLayersModel->forward(x);
             case Model::Model_Jojo:
                 return m_jojoModel->forward(x);
+            case Model::Model_SimpleCnn:
+                return m_simpleCnnModel->forward(x);
             }
         }
 
         Model m_model;
         std::unique_ptr<Baseline> m_baseModel;
+        std::unique_ptr<TwoLayers> m_twoLayersModel;
         std::unique_ptr<NetJojo> m_jojoModel;
+        std::unique_ptr<SimpleCnn> m_simpleCnnModel;
     };
 }
