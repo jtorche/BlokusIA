@@ -585,6 +585,12 @@ namespace blokusAI
     }
 
     //-------------------------------------------------------------------------------------------------
+    const ReachableSlots& GameState::getPlayableSlot(Slot _player) const
+    {
+        return m_reachableSlotsCache[convertToIndex(_player)];
+    }
+
+    //-------------------------------------------------------------------------------------------------
     static bool insertSorted(u32 _numSlots, Board::PlayableSlots& _array, ubyte2 _element)
     {
         auto begin = _array.begin();

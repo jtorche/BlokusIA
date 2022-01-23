@@ -30,12 +30,15 @@ namespace blokusAI
 		void merge(Dataset&& _other);
 		void shuffle();
 
-		Batches constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, bool _useReachableCluster = false, bool _labelAsScore = false) const;
+		Batches constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, u32 _turnOffset = 0, bool _useReachableCluster = false) const;
 
 		static torch::Tensor fillInputTensorData(const Board& _board, u32 _playerIndex, bool _useReachableCluster, float* _data);
+		static torch::Tensor fillInputTensorData(const GameState& _state, u32 _playerIndex, bool _useReachableCluster, float* _data);
 		static u32 computeInputTensorDataSize(bool _useReachableCluster);
 
 	private:
 		std::vector<Entry> m_data;
+
+		static torch::Tensor fillInputTensorData(u32 _playerIndex, bool _useReachableCluster, const Board& _board, const ReachableSlots * _reachableSlots[], float* _data);
 	};
 }

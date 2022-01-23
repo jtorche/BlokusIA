@@ -25,20 +25,20 @@ int main()
 #endif
 #if 1
     CustomHeuristicImpl customHeuristic(
-        { { "D:/Prog/blokusDataset/model_0_16_baseline.pt", 16 },
-          { "D:/Prog/blokusDataset/model_17_40_baseline.pt", 40 },
-          { "D:/Prog/blokusDataset/model_41_84_baseline.pt", 84 } 
-        }, BlokusNet::Model::Model_Baseline, false
+        { { "D:/Prog/blokusDataset/model_0_16_simplecnn.pt", 16 },
+          { "D:/Prog/blokusDataset/model_17_40_simplecnn.pt", 40 },
+          { "D:/Prog/blokusDataset/model_41_84_simplecnn.pt", 84 } 
+        }, BlokusNet::Model::Model_SimpleCnn, true
     );
     aiParam[0].maxDepth = 4;
-    aiParam[0].moveHeuristic = MoveHeuristic::MultiSource_Custom;
+    aiParam[0].moveHeuristic = MoveHeuristic::MultiSource;
     aiParam[0].heuristic = BoardHeuristic::Custom;
     aiParam[0].maxMoveToLookAt = 16;
-    aiParam[0].maxMoveInRecursion = 4;
+    aiParam[0].maxMoveInRecursion = 16;
     aiParam[0].selectAmongNBestMoves = 1;
     aiParam[0].customHeuristic = &customHeuristic;
-    aiParam[0].multiSourceParam.m_numPieceAtCenter = 24;
-    aiParam[0].multiSourceParam.m_numPiecesWithBridge = 16;
+    aiParam[0].multiSourceParam.m_numPieceAtCenter = 12;
+    aiParam[0].multiSourceParam.m_numPiecesWithBridge = 4;
     IterativeAI<FastParanoidFourPlayer_AI> AI1;
 #endif
 
@@ -76,7 +76,7 @@ int main()
         gameState.getBoard().print();
 
         _ai.startComputation(aiParam[_playerIndex], gameState);
-        do { Sleep(1000); } while (_ai.getBestMove().depth == u32(-1));
+        do { Sleep(_playerIndex==0 ? 10000 : 1000); } while (_ai.getBestMove().depth == u32(-1));
         _ai.stopComputation();
         
         std::cout << "Move depth:" << _ai.getBestMove().depth << std::endl;

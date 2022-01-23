@@ -32,7 +32,7 @@ namespace blokusAI
 
 		u32 numFloats = Dataset::computeInputTensorDataSize(m_useCluster);
 		auto data = std::unique_ptr<float[]>(new float[numFloats]);
-		torch::Tensor tensor = Dataset::fillInputTensorData(_state.getBoard(), u32(_player) - u32(Slot::P0), m_useCluster, data.get());
+		torch::Tensor tensor = Dataset::fillInputTensorData(_state, u32(_player) - u32(Slot::P0), m_useCluster, data.get());
 
 		std::optional<torch::Tensor> result;
 		for (u32 i = 0; i < m_netPerTurn.size(); ++i)
@@ -49,7 +49,7 @@ namespace blokusAI
 
 		using namespace torch::indexing;
 		float probaFirst = result->accessor<float, 2>()[0][0];
-		float probaFirstOrSecond = result->accessor<float, 2>()[0][1];
+		//float probaFirstOrSecond = result->accessor<float, 2>()[0][1];
 
 		return probaFirst;
 	}

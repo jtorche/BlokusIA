@@ -104,6 +104,7 @@ namespace blokusAI
                                                               const MultiSourceMoveHeuristicParam * _multiSrcParam = nullptr, CustomHeuristicInterface* _customHeuristic = nullptr) const;
 
         u32 getPlayedPieceTiles(Slot _player) const;
+        const ReachableSlots& getPlayableSlot(Slot _player) const;
 
 		float computeHeuristic(const Move& _move, ubyte2 _playablePos, MoveHeuristic) const;
 		float computeBoardScore(Slot _player, BoardHeuristic, CustomHeuristicInterface* _customHeuristic = nullptr) const;

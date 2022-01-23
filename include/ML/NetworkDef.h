@@ -59,10 +59,9 @@ namespace blokusAI
         SimpleCnn(torch::nn::Module* _torchModule, u32 _inChannelCount)
         {
             using namespace torch;
-            const u32 cnnNumFilter = 64;
-            cnnOuputSize = (cnnNumFilter / 4) * Board::BoardSize * Board::BoardSize;
-            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, cnnNumFilter, 5).padding(2).stride(2)));
-            fully1 = _torchModule->register_module("fully1", nn::Linear(cnnOuputSize, 64));
+            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 64, 3).padding(1).stride(2)));
+            pool = _torchModule->register_module("pool", nn::MaxPool2d(nn::MaxPool2dImpl({ 2,2 })));
+            fully1 = _torchModule->register_module("fully1", nn::Linear(25 * 64, 64));
             fully2 = _torchModule->register_module("fully2", nn::Linear(64, 2));
         }
 
@@ -72,15 +71,14 @@ namespace blokusAI
             using namespace torch::indexing;
 
             x = torch::relu(conv1->forward(x));
-            x = x.reshape({ x.sizes()[0], cnnOuputSize });
+            x = pool->forward(x);
+            x = x.reshape({ x.sizes()[0], 25 * 64 });
             x = torch::relu(fully1->forward(x));
             return torch::sigmoid(fully2->forward(x));
-
-            return x;
         }
 
-        u32 cnnOuputSize;
         torch::nn::Conv2d conv1 = nullptr;
+        torch::nn::MaxPool2d pool = nullptr;
         torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
     };
 
@@ -89,10 +87,10 @@ namespace blokusAI
         SimpleCnn2(torch::nn::Module* _torchModule, u32 _inChannelCount)
         {
             using namespace torch;
-            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 64, 3).padding(1).stride(2)));
-            conv2 = _torchModule->register_module("conv2", nn::Conv2d(nn::Conv2dOptions(64, 128, 3).padding(1).stride(2)));
-            fully1 = _torchModule->register_module("fully1", nn::Linear(25*128, 64));
-            fully2 = _torchModule->register_module("fully2", nn::Linear(64, 2));
+            conv1 = _torchModule->register_module("conv1", nn::Conv2d(nn::Conv2dOptions(_inChannelCount, 45, 3).padding(1).stride(2)));
+            conv2 = _torchModule->register_module("conv2", nn::Conv2d(nn::Conv2dOptions(45, 90, 3).padding(1).stride(2)));
+            fully1 = _torchModule->register_module("fully1", nn::Linear(25 * 90, 45));
+            fully2 = _torchModule->register_module("fully2", nn::Linear(45, 2));
         }
 
         // Implement the Net's algorithm.
@@ -102,7 +100,7 @@ namespace blokusAI
 
             x = torch::relu(conv1->forward(x));
             x = torch::relu(conv2->forward(x));
-            x = x.reshape({ x.sizes()[0], 25 * 128 });
+            x = x.reshape({ x.sizes()[0], 25 * 90 });
             x = torch::relu(fully1->forward(x));
             return torch::sigmoid(fully2->forward(x));
         }

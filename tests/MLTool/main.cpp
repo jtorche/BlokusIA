@@ -2,8 +2,9 @@
 
 // Header
 int genDataset(std::string _outputFolder, std::string _datasetBaseName, u32 _numDataset, u32 _numGamePerDataset);
-int trainModel(std::string _model, std::string _datasetFolder, std::string _datasetBaseName, std::string _testsetName, std::string _inModelPath, std::string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, bool _useCluster, bool _autoLr);
-int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName);
+int trainModel(std::string _model, std::string _datasetFolder, std::string _datasetBaseName, std::string _testsetName, std::string _inModelPath, std::string _outModelPath, 
+               u32 _datasetIndex, float _lr, uvec2 _turnRange, u32 _turnOffset, bool _useCluster, bool _autoLr);
+int shuffleDataset(std::string _datasetFolder, std::string _datasetBaseName, u32 _numDatasetOut);
 
 int main(int argc, char * argv[]) 
 {
@@ -46,6 +47,7 @@ int main(int argc, char * argv[])
             ("offset", "Offset to skip some dataset before training", cxxopts::value<u32>()->default_value("0"))
             ("lr", "Learning rate", cxxopts::value<float>()->default_value("0.02"))
             ("turnRange", "Game position to select in turn range", cxxopts::value<std::vector<u32>>()->default_value("0,80"))
+            ("turn", "In how much turn the IA will play", cxxopts::value<u32>()->default_value("0"))
             ("cluster", "Use cluster data to train")
             ("autoLr", "Adapt Lr automatically, don't stop training");
 
@@ -65,6 +67,7 @@ int main(int argc, char * argv[])
                           parseResult["offset"].as<u32>(),
                           parseResult["lr"].as<float>(),
                           uvec2(turnRange[0], turnRange[1]),
+                          parseResult["turn"].as<u32>(),
                           parseResult["cluster"].as<bool>(), 
                           parseResult["autoLr"].as<bool>());
 
@@ -75,12 +78,13 @@ int main(int argc, char * argv[])
         optionsTrain.allow_unrecognised_options();
         optionsTrain.add_options()
             ("folder", "Output folder", cxxopts::value<std::string>())
-            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"));
+            ("name", "Base name for dataset", cxxopts::value<std::string>()->default_value("dataset"))
+            ("numDatasets", "Num dataset to generate", cxxopts::value<u32>()->default_value("8"));
 
         auto parseResult = optionsTrain.parse(argc, argv);
 
         system("pause");
-        return shuffleDataset(parseResult["folder"].as<std::string>(), parseResult["name"].as<std::string>());
+        return shuffleDataset(parseResult["folder"].as<std::string>(), parseResult["name"].as<std::string>(), parseResult["numDatasets"].as<u32>());
     }
 
     return 0;

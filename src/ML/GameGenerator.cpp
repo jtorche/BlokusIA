@@ -5,7 +5,7 @@ namespace blokusAI
 	void GameGenerator::playGame(u32 _ia0, u32 _ia1, u32 _ia2, u32 _ia3)
 	{
 		std::vector<GameState> gameStates;
-		gameStates.reserve(22);
+		gameStates.reserve(64);
 		GameState gameState;
 
 		bool gameContinue = true;
@@ -13,8 +13,7 @@ namespace blokusAI
 		u32 ias[4] = { _ia0, _ia1, _ia2, _ia3 };
 		while (gameContinue)
 		{
-			if (turn > 0 && turn % 4 == 0)
-				gameStates.push_back(gameState);
+			gameStates.push_back(gameState);
 
 			u32 iaIndex = turn % 4;
 			const auto& ai = m_allAIs[ias[iaIndex]]->m_ai;

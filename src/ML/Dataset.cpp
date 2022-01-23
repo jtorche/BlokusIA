@@ -46,9 +46,6 @@ namespace blokusAI
 				fclose(f);
 			}
 			else return false;
-
-			for (auto& d : m_data)
-				DEBUG_ASSERT(d.turn != 0);
 		}
 		else return false;
 
@@ -67,68 +64,56 @@ namespace blokusAI
 		std::shuffle(m_data.begin(), m_data.end(), s_rand);
 	}
 
-	Dataset::Batches Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, bool _useReachableCluster, bool _labelAsScore) const
+	Dataset::Batches Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, u32 _turnOffset, bool _useReachableCluster) const
 	{
 		std::vector<std::pair<torch::Tensor, torch::Tensor>> tensorData;
 
 		const u32 numSlice = 2 + (_useReachableCluster ? 2 : 0);
 		const u32 sliceStride = Board::BoardSize * Board::BoardSize; // in float count
 		
-		u32 globalIndex = 0;
 		float* blob = new float[_epochSize * sliceStride * numSlice];
 		float* blobCurData = blob;
 		std::vector<float> labels;
 		
-		while(globalIndex < m_data.size() * 4)
+		u32 fillIndex = 0;
+		for (u32 i = 0; i < m_data.size(); ++i)
 		{
-			u32 dataIndex = globalIndex / 4;
-			u32 playerIndex = globalIndex % 4;
-
-			if (m_data[dataIndex].turn >= _turnRange.x && m_data[dataIndex].turn <= _turnRange.y)
+			if (m_data[i].turn % 4 == _turnOffset && m_data[i].turn >= _turnRange.x && m_data[i].turn <= _turnRange.y)
 			{
-				fillInputTensorData(m_data[dataIndex].board, playerIndex, _useReachableCluster, blobCurData);
+				const u32 playerIndex = 0;
+				fillInputTensorData(m_data[i].board, playerIndex, _useReachableCluster, blobCurData);
 				blobCurData += sliceStride * numSlice;
-				
-				u32 rankingLookup[4];
-				for (u32 i = 0; i < 4; ++i)
-					rankingLookup[u32(m_data[dataIndex].ranking[i]) - u32(Slot::P0)] = i;
 
-				if (_labelAsScore)
-				{
-					auto getScore = [&]() -> float
-					{
-						switch (rankingLookup[playerIndex])
-						{
-						case 0: return 1;
-						case 1: return 0.5;
-						case 2:
-						case 3: return 0;
-						}
-					};
-					labels.push_back(getScore());
-				}
-				else
-				{
-					labels.push_back(rankingLookup[playerIndex] == 0 ? 1 : 0); // first class to predict if first
-					labels.push_back(rankingLookup[playerIndex] <= 1 ? 1 : 0); // second class to predict if first or second
-				}
+				u32 rankingLookup[4];
+				for (u32 rank = 0; rank < 4; ++rank)
+					rankingLookup[u32(m_data[i].ranking[rank]) - u32(Slot::P0)] = rank;
+
+				labels.push_back(rankingLookup[playerIndex] == 0 ? 1 : 0); // first class to predict if first
+				labels.push_back(rankingLookup[playerIndex] <= 1 ? 1 : 0); // second class to predict if first or second
+				fillIndex++;
 			}
 
-			globalIndex++;
-
-			if (blob + u64(_epochSize * sliceStride * numSlice) == blobCurData)
+			if (fillIndex == _epochSize)
 			{
 				tensorData.push_back(
 				{
 					torch::from_blob(blob, { _epochSize, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone(),
-					_labelAsScore ? torch::from_blob(labels.data(), { _epochSize }, torch::TensorOptions(torch::ScalarType::Float)).clone() :
-									torch::from_blob(labels.data(), { _epochSize, 2 }, torch::TensorOptions(torch::ScalarType::Float)).clone()
+					torch::from_blob(labels.data(), { _epochSize, 2 }, torch::TensorOptions(torch::ScalarType::Float)).clone()
 				});
 
+				fillIndex = 0;
 				blobCurData = blob;
 				labels.clear();
 			}
-			
+		}
+
+		if (fillIndex > _epochSize / 2)
+		{
+			tensorData.push_back(
+			{
+				torch::from_blob(blob, { fillIndex, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone(),
+				torch::from_blob(labels.data(), { fillIndex, 2 }, torch::TensorOptions(torch::ScalarType::Float)).clone()
+			});
 		}
 
 		delete[] blob;
@@ -144,6 +129,52 @@ namespace blokusAI
 
 	torch::Tensor Dataset::fillInputTensorData(const Board& _board, u32 _playerIndex, bool _useReachableCluster, float* _outData)
 	{
+		DEBUG_ASSERT(_playerIndex == 0);
+		Board board = _board.rotatedBoard(Rotation(u32(Rotation::Rot_0) + _playerIndex));
+
+		const ReachableSlots* _reachableSlots[4] = {};
+		if (_useReachableCluster)
+		{
+			ReachableSlots reachableSlots[4];
+			for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
+			{
+				u32 index = u32(s) - u32(Slot::P0);
+				Board::PlayableSlots playable;
+				u32 numPlayable = board.computeValidSlotsForPlayer(s, playable);
+				GameState::computeReachableSlots(reachableSlots[index], s, board, playable, numPlayable);
+				_reachableSlots[index] = &reachableSlots[index];
+			}
+		}
+
+		const u32 numSlice = 2 + (_useReachableCluster ? 2 : 0);
+		return torch::from_blob(_outData, { 1, numSlice, Board::BoardSize, Board::BoardSize });
+	}
+
+	torch::Tensor Dataset::fillInputTensorData(const GameState& _state, u32 _playerIndex, bool _useReachableCluster, float* _outData)
+	{
+		const ReachableSlots* _reachableSlots[4] = {};
+
+		if (_useReachableCluster)
+		{
+			if (_playerIndex == 0)
+			{
+				_reachableSlots[0] = &_state.getPlayableSlot(Slot::P0);
+				_reachableSlots[1] = &_state.getPlayableSlot(Slot::P1);
+				_reachableSlots[2] = &_state.getPlayableSlot(Slot::P2);
+				_reachableSlots[3] = &_state.getPlayableSlot(Slot::P3);
+			}
+			else
+			{
+				Board board = _state.getBoard().rotatedBoard(Rotation(u32(Rotation::Rot_0) + _playerIndex));
+				return fillInputTensorData(board, _playerIndex, _useReachableCluster, _outData);
+			}
+		}
+
+		return fillInputTensorData(_playerIndex, _useReachableCluster, _state.getBoard(), _useReachableCluster ? _reachableSlots : nullptr, _outData);
+	}
+
+	torch::Tensor Dataset::fillInputTensorData(u32 _playerIndex, bool _useReachableCluster, const Board& _board, const ReachableSlots* _reachableSlots[], float* _outData)
+	{
 		const u32 sliceStride = Board::BoardSize * Board::BoardSize; // in float count
 		Board board = _board.rotatedBoard(Rotation(u32(Rotation::Rot_0) + _playerIndex));
 
@@ -152,26 +183,18 @@ namespace blokusAI
 			{
 				Slot s = board.getSlot(x, y);
 				_outData[y * Board::BoardSize + x] = (s == Slot::P0) ? 1 : 0;
-				_outData[sliceStride + y * Board::BoardSize + x] = (s != Slot::P0 && s != Slot::Empty) ? 1 : 0;
+				_outData[sliceStride + y * Board::BoardSize + x] = (s != Slot::P0 && s != Slot::Empty) ? -1 : 0;
 			}
 
 		if (_useReachableCluster)
 		{
-			ReachableSlots reachableSlots[4];
-			for (Slot s : { Slot::P0, Slot::P1, Slot::P2, Slot::P3 })
-			{
-				Board::PlayableSlots playable;
-				u32 numPlayable = board.computeValidSlotsForPlayer(s, playable);
-				GameState::computeReachableSlots(reachableSlots[u32(s) - u32(Slot::P0)], s, board, playable, numPlayable);
-			}
-
 			for (u32 y = 0; y < Board::BoardSize; ++y)
 				for (u32 x = 0; x < Board::BoardSize; ++x)
 				{
-					_outData[sliceStride * 2 + y * Board::BoardSize + x] = reachableSlots[0].m_clusters[x][y] > 0 ? 1 : 0;
-					_outData[sliceStride * 3 + y * Board::BoardSize + x] = (reachableSlots[1].m_clusters[x][y] > 0 ||
-																		    reachableSlots[2].m_clusters[x][y] > 0 ||
-												                            reachableSlots[3].m_clusters[x][y] > 0) ? 1 : 0;
+					_outData[sliceStride * 2 + y * Board::BoardSize + x] = _reachableSlots[0]->m_clusters[x][y] > 0 ? 1 : 0;
+					_outData[sliceStride * 3 + y * Board::BoardSize + x] = ((_reachableSlots[1]->m_clusters[x][y] > 0 ? 1 : 0) +
+																		    (_reachableSlots[2]->m_clusters[x][y] > 0 ? 1 : 0) +
+																		    (_reachableSlots[3]->m_clusters[x][y] > 0 ? 1 : 0)) / (-3.f);
 				}
 		}
 
