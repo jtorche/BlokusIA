@@ -14,10 +14,19 @@ u32 findNumDatasetOnDisk(string _outputFolder, string _datasetBaseName);
 
 const u32 batchSize = 32;
 
-float evalMeanLoss(const blokusAI::Dataset::Batches& _testset, std::shared_ptr<blokusAI::BlokusNet> _net, torch::Tensor _weightsTensor)
+float evalPrecision(torch::Tensor prediction, torch::Tensor labels)
+{
+    prediction = torch::round(prediction);
+    auto p = torch::mean(torch::abs(prediction - labels));
+    
+    return p.item<float>();
+}
+
+std::pair<float,float> evalMeanLoss(const blokusAI::Dataset::Batches& _testset, std::shared_ptr<blokusAI::BlokusNet> _net, torch::Tensor _weightsTensor)
 {
     torch::NoGradGuard _{};
     float averageLoss = 0;
+    float averagePrecision = {};
     u32 numElems = 0;
     for (auto& [batch_data, batch_labels] : _testset)
     {
@@ -26,18 +35,22 @@ float evalMeanLoss(const blokusAI::Dataset::Batches& _testset, std::shared_ptr<b
 
         numElems += batch_data.sizes()[0];
         averageLoss += loss.item<float>() * batch_data.sizes()[0];
+        averagePrecision += evalPrecision(prediction, batch_labels) * batch_data.sizes()[0];
     }
 
-    return averageLoss / numElems;
+    return { averageLoss / numElems, averagePrecision / numElems };
 }
 
-int trainModel(string _model, string _datasetFolder, string _datasetBaseName, string _testsetName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, u32 _turnOffset, bool _useCluster, bool _autoLr)
+int trainModel(string _model, string _datasetFolder, string _datasetBaseName, string _testsetName, string _inModelPath, string _outModelPath, u32 _datasetIndex, float _lr, uvec2 _turnRange, u32 _turnOffset, bool _useCluster, bool _autoLr, bool _autoExit)
 {
+    if(!_autoExit)
+        system("pause");
+
     blokusAI::initBlokusAI();
 
     using namespace torch::indexing;
-    _inModelPath += "_" + _model + ".pt";
-    _outModelPath += "_" + _model + ".pt";
+    _inModelPath += "_" + _model + "_" + std::to_string(_turnOffset) + ".pt";
+    _outModelPath += "_" + _model + "_" + std::to_string(_turnOffset) + ".pt";
 
     std::cout << "Train model with param : " << std::endl;
     std::cout << "Model : " << _model << std::endl;
@@ -74,17 +87,21 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
         std::cout << "Load model " << _inModelPath << std::endl;
     }
 
-    float labelWeights[2] = { 0.25, 0.5 };
-    torch::Tensor weightsTensor = torch::from_blob(labelWeights, { 2 });
-
     std::unique_ptr<blokusAI::Dataset::Batches> testBatches;
+    torch::Tensor weightTestset;
     if (_testsetName.empty() == false)
     {
         std::string testsetPath = getDatasetPath(_datasetFolder, _testsetName, 0);
-        blokusAI::Dataset dataset;
-        dataset.read(testsetPath);
-        testBatches = std::make_unique<blokusAI::Dataset::Batches>(dataset.constructTensors(batchSize, _turnRange, _turnOffset, _useCluster));
-        std::cout << "Test set size : " << testBatches->size() << std::endl;
+        if (std::filesystem::exists(testsetPath))
+        {
+            blokusAI::Dataset dataset;
+            dataset.read(testsetPath);
+            dataset.shuffle();
+            weightTestset = dataset.computeWeight();
+            testBatches = std::make_unique<blokusAI::Dataset::Batches>(dataset.constructTensors(batchSize, _turnRange, _turnOffset, _useCluster));
+            auto [loss, p] = evalMeanLoss(*testBatches, net, weightTestset);
+            std::cout << "Test set size : " << testBatches->size() << " loss=" << loss << " p=" << p << std::endl;
+        }
     }
 
     while(1)
@@ -97,47 +114,51 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
         {
             blokusAI::Dataset dataset;
             dataset.read(getDatasetPath(_datasetFolder, _datasetBaseName, i));
+            auto weights = dataset.computeWeight();
 
             auto batches = dataset.constructTensors(batchSize, _turnRange, _turnOffset, _useCluster);
-            float averageLoss = 0, averageLossOverDataset = 0, averageTestLossOverDataset = 0;
-            u32 numElems = 0;
-            u32 batchIndex = 0, epochIndex = 0;
+            float averageLoss = 0, averageLossOverDataset = 0;
+
+            u32 batchIndex = 0;
             for (auto& [batch_data, batch_labels] : batches)
             {
                 optimizer->zero_grad();
+                
                 torch::Tensor prediction = net->forward(batch_data);
-                torch::Tensor loss = torch::binary_cross_entropy(prediction, batch_labels, weightsTensor);
+                torch::Tensor loss = torch::binary_cross_entropy(prediction, batch_labels, weights);
                 loss.backward();
                 optimizer->step();
 
                 averageLoss += loss.item<float>();
-                averageLossOverDataset += loss.item<float>() * batch_data.sizes()[0];
-                numElems += batch_data.sizes()[0];
+                averageLossOverDataset += loss.item<float>();
 
                 constexpr u32 reportingInterval = 200;
                 if (++batchIndex % reportingInterval == 0)
                 {
-                    std::cout << "Dataset: " << i << " | Batch: " << batchIndex << "/" << batches.size() << " | Loss: " << averageLoss / reportingInterval;
+                    std::cout << "Dataset: " << i << " | Batch: " << batchIndex << "/" << batches.size() << " | Loss: " << averageLoss / reportingInterval << std::endl;
 
                     optimizer->zero_grad();
-                    float testsetLoss = testBatches ? evalMeanLoss(*testBatches, net, weightsTensor) : 0;
-                    std:: cout << " | Testset: " << testsetLoss << std::endl;
-                    averageTestLossOverDataset += testsetLoss;
-                    epochIndex++;
                     averageLoss = 0;
                 }
             }
+
+            averageLossOverDataset = averageLossOverDataset / batches.size();
             
             // Dataset have been processed
             {
-                averageLossOverDataset = averageLossOverDataset / numElems;
-                averageTestLossOverDataset = averageTestLossOverDataset / epochIndex;
-                if (averageTestLossOverDataset > prevAvgTestLossOverDataset)
+                auto [testsetLoss, testsetPrecision] = testBatches ? evalMeanLoss(*testBatches, net, weightTestset) : std::make_pair(0.f, 0.f);
+                std::cout << "Testset: loss=" << testsetLoss << " p=" << 1.f - testsetPrecision << std::endl;
+
+                if (testsetLoss > prevAvgTestLossOverDataset)
                 {
                     if (_autoLr)
                     {
                         _lr /= 4;
                         std::cout << "Avg loss on testset has decreased over this dataset, new Lr: " << _lr << std::endl;
+                    }
+                    else if (_autoExit)
+                    {
+                        return 0;
                     }
                     else
                     {
@@ -153,18 +174,20 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
 
                     optimizer = std::make_unique<OptimizerType>(net->parameters(), _lr);
                 }
-                prevAvgTestLossOverDataset = averageTestLossOverDataset;
+                prevAvgTestLossOverDataset = testsetLoss;
 
                 // Serialize model periodically as a checkpoint.
                 std::cout << "Save " << _outModelPath << std::endl;
                 torch::save(net, _outModelPath);
 
                 std::filesystem::path extraInfoPath = _outModelPath;
+                extraInfoPath.replace_filename("log_" + extraInfoPath.filename().string());
                 extraInfoPath.replace_extension("txt");
                 std::ofstream extraInfoFile(extraInfoPath, std::ios_base::app);
                 extraInfoFile << "Dataset=" << getDatasetPath(_datasetFolder, _datasetBaseName, i) << " Lr=" << _lr <<
                                  " Loss=" << averageLossOverDataset <<
-                                 " TestLoss=" << averageTestLossOverDataset << std::endl;
+                                 " TestLoss=" << testsetLoss <<
+                                 " TestP=" << testsetPrecision << std::endl;
             }
         }
 
@@ -176,6 +199,7 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
 
 int shuffleDataset(string _datasetFolder, string _datasetBaseName, u32 _numDatasetOut)
 {
+    blokusAI::initBlokusAI();
     u32 numDataset = findNumDatasetOnDisk(_datasetFolder, _datasetBaseName);
 
     blokusAI::Dataset dataset;

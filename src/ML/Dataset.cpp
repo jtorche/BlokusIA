@@ -64,6 +64,24 @@ namespace blokusAI
 		std::shuffle(m_data.begin(), m_data.end(), s_rand);
 	}
 
+	torch::Tensor Dataset::computeWeight() const
+	{
+		u32 p0RankDistribution[4] = {};
+		for (const auto& dat : m_data)
+		{
+			for (u32 i = 0; i < 4; ++i)
+			{
+				if(dat.ranking[i] == Slot::P0)
+					p0RankDistribution[i]++;
+			}
+		}
+
+		u32 sum = std::accumulate(std::begin(p0RankDistribution), std::end(p0RankDistribution), 0);
+		vec2 w = { float(p0RankDistribution[0]) / sum, float(p0RankDistribution[0] + p0RankDistribution[1]) / sum };
+
+		return torch::from_blob(&w, { 2 }).clone();
+	}
+
 	Dataset::Batches Dataset::constructTensors(u32 _epochSize, uvec2 _turnRange, u32 _turnOffset, bool _useReachableCluster) const
 	{
 		std::vector<std::pair<torch::Tensor, torch::Tensor>> tensorData;
@@ -107,15 +125,6 @@ namespace blokusAI
 			}
 		}
 
-		if (fillIndex > _epochSize / 2)
-		{
-			tensorData.push_back(
-			{
-				torch::from_blob(blob, { fillIndex, numSlice, Board::BoardSize, Board::BoardSize }, torch::TensorOptions(torch::ScalarType::Float)).clone(),
-				torch::from_blob(labels.data(), { fillIndex, 2 }, torch::TensorOptions(torch::ScalarType::Float)).clone()
-			});
-		}
-
 		delete[] blob;
 		return tensorData;
 	}
@@ -146,8 +155,7 @@ namespace blokusAI
 			}
 		}
 
-		const u32 numSlice = 2 + (_useReachableCluster ? 2 : 0);
-		return torch::from_blob(_outData, { 1, numSlice, Board::BoardSize, Board::BoardSize });
+		return fillInputTensorData(_playerIndex, _useReachableCluster, _board, _reachableSlots, _outData);
 	}
 
 	torch::Tensor Dataset::fillInputTensorData(const GameState& _state, u32 _playerIndex, bool _useReachableCluster, float* _outData)

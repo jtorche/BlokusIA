@@ -46,8 +46,6 @@ namespace blokusAI
             x = x.reshape({ x.sizes()[0], channelCount * Board::BoardSize * Board::BoardSize });
             x  = torch::relu(fully1->forward(x));
             return torch::sigmoid(fully2->forward(x));
-
-            return x;
         }
 
         u32 channelCount;

@@ -39,6 +39,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         paramFullRandom.heuristic = BoardHeuristic::RemainingTiles;
         paramFullRandom.moveHeuristic = MoveHeuristic::TileCount;
         paramFullRandom.maxMoveToLookAt = 128;
+        paramFullRandom.selectAmongNBestMoves = 128;
         paramFullRandom.numTurnToForceBestMoveHeuristic = 0;
         generator.addAI("FullRandom", new Dummy_AI(paramFullRandom));
     }
@@ -48,6 +49,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         paramRushCenterThenRandom.heuristic = BoardHeuristic::RemainingTiles;
         paramRushCenterThenRandom.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         paramRushCenterThenRandom.maxMoveToLookAt = 128;
+        paramRushCenterThenRandom.selectAmongNBestMoves = 128;
         paramRushCenterThenRandom.numTurnToForceBestMoveHeuristic = 3;
         generator.addAI("RushCenterThenRandom", new Dummy_AI(paramRushCenterThenRandom));
     }
@@ -56,6 +58,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         paramFullCenter.heuristic = BoardHeuristic::RemainingTiles;
         paramFullCenter.moveHeuristic = MoveHeuristic::TileCount_DistCenter;
         paramFullCenter.maxMoveToLookAt = 16;
+        paramFullCenter.selectAmongNBestMoves = 128;
         paramFullCenter.numTurnToForceBestMoveHeuristic = 3;
         generator.addAI("FullCenter", new Dummy_AI(paramFullCenter));
     }
@@ -66,19 +69,15 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         param.maxMoveToLookAt = 32;
         param.maxMoveInRecursion = 32;
         param.numTurnToForceBestMoveHeuristic = 3;
-        param.selectAmongNBestMoves = 3;
+        param.selectAmongNBestMoves = 4;
         param.maxDepth = 2;
         generator.addAI("Alone_WReachSpace_Depth2", new AlonePlayer_AI(param));
-        
-        param.selectAmongNBestMoves = 2;
-        param.maxDepth = 3;
-        generator.addAI("Alone_WReachSpace_Depth3", new AlonePlayer_AI(param));
     }
     {
         BaseAI::Parameters param;
         param.heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
         param.moveHeuristic = MoveHeuristic::MultiSource;
-        param.selectAmongNBestMoves = 1;
+        param.selectAmongNBestMoves = 4;
         param.numTurnToForceBestMoveHeuristic = 3;
         param.maxDepth = 4;
         param.maxMoveToLookAt = 10;
@@ -94,7 +93,7 @@ int genDataset(string _outputFolder, string _datasetBaseName, u32 _numDataset, u
         param.maxMoveToLookAt = 32;
         param.maxMoveInRecursion = 32;
         param.numTurnToForceBestMoveHeuristic = 3;
-        param.selectAmongNBestMoves = 2;
+        param.selectAmongNBestMoves = 4;
 
         param.maxDepth = 3;
         generator.addAI("Paranoid_TileCount_Depth3", new ParanoidFourPlayer_AI(param));

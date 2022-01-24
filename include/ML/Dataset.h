@@ -29,6 +29,7 @@ namespace blokusAI
 		bool read(std::string _path);
 		void merge(Dataset&& _other);
 		void shuffle();
+		torch::Tensor computeWeight() const;
 
 		Batches constructTensors(u32 _epochSize, uvec2 _turnRange = { 0, 84 }, u32 _turnOffset = 0, bool _useReachableCluster = false) const;
 
