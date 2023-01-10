@@ -1,4 +1,4 @@
-#include "AI/Dummy_AI.h"
+#include "AI/blockusAI/Dummy_AI.h"
 
 namespace blokusAI
 {

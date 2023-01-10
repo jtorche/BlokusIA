@@ -1,10 +1,10 @@
-#include "AI/IterativeAI.h"
+#include "AI/blockusAI/IterativeAI.h"
 
-#include "AI/FourPlayerMaxN_AI.h"
-#include "AI/ParanoidFourPlayer_AI.h"
-#include "AI/TwoPlayerMinMax_AI.h"
-#include "AI/Dummy_AI.h"
-#include "AI/AlonePlayer_AI.h"
+#include "AI/blockusAI/FourPlayerMaxN_AI.h"
+#include "AI/blockusAI/ParanoidFourPlayer_AI.h"
+#include "AI/blockusAI/TwoPlayerMinMax_AI.h"
+#include "AI/blockusAI/Dummy_AI.h"
+#include "AI/blockusAI/AlonePlayer_AI.h"
 
 namespace blokusAI
 {

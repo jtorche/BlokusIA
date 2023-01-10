@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AI/AITournament.h"
+#include "AI/blockusAI/AITournament.h"
 
 namespace blokusAI
 {

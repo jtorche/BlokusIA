@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AI/BlokusAI.h"
+#include "AI/blockusAI/BlokusAI.h"
 #include "ML/NetworkDef.h"
 
 namespace blokusAI
@@ -11,7 +11,7 @@ namespace blokusAI
 
 	struct CustomHeuristicImpl final : CustomHeuristicInterface
 	{
-		CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, BlokusNet::Model _model, bool _useCluster);
+		CustomHeuristicImpl(string _path, vector<u32> _turnSplit, BlokusNet::Model _model, bool _useCluster = true);
 
 		float moveHeuristic(const GameState&, const Move& _move, ubyte2 _playablePos) override;
 		float boardHeuristic(const GameState&, Slot _player) override;

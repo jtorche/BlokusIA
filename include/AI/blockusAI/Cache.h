@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/flat_hash_map.h"
-#include "AI/BlokusAI.h"
+#include "AI/blockusAI/BlokusAI.h"
 
 namespace blokusAI
 {

@@ -5,12 +5,13 @@
 
 namespace blokusAI
 {
-	CustomHeuristicImpl::CustomHeuristicImpl(vector<pair<string, u32>> _netPathAndTurn, BlokusNet::Model _model, bool _useCluster) : m_useCluster{ _useCluster }
+	CustomHeuristicImpl::CustomHeuristicImpl(string _path, vector<u32> _turnSplit, BlokusNet::Model _model, bool _useCluster) : m_useCluster{ _useCluster }
 	{
 		string modelName = "";
 		switch (_model)
 		{
 		default:
+			DEBUG_ASSERT(false);
 		case BlokusNet::Model::Model_Baseline:
 			modelName = "baseline"; break;
 		case BlokusNet::Model::Model_Jojo:
@@ -19,26 +20,30 @@ namespace blokusAI
 			modelName = "simplecnn"; break;
 		case BlokusNet::Model::Model_SimpleCnn2:
 			modelName = "simplecnn2"; break;
+		case BlokusNet::Model::Model_Cnn1:
+			modelName = "cnn1"; break;
 		case BlokusNet::Model::Model_TwoLayers:
 			modelName = "twolayers"; break;
 		}
 
-		m_netPerTurn.reserve(_netPathAndTurn.size());
-		m_networks.reserve(_netPathAndTurn.size());
+		m_netPerTurn = std::move(_turnSplit);
+		m_networks.reserve(m_netPerTurn.size());
 
-		for (const auto& [path, turn] : _netPathAndTurn)
+		u32 prevTurnSplit = 0;
+		for (u32 turn : m_netPerTurn)
 		{
 			m_networks.push_back({ std::make_shared<BlokusNet>(_model, _useCluster ? 4 : 2),
 								   std::make_shared<BlokusNet>(_model, _useCluster ? 4 : 2),
 								   std::make_shared<BlokusNet>(_model, _useCluster ? 4 : 2),
 								   std::make_shared<BlokusNet>(_model, _useCluster ? 4 : 2) });
-			m_netPerTurn.push_back(turn);
 
 			for (u32 i = 0; i < 4; ++i)
 			{
-				string completePath = path + "_" + modelName + "_" + std::to_string(i) + ".pt";
-				torch::load(m_networks.back()[i], path);
+				string completePath = _path + "_" + std::to_string(prevTurnSplit) + "_" + std::to_string(turn) + "_" + modelName + "_" + std::to_string(i) + ".pt";
+				torch::load(m_networks.back()[i], completePath);
 			}
+
+			prevTurnSplit = turn + 1;
 		}
 	}
 

@@ -1,9 +1,9 @@
 #include <numeric>
 #include <limits>
 
-#include "AI/BlokusAI.h"
-#include "AI/BlokusGameHelpers.h"
-#include "AI/Cache.h"
+#include "AI/blockusAI/BlokusAI.h"
+#include "AI/blockusAI/BlokusGameHelpers.h"
+#include "AI/blockusAI/Cache.h"
 
 namespace blokusAI
 {

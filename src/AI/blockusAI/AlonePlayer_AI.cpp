@@ -1,4 +1,4 @@
-#include "AI/AlonePlayer_AI.h"
+#include "AI/blockusAI/AlonePlayer_AI.h"
 
 namespace blokusAI
 {

@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <windows.h>
 
-#include "AI/BlokusAI.h"
+#include "AI/blockusAI/BlokusAI.h"
 #include "ML/Dataset.h"
 #include "ML/NetworkDef.h"
 
@@ -73,6 +73,8 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_SimpleCnn, _useCluster ? 4 : 2);
     else if (_model == "simplecnn2")
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_SimpleCnn2, _useCluster ? 4 : 2);
+    else if (_model == "cnn1")
+        net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_Cnn1, _useCluster ? 4 : 2);
     else if(_model == "baseline")
         net = std::make_shared<blokusAI::BlokusNet>(blokusAI::BlokusNet::Model::Model_Baseline, _useCluster ? 4 : 2);
     else
@@ -104,6 +106,7 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
         }
     }
 
+    bool canAutoExit = false;
     while(1)
     {
         using OptimizerType = torch::optim::AdamW;
@@ -158,7 +161,8 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
                     }
                     else if (_autoExit)
                     {
-                        return 0;
+                        if(canAutoExit)
+                            return 0;
                     }
                     else
                     {
@@ -187,11 +191,12 @@ int trainModel(string _model, string _datasetFolder, string _datasetBaseName, st
                 extraInfoFile << "Dataset=" << getDatasetPath(_datasetFolder, _datasetBaseName, i) << " Lr=" << _lr <<
                                  " Loss=" << averageLossOverDataset <<
                                  " TestLoss=" << testsetLoss <<
-                                 " TestP=" << testsetPrecision << std::endl;
+                                 " TestP=" << 1.f - testsetPrecision << std::endl;
             }
         }
 
         _datasetIndex = 0;
+        canAutoExit = true;
     }
 
     return 0;

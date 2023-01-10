@@ -1,6 +1,6 @@
 #include <numeric>
 
-#include "AI/BlokusGame.h"
+#include "AI/blockusAI/BlokusGame.h"
 
 namespace blokusAI
 {

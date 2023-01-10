@@ -1,11 +1,11 @@
 #include <windows.h>
 
-#include "AI/FourPlayerMaxN_AI.h"
-#include "AI/TwoPlayerMinMax_AI.h"
-#include "AI/ParanoidFourPlayer_AI.h"
-#include "AI/Dummy_AI.h"
-#include "AI/AlonePlayer_AI.h"
-#include "AI/IterativeAI.h"
+#include "AI/blockusAI/FourPlayerMaxN_AI.h"
+#include "AI/blockusAI/TwoPlayerMinMax_AI.h"
+#include "AI/blockusAI/ParanoidFourPlayer_AI.h"
+#include "AI/blockusAI/Dummy_AI.h"
+#include "AI/blockusAI/AlonePlayer_AI.h"
+#include "AI/blockusAI/IterativeAI.h"
 #include "ML/HeuristicImpl.h"
 
 using namespace blokusAI;
@@ -24,21 +24,17 @@ int main()
     IterativeAI<ParanoidFourPlayer_AI> AI1;
 #endif
 #if 1
-    CustomHeuristicImpl customHeuristic(
-        { { "D:/Prog/blokusDataset/model_0_16_simplecnn.pt", 16 },
-          { "D:/Prog/blokusDataset/model_17_40_simplecnn.pt", 40 },
-          { "D:/Prog/blokusDataset/model_41_84_simplecnn.pt", 84 } 
-        }, BlokusNet::Model::Model_SimpleCnn, true
-    );
+    CustomHeuristicImpl customHeuristic("D:/Prog/blokusDataset/test/model", { 16, 40, 84 }, BlokusNet::Model::Model_Cnn1);
+    
     aiParam[0].maxDepth = 4;
     aiParam[0].moveHeuristic = MoveHeuristic::MultiSource;
     aiParam[0].heuristic = BoardHeuristic::Custom;
-    aiParam[0].maxMoveToLookAt = 16;
-    aiParam[0].maxMoveInRecursion = 16;
+    aiParam[0].maxMoveToLookAt = 64;
+    aiParam[0].maxMoveInRecursion = 32;
     aiParam[0].selectAmongNBestMoves = 1;
     aiParam[0].customHeuristic = &customHeuristic;
-    aiParam[0].multiSourceParam.m_numPieceAtCenter = 12;
-    aiParam[0].multiSourceParam.m_numPiecesWithBridge = 4;
+    aiParam[0].multiSourceParam.m_numPieceAtCenter = 30;
+    aiParam[0].multiSourceParam.m_numPiecesWithBridge = 20;
     IterativeAI<FastParanoidFourPlayer_AI> AI1;
 #endif
 
@@ -46,21 +42,21 @@ int main()
     aiParam[1].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[1].maxMoveToLookAt = 32;
     aiParam[1].maxMoveInRecursion = 32;
-    aiParam[1].selectAmongNBestMoves = 1;
+    aiParam[1].selectAmongNBestMoves = 2;
     IterativeAI<ParanoidFourPlayer_AI> AI2;
 
     aiParam[2].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[2].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[2].maxMoveToLookAt = 8;
     aiParam[2].maxMoveInRecursion = 8;
-    aiParam[2].selectAmongNBestMoves = 1;
+    aiParam[2].selectAmongNBestMoves = 2;
     IterativeAI<ParanoidFourPlayer_AI> AI3;
 
     aiParam[3].moveHeuristic = MoveHeuristic::TileCount_DistCenter;
     aiParam[3].heuristic = BoardHeuristic::ReachableEmptySpaceWeighted;
     aiParam[3].maxMoveToLookAt = 4;
     aiParam[3].maxMoveInRecursion = 4;
-    aiParam[3].selectAmongNBestMoves = 1;
+    aiParam[3].selectAmongNBestMoves = 2;
     IterativeAI<ParanoidFourPlayer_AI> AI4;
 
     for (auto& p : aiParam)

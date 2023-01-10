@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Common.h"
-#include "AI/BlokusAI.h"
+#include "AI/blockusAI/BlokusAI.h"
 #include <torch/torch.h>
 
 namespace blokusAI
