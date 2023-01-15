@@ -108,6 +108,16 @@ namespace sevenWD
 		Count
 	};
 
+	enum class SpecialAction
+	{
+		Nothing,
+		Replay,
+		TakeScienceToken,
+		GreatLibraryScienceToken,
+		DestroyBrawnCard,
+		DestroyGreyCard,
+	};
+
 	//----------------------------------------------------------------------------
 	class Card
 	{
@@ -185,19 +195,20 @@ namespace sevenWD
 	struct PlayerCity
 	{
 		u32 m_chainingSymbols = 0; // bitfield
+		u16 m_ownedGuildCards = 0; // bitfield
 		u32 m_ownedScienceTokens = 0; // bitfield
 		u8 m_ownedScienceSymbols = 0; // bitfield
-		u8 m_ownedGuildCards = 0; // bitfield
 		u8 m_gold = 0;
 		u8 m_victoryPoints = 0;
 		std::array<u8, u32(CardType::Count)> m_numCardPerType = {};
-		std::array<u8, u32(CardType::Count)> m_production = {};
+		std::array<u8, u32(ResourceType::Count)> m_production = {};
 		std::pair<u8, u8> m_weakProduction = {};
 		std::array<bool, u32(CardType::Count)> m_resourceDiscount = {};
 		std::array<Wonders, 4> m_unbuildWonders = {};
 		u8 m_unbuildWonderCount = 4;
 
 		u32 computeCost(const Card& _card, const PlayerCity& _otherPlayer);
+		SpecialAction addCard(const Card& _card, const PlayerCity& _otherCity);
 	};
 
 	//----------------------------------------------------------------------------
@@ -206,6 +217,7 @@ namespace sevenWD
 	public:
 		GameState(const GameContext& _context);
 
+		
 	private:
 		
 		struct CardNode

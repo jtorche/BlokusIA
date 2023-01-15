@@ -432,9 +432,15 @@ namespace sevenWD
 
 	u32 PlayerCity::computeCost(const Card& _card, const PlayerCity& _otherPlayer)
 	{
+		if (m_chainingSymbols & (1u << u32(_card.m_chainIn)))
+			return 0;
+
 		std::array<u8, u32(RT::Count)> goldCostPerResource = { 2,2,2,2,2 }; // base cost
 		for (u32 i = 0; i < u32(RT::Count); ++i)
+		{
 			goldCostPerResource[i] += _otherPlayer.m_production[i];
+			goldCostPerResource[i] = m_resourceDiscount[i] ? 1 : goldCostPerResource[i];
+		}
 
 		std::array<u8, u32(RT::Count)> cardResourceCost = _card.m_cost;
 		bool empty = true;
@@ -483,8 +489,76 @@ namespace sevenWD
 			for (u32 i = 0; i < u32(RT::Count); ++i)
 				finalCost += cardResourceCost[i] * goldCostPerResource[i];
 
-			return finalCost;
+			return finalCost + _card.m_goldCost;
 		}
-		return 0;
+		return _card.m_goldCost;
+	}
+
+	SpecialAction PlayerCity::addCard(const Card& _card, const PlayerCity& _otherCity)
+	{
+		SpecialAction action = SpecialAction::Nothing;
+
+		m_chainingSymbols |= (1u << u32(_card.m_chainOut));
+
+		if (_card.m_goldPerNumberOfCardColorTypeCard)
+			m_gold += m_numCardPerType[_card.m_secondaryType] * _card.m_goldReward;
+		else if(_card.m_type == CardType::Guild)
+			m_gold += std::max(m_numCardPerType[_card.m_secondaryType], _otherCity.m_numCardPerType[_card.m_secondaryType]) * _card.m_goldReward;
+		else
+			m_gold += _card.m_goldReward;
+
+		m_numCardPerType[u32(_card.m_type)]++;
+		m_victoryPoints += m_victoryPoints;
+
+		for (u32 i = 0; i < u32(ResourceType::Count); ++i)
+		{
+			if (_card.m_isResourceDiscount)
+				m_resourceDiscount[i] |= _card.m_production[i] > 0;
+			else if (_card.m_isWeakProduction); 
+				// handled differently
+			else
+				m_production[i] += _card.m_production[i];
+		}
+
+		if (_card.m_isWeakProduction)
+		{
+			DEBUG_ASSERT(_card.m_production[u32(RT::Wood)] == _card.m_production[u32(RT::Clay)] && 
+						 _card.m_production[u32(RT::Wood)] == _card.m_production[u32(RT::Stone)]);
+			DEBUG_ASSERT(_card.m_production[u32(RT::Glass)] == _card.m_production[u32(RT::Papyrus)]);
+
+			m_weakProduction.first += _card.m_production[u32(RT::Wood)];
+			m_weakProduction.second += _card.m_production[u32(RT::Glass)];
+		}
+
+		switch (_card.m_type)
+		{
+		case CardType::Science:
+			if (m_ownedScienceSymbols & (1u << u32(_card.m_science)))
+				action = SpecialAction::TakeScienceToken;
+			m_ownedScienceSymbols |=  1u << u32(_card.m_science);
+			break;
+
+		case CardType::Guild:
+			m_ownedGuildCards |= 1u << _card.m_secondaryType;
+			break;
+
+		case CardType::Wonder:
+		{
+			auto it = std::remove(std::begin(m_unbuildWonders), std::begin(m_unbuildWonders) + m_unbuildWonderCount, Wonders(_card.m_secondaryType));
+			DEBUG_ASSERT(it != std::end(m_unbuildWonders));
+			size_t index = std::distance(std::begin(m_unbuildWonders), it);
+			std::swap(m_unbuildWonders[m_unbuildWonderCount-1], m_unbuildWonders[index]);
+			m_unbuildWonderCount--;
+			
+			// Apply Wonder speical effect
+			//switch (Wonders(_card.m_secondaryType))
+			//{
+			//	case 
+			//}
+			break;
+		}
+		}
+		
+		return action;
 	}
 }
