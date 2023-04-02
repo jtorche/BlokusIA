@@ -1,6 +1,5 @@
 #include "AI/blockusAI/BlokusGame.h"
 #include "AI/blockusAI/BlokusGameHelpers.h"
-#include "AI/7WDuel/GameEngine.h"
 
 namespace blokusAI
 {
@@ -121,59 +120,12 @@ namespace blokusAI
 	}
 }
 
-namespace sevenWD
-{
-	void costTest()
-	{
-		{
-			Card card(CardTag<CardType::Blue>{}, "Test", 3);
-			card.setResourceCost({ RT::Wood, RT::Clay, RT::Glass, RT::Papyrus });
-			card.setGoldCost(10);
-
-			PlayerCity opoCity;
-			opoCity.m_production[u32(RT::Glass)] = 1;
-
-			PlayerCity myCity;
-			myCity.m_weakProduction.second = 1;
-			myCity.m_production[u32(RT::Wood)] = 1;
-			myCity.m_resourceDiscount[u32(RT::Clay)] = true;
-
-			u32 cost = myCity.computeCost(card, opoCity);
-			DEBUG_ASSERT(cost == 13);
-		}
-
-		{
-			Card card(CardTag<CardType::Blue>{}, "Test", 3);
-			card.setResourceCost({ RT::Wood, RT::Clay, RT::Stone });
-
-			PlayerCity opoCity;
-			opoCity.m_production[u32(RT::Stone)] = 3;
-			opoCity.m_production[u32(RT::Clay)] = 2;
-			opoCity.m_production[u32(RT::Wood)] = 1;
-
-			PlayerCity myCity;
-			myCity.m_weakProduction.first = 1;
-			myCity.m_resourceDiscount[u32(RT::Stone)] = true;
-
-			u32 cost = myCity.computeCost(card, opoCity);
-			DEBUG_ASSERT(cost == 4);
-		}
-	}
-}
-
 void runTest()
 {
-	//blokusAI::cornerTest();
-	//blokusAI::pieceTest();
-	//blokusAI::pieceTest2();
-	//blokusAI::boardTest();
-
-	sevenWD::costTest();
-
-	std::cout << "Sizoef Card = " << sizeof(sevenWD::Card) << std::endl;
-	std::cout << "Sizoef GameState = " << sizeof(sevenWD::GameState) << std::endl;
-	sevenWD::GameContext sevenWDContext;
-	sevenWD::GameState state(sevenWDContext);
+	blokusAI::cornerTest();
+	blokusAI::pieceTest();
+	blokusAI::pieceTest2();
+	blokusAI::boardTest();
 
 	std::cout << "Unit tests succeeded" << std::endl << std::endl;
 	system("pause");
