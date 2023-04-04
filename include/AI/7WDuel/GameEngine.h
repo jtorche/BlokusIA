@@ -182,6 +182,7 @@ namespace sevenWD
 
 		std::default_random_engine& rand() const { return m_rand; }
 		const Card& getCard(u8 _cardId) const { return *m_allCards[_cardId]; }
+		const Card& getWonder(Wonders _wonder) const { return m_wonders[u32(_wonder)]; }
 
 	private:
 		mutable std::default_random_engine m_rand;
@@ -232,6 +233,7 @@ namespace sevenWD
 
 		SpecialAction pick(u32 _playableCardIndex);
 		void burn(u32 _playableCardIndex);
+		SpecialAction buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex);
 
 	private:
 		
@@ -265,6 +267,7 @@ namespace sevenWD
 		u32 genPyramidGraph(u32 _numRow, u32 _startNodeIndex);
 		u32 genInversePyramidGraph(u32 _baseSize, u32 _numRow, u32 _startNodeIndex);
 
+		PlayerCity& getCurrentPlayerCity() { return m_playerCity[m_playerTurn]; }
 		void unlinkNodeFromGraph(u32 _nodeIndex);
 
 		void initScienceTokens();

@@ -336,7 +336,34 @@ namespace sevenWD
 
 		unlinkNodeFromGraph(pickedCard);
 
-		return m_playerCity[m_playerTurn].addCard(m_context.getCard(m_cardsPermutation[pickedCard]), m_playerCity[(m_playerTurn + 1) % 2]);
+		return getCurrentPlayerCity().addCard(m_context.getCard(m_cardsPermutation[pickedCard]), m_playerCity[(m_playerTurn + 1) % 2]);
+	}
+
+	void GameState::burn(u32 _playableCardIndex)
+	{
+		u8 pickedCard = m_playableCards[_playableCardIndex];
+		std::swap(m_playableCards[_playableCardIndex], m_playableCards[m_numPlayableCards - 1]);
+		m_numPlayableCards--;
+
+		unlinkNodeFromGraph(pickedCard);
+
+		u8 burnValue = 2 + getCurrentPlayerCity().m_numCardPerType[u32(CardType::Yellow)];
+		getCurrentPlayerCity().m_gold += burnValue;
+	}
+
+	SpecialAction GameState::buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex)
+	{
+		u8 pickedCard = m_playableCards[_withPlayableCardIndex];
+		std::swap(m_playableCards[_withPlayableCardIndex], m_playableCards[m_numPlayableCards - 1]);
+		m_numPlayableCards--;
+
+		unlinkNodeFromGraph(pickedCard);
+
+		Wonders pickedWonder = getCurrentPlayerCity().m_unbuildWonders[_wondersIndex];
+		std::swap(getCurrentPlayerCity().m_unbuildWonders[_wondersIndex], getCurrentPlayerCity().m_unbuildWonders[getCurrentPlayerCity().m_unbuildWonderCount - 1]);
+		getCurrentPlayerCity().m_unbuildWonderCount--;
+
+		return getCurrentPlayerCity().addCard(m_context.getWonder(pickedWonder), m_playerCity[(m_playerTurn + 1) % 2]);
 	}
 
 	u32 GameState::genPyramidGraph(u32 _numRow, u32 _startNodeIndex)
@@ -649,7 +676,7 @@ namespace sevenWD
 			std::swap(m_unbuildWonders[m_unbuildWonderCount-1], m_unbuildWonders[index]);
 			m_unbuildWonderCount--;
 			
-			// Apply Wonder speical effect
+			// Apply Wonder special effect
 			//switch (Wonders(_card.m_secondaryType))
 			//{
 			//	case 

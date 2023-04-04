@@ -18,6 +18,9 @@ int main()
 	sevenWD::GameContext sevenWDContext;
 	sevenWD::GameState state(sevenWDContext);
 
+	state.pick(0);
+	state.pick(1);
+
 	std::cout << "Unit tests succeeded" << std::endl << std::endl;
 	system("pause");
 
