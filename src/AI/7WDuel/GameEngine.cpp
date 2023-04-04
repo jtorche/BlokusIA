@@ -123,13 +123,48 @@ namespace sevenWD
 	}
 
 	//----------------------------------------------------------------------------
+	void Card::setId(u8 _id)
+	{
+		m_id = _id;
+	}
+
+	//----------------------------------------------------------------------------
 	GameContext::GameContext(unsigned _seed) : m_rand(_seed)
 	{
+		m_allCards.clear();
 		fillAge1();
 		fillAge2();
 		fillAge3();
 		fillGuildCards();
 		fillWonders();
+	}
+
+	//----------------------------------------------------------------------------
+	void GameContext::initCityWithRandomWonders(PlayerCity& _player1, PlayerCity& _player2) const
+	{
+		std::vector<Wonders> wonders((u32)Wonders::Count);
+		for (u32 i = 0; i < wonders.size(); ++i)
+			wonders[i] = Wonders(i);
+
+		std::shuffle(wonders.begin(), wonders.end(), m_rand);
+
+		_player1.m_unbuildWonderCount = 4;
+		for (u32 i = 0; i < 4; ++i)
+			_player1.m_unbuildWonders[i] = wonders[i];
+
+		_player2.m_unbuildWonderCount = 4;
+		for (u32 i = 0; i < 4; ++i)
+			_player2.m_unbuildWonders[i] = wonders[i];
+	}
+
+	void GameContext::initAge1Permutation(std::array<u8, 20>& _permut) const
+	{
+		std::array<u8, 23> age1Index;
+		for (u32 i = 0; i < m_age1Cards.size(); ++i)
+			age1Index[i] = m_age1Cards[i].getId();
+
+		std::shuffle(age1Index.begin(), age1Index.end(), rand());
+		std::copy(age1Index.begin(), age1Index.begin() + 20, _permut.begin());
 	}
 
 	void GameContext::fillAge1()
@@ -162,6 +197,12 @@ namespace sevenWD
 		m_age1Cards.push_back(Card(CardTag<CardType::Science>{}, "Atelier",		ScienceSymbol::Triangle, 1).setResourceCost({ RT::Papyrus }));
 		m_age1Cards.push_back(Card(CardTag<CardType::Science>{}, "Scriptorium", ScienceSymbol::Script,	 0).setGoldCost(2).setChainOut(ChainingSymbol::Book));
 		m_age1Cards.push_back(Card(CardTag<CardType::Science>{}, "Officine",	ScienceSymbol::Bowl,	 0).setGoldCost(2).setChainOut(ChainingSymbol::Gear));
+
+		for (Card& card : m_age1Cards)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	void GameContext::fillAge2()
@@ -194,6 +235,12 @@ namespace sevenWD
 		m_age2Cards.push_back(Card(CardTag<CardType::Science>{}, "Laboratoire", ScienceSymbol::Triangle, 1).setResourceCost({ RT::Wood, RT::Glass, RT::Glass }).setChainOut(ChainingSymbol::Lamp));
 		m_age2Cards.push_back(Card(CardTag<CardType::Science>{}, "Bibliotheque", ScienceSymbol::Script, 2).setResourceCost({ RT::Stone, RT::Wood, RT::Glass }).setChainIn(ChainingSymbol::Book));
 		m_age2Cards.push_back(Card(CardTag<CardType::Science>{}, "Dispensaire", ScienceSymbol::Bowl, 2).setResourceCost({ RT::Clay, RT::Clay, RT::Stone }).setChainIn(ChainingSymbol::Gear));
+
+		for (Card& card : m_age2Cards)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	void GameContext::fillAge3()
@@ -221,6 +268,12 @@ namespace sevenWD
 		m_age3Cards.push_back(Card(CardTag<CardType::Science>{}, "University", ScienceSymbol::Globe, 2).setResourceCost({ RT::Clay, RT::Glass, RT::Papyrus }).setChainIn(ChainingSymbol::Harp));
 		m_age3Cards.push_back(Card(CardTag<CardType::Science>{}, "Etude", ScienceSymbol::SolarClock, 3).setResourceCost({ RT::Wood, RT::Wood, RT::Glass, RT::Papyrus }));
 		m_age3Cards.push_back(Card(CardTag<CardType::Science>{}, "Academie", ScienceSymbol::SolarClock, 3).setResourceCost({ RT::Stone, RT::Wood, RT::Glass, RT::Glass }));
+
+		for (Card& card : m_age3Cards)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	void GameContext::fillGuildCards()
@@ -232,6 +285,12 @@ namespace sevenWD
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesSciences", CardType::Science, 1, 1).setResourceCost({ RT::Clay, RT::Clay, RT::Wood, RT::Wood }));
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesBatisseurs", CardType::Wonder, 0, 2).setResourceCost({ RT::Stone, RT::Stone, RT::Clay, RT::Wood, RT::Glass }));
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesUsuriers", CardType::Count, 3, 1).setResourceCost({ RT::Stone, RT::Stone, RT::Wood, RT::Wood }));
+
+		for (Card& card : m_guildCards)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	void GameContext::fillWonders()
@@ -251,20 +310,33 @@ namespace sevenWD
 		m_wonders[u32(Wonders::Piraeus)] = Card(Wonders::Piraeus, "LaPiree", 2, true).setWeakResourceProduction({ RT::Papyrus, RT::Glass }).setResourceCost({ RT::Clay, RT::Stone, RT::Wood, RT::Wood });
 		m_wonders[u32(Wonders::HangingGarden)] = Card(Wonders::HangingGarden, "JardinSuspendus", 3, true).setGoldCost(6).setResourceCost({ RT::Papyrus, RT::Glass, RT::Wood, RT::Wood });
 		m_wonders[u32(Wonders::Mausoleum)] = Card(Wonders::Mausoleum, "Mausoleum", 2).setResourceCost({ RT::Papyrus, RT::Glass, RT::Glass, RT::Clay, RT::Clay });
+
+		for (Card& card : m_wonders)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	//----------------------------------------------------------------------------
 	GameState::GameState(const GameContext& _context) : m_context{ _context }
 	{
-		m_numPlayableCards = 0;
-		for (u8 i = 0; i < 23; ++i)
-			m_cardsPermutation[i] = i;
-
-		std::shuffle(m_cardsPermutation.begin(), m_cardsPermutation.end(), m_context.rand());
-		initAge1Graph();
-		initAge2Graph();
-		initAge3Graph();
 		initScienceTokens();
+		initAge1Graph();
+		
+		m_context.initCityWithRandomWonders(m_playerCity[0], m_playerCity[1]);
+		m_context.initAge1Permutation(m_cardsPermutation);
+	}
+
+	SpecialAction GameState::pick(u32 _playableCardIndex)
+	{
+		u8 pickedCard = m_playableCards[_playableCardIndex];
+		std::swap(m_playableCards[_playableCardIndex], m_playableCards[m_numPlayableCards - 1]);
+		m_numPlayableCards--;
+
+		unlinkNodeFromGraph(pickedCard);
+
+		return m_playerCity[m_playerTurn].addCard(m_context.getCard(m_cardsPermutation[pickedCard]), m_playerCity[(m_playerTurn + 1) % 2]);
 	}
 
 	u32 GameState::genPyramidGraph(u32 _numRow, u32 _startNodeIndex)
@@ -354,6 +426,28 @@ namespace sevenWD
 		}
 
 		return curNodeIndex;
+	}
+
+	void GameState::unlinkNodeFromGraph(u32 _nodeIndex)
+	{
+		DEBUG_ASSERT(m_graph[_nodeIndex].m_child0 == CardNode::InvalidNode && m_graph[_nodeIndex].m_child1 == CardNode::InvalidNode);
+
+		auto removeFromParent = [&](u8 parent)
+		{
+			if (parent != CardNode::InvalidNode)
+			{
+				m_graph[parent].m_child0 = m_graph[parent].m_child0 == _nodeIndex ? CardNode::InvalidNode : m_graph[parent].m_child0;
+				m_graph[parent].m_child1 = m_graph[parent].m_child1 == _nodeIndex ? CardNode::InvalidNode : m_graph[parent].m_child1;
+
+				if (m_graph[parent].m_child0 == CardNode::InvalidNode && m_graph[parent].m_child1 == CardNode::InvalidNode)
+				{
+					m_graph[parent].m_visible = true;
+					m_playableCards[m_numPlayableCards++] = parent;
+				}
+			}
+		};
+		removeFromParent(m_graph[_nodeIndex].m_parent0);
+		removeFromParent(m_graph[_nodeIndex].m_parent1);
 	}
 
 	void GameState::initScienceTokens()
@@ -506,6 +600,11 @@ namespace sevenWD
 			m_gold += std::max(m_numCardPerType[_card.m_secondaryType], _otherCity.m_numCardPerType[_card.m_secondaryType]) * _card.m_goldReward;
 		else
 			m_gold += _card.m_goldReward;
+
+		if (_card.m_type == CardType::Brown)
+			m_brownCardIndexes[m_numCardPerType[u32(CardType::Brown)]] = u8(_card.m_id);
+		if (_card.m_type == CardType::Grey)
+			m_greyCardIndexes[m_numCardPerType[u32(CardType::Grey)]] = u8(_card.m_id);
 
 		m_numCardPerType[u32(_card.m_type)]++;
 		m_victoryPoints += m_victoryPoints;

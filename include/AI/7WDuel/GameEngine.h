@@ -132,7 +132,8 @@ namespace sevenWD
 		Card(CardTag<CardType::Guild>, const char* _name, CardType _cardColorForBonus, u8 _goldReward, u8 _victoryPointReward);
 		Card(Wonders _wonders, const char* _name, u8 _victoryPointReward, bool _extraTurn = false);
 
-		
+		u8 getId() const { return m_id; }
+		void setId(u8 _id);
 		Card& setResourceDiscount(ResourceSet _resources);
 		Card& setWeakResourceProduction(ResourceSet _resources);
 		Card& setMilitary(u8 _shield);
@@ -146,6 +147,7 @@ namespace sevenWD
 
 	private:
 		const char* m_name = nullptr;
+		u8 m_id = u8(-1);
 		CardType m_type = CardType::Count;
 		
 		ChainingSymbol m_chainIn = ChainingSymbol::None; 
@@ -173,7 +175,13 @@ namespace sevenWD
 	public:
 		GameContext(unsigned _seed = 42);
 
+		void initCityWithRandomWonders(PlayerCity& _player1, PlayerCity& _player2) const;
+		void initAge1Permutation(std::array<u8, 20>& _permut) const;
+		void initAge2Permutation(std::array<u8, 20>& _permut) const;
+		void initAge3Permutation(std::array<u8, 20>& _permut) const;
+
 		std::default_random_engine& rand() const { return m_rand; }
+		const Card& getCard(u8 _cardId) const { return *m_allCards[_cardId]; }
 
 	private:
 		mutable std::default_random_engine m_rand;
@@ -182,6 +190,7 @@ namespace sevenWD
 		std::vector<Card> m_age3Cards;
 		std::vector<Card> m_guildCards;
 		std::vector<Card> m_wonders;
+		std::vector<const Card*> m_allCards;
 
 	private:
 		void fillAge1();
@@ -204,6 +213,8 @@ namespace sevenWD
 		std::array<u8, u32(ResourceType::Count)> m_production = {};
 		std::pair<u8, u8> m_weakProduction = {};
 		std::array<bool, u32(CardType::Count)> m_resourceDiscount = {};
+		std::array<u8, 16> m_brownCardIndexes;
+		std::array<u8, 8> m_greyCardIndexes;
 		std::array<Wonders, 4> m_unbuildWonders = {};
 		u8 m_unbuildWonderCount = 4;
 
@@ -217,7 +228,11 @@ namespace sevenWD
 	public:
 		GameState(const GameContext& _context);
 
-		
+		void nextPlayer() { m_playerTurn = (m_playerTurn + 1) % 2; }
+
+		SpecialAction pick(u32 _playableCardIndex);
+		void burn(u32 _playableCardIndex);
+
 	private:
 		
 		struct CardNode
@@ -238,16 +253,19 @@ namespace sevenWD
 		u8 m_numScienceToken = 0;
 
 		std::array<CardNode, 20> m_graph;
-		std::array<u8, 23> m_cardsPermutation; // index in m_context
+		std::array<u8, 20> m_cardsPermutation; // index in m_context
 		std::array<u8, 6> m_playableCards; // index in m_graph
 		u8 m_numPlayableCards;
 
+		u8 m_playerTurn = 0;
 		u8 m_currentAge = u8(-1);
 		int8_t m_military = 0;
 
 	private:
 		u32 genPyramidGraph(u32 _numRow, u32 _startNodeIndex);
 		u32 genInversePyramidGraph(u32 _baseSize, u32 _numRow, u32 _startNodeIndex);
+
+		void unlinkNodeFromGraph(u32 _nodeIndex);
 
 		void initScienceTokens();
 		void initAge1Graph();
