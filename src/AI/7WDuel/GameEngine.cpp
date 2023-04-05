@@ -1,8 +1,65 @@
 #include "AI/7WDuel/GameEngine.h"
 #include "AI/blockusAI/BlokusAI.h"
 
+#include <sstream>
+
 namespace sevenWD
 {
+	namespace Helper
+	{
+		const char * toString(ResourceType _type)
+		{
+			switch (_type)
+			{
+			case ResourceType::Wood:	return "Wood";
+			case ResourceType::Clay:	return "Clay";
+			case ResourceType::Stone:	return "Stone";
+			case ResourceType::Glass:	return "Glass";
+			case ResourceType::Papyrus: return "Papyrus";
+			default:
+				return "None";
+			}
+			
+			
+		};
+
+		const char* toString(CardType _type)
+		{
+			switch (_type)
+			{
+			case CardType::Blue:	return "Blue";
+			case CardType::Brown:	return "Brown";
+			case CardType::Grey:	return "Grey";
+			case CardType::Yellow:	return "Yellow";
+			case CardType::Science:	return "Science";
+			case CardType::Military:return "Military";
+			case CardType::Guild:	return "Guild";
+			case CardType::Wonder:	return "Wonder";
+
+			default:
+				return "None";
+			}
+		}
+
+		const char* toString(ScienceSymbol _type)
+		{
+			switch (_type)
+			{
+			case ScienceSymbol::Wheel:		return "Wheel";
+			case ScienceSymbol::Script:		return "Script";
+			case ScienceSymbol::Triangle:	return "Triangle";
+			case ScienceSymbol::Bowl:		return "Bowl";
+			case ScienceSymbol::SolarClock:	return "SolarClock";
+			case ScienceSymbol::Balance:	return "Balance";
+			case ScienceSymbol::Globe:		return "Globe";
+
+
+			default:
+				return "None";
+			}
+		}
+	}
+
 	//----------------------------------------------------------------------------
 	Card::Card(CardTag<CardType::Blue>, const char* _name, u8 _victoryPoints) : m_type{ CardType::Blue }, m_name { _name }, m_victoryPoints{ _victoryPoints }
 	{
@@ -129,6 +186,33 @@ namespace sevenWD
 	}
 
 	//----------------------------------------------------------------------------
+	void Card::print() const
+	{
+		std::stringstream cost;
+		bool firstCost = true;
+		auto concatCost = [&](ResourceType _type)
+		{
+			if (m_cost[u32(_type)] > 0)
+			{
+				cost << (firstCost ? "" : ", ") << u32(m_cost[u32(_type)]) << " " << Helper::toString(_type);
+				firstCost = false;
+			}
+		};
+		if (m_goldCost > 0)
+		{
+			cost << (firstCost ? "" : ", ") << u32(m_goldCost) << " Gold";
+			firstCost = false;
+		}
+
+		for(u32 i=0 ; i<u32(ResourceType::Count) ; ++i)
+			concatCost(ResourceType(i));
+
+
+
+		std::cout << "(" << Helper::toString(m_type) << ")" << m_name << "; Cost: " << cost.str() << std::endl;
+	}
+
+	//----------------------------------------------------------------------------
 	GameContext::GameContext(unsigned _seed) : m_rand(_seed)
 	{
 		m_allCards.clear();
@@ -142,6 +226,9 @@ namespace sevenWD
 	//----------------------------------------------------------------------------
 	void GameContext::initCityWithRandomWonders(PlayerCity& _player1, PlayerCity& _player2) const
 	{
+		_player1.m_gold = 7;
+		_player2.m_gold = 7;
+
 		std::vector<Wonders> wonders((u32)Wonders::Count);
 		for (u32 i = 0; i < wonders.size(); ++i)
 			wonders[i] = Wonders(i);
@@ -336,7 +423,16 @@ namespace sevenWD
 
 		unlinkNodeFromGraph(pickedCard);
 
-		return getCurrentPlayerCity().addCard(m_context.getCard(m_cardsPermutation[pickedCard]), m_playerCity[(m_playerTurn + 1) % 2]);
+		const Card& card = m_context.getCard(m_cardsPermutation[pickedCard]);
+		m_military += (m_playerTurn == 0 ? card.getMilitary() : -card.getMilitary());
+
+		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
+		u32 cost = getCurrentPlayerCity().computeCost(card, otherPlayer);
+
+		DEBUG_ASSERT(getCurrentPlayerCity().m_gold >= cost);
+		getCurrentPlayerCity().m_gold -= u8(cost);
+
+		return getCurrentPlayerCity().addCard(card, otherPlayer);
 	}
 
 	void GameState::burn(u32 _playableCardIndex)
@@ -363,7 +459,14 @@ namespace sevenWD
 		std::swap(getCurrentPlayerCity().m_unbuildWonders[_wondersIndex], getCurrentPlayerCity().m_unbuildWonders[getCurrentPlayerCity().m_unbuildWonderCount - 1]);
 		getCurrentPlayerCity().m_unbuildWonderCount--;
 
-		return getCurrentPlayerCity().addCard(m_context.getWonder(pickedWonder), m_playerCity[(m_playerTurn + 1) % 2]);
+		const Card& wonder = m_context.getWonder(pickedWonder);
+		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
+		u32 cost = getCurrentPlayerCity().computeCost(wonder, otherPlayer);
+
+		DEBUG_ASSERT(getCurrentPlayerCity().m_gold >= cost);
+		getCurrentPlayerCity().m_gold -= u8(cost);
+
+		return getCurrentPlayerCity().addCard(wonder, otherPlayer);
 	}
 
 	u32 GameState::genPyramidGraph(u32 _numRow, u32 _startNodeIndex)
@@ -551,9 +654,20 @@ namespace sevenWD
 			m_playableCards[m_numPlayableCards++] = u8(end - 2 + i);
 	}
 
+	void GameState::printPlayablCards()
+	{
+		std::cout << "Player turn : " << u32(m_playerTurn) << std::endl;
+		for (u32 i = 0; i < m_numPlayableCards; ++i)
+		{
+			const Card& card = m_context.getCard(m_cardsPermutation[m_playableCards[i]]);
+			std::cout << i << ", Cost= "<< getCurrentPlayerCity().computeCost(card, m_playerCity[(m_playerTurn + 1) % 2]) << " :";
+			m_context.getCard(m_cardsPermutation[m_playableCards[i]]).print();
+		}
+	}
+
 	u32 PlayerCity::computeCost(const Card& _card, const PlayerCity& _otherPlayer)
 	{
-		if (m_chainingSymbols & (1u << u32(_card.m_chainIn)))
+		if (_card.m_chainIn != ChainingSymbol::None && m_chainingSymbols & (1u << u32(_card.m_chainIn)))
 			return 0;
 
 		std::array<u8, u32(RT::Count)> goldCostPerResource = { 2,2,2,2,2 }; // base cost

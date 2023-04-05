@@ -133,6 +133,8 @@ namespace sevenWD
 		Card(Wonders _wonders, const char* _name, u8 _victoryPointReward, bool _extraTurn = false);
 
 		u8 getId() const { return m_id; }
+		u8 getMilitary() const { return m_military; }
+
 		void setId(u8 _id);
 		Card& setResourceDiscount(ResourceSet _resources);
 		Card& setWeakResourceProduction(ResourceSet _resources);
@@ -144,6 +146,8 @@ namespace sevenWD
 		Card& setChainOut(ChainingSymbol _symbol);
 		Card& setResourceCost(ResourceSet _cost);
 		Card& setGoldCost(u8 _num);
+
+		void print() const;
 
 	private:
 		const char* m_name = nullptr;
@@ -221,6 +225,8 @@ namespace sevenWD
 
 		u32 computeCost(const Card& _card, const PlayerCity& _otherPlayer);
 		SpecialAction addCard(const Card& _card, const PlayerCity& _otherCity);
+
+		void print();
 	};
 
 	//----------------------------------------------------------------------------
@@ -234,6 +240,8 @@ namespace sevenWD
 		SpecialAction pick(u32 _playableCardIndex);
 		void burn(u32 _playableCardIndex);
 		SpecialAction buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex);
+
+		void printPlayablCards();
 
 	private:
 		
