@@ -36,6 +36,7 @@ namespace sevenWD
 		Military,
 		Guild,
 		Wonder,
+		ScienceToken,
 		Count
 	};
 
@@ -65,6 +66,7 @@ namespace sevenWD
 		SolarClock,
 		Balance,
 		Globe,
+		Law,
 		Count
 	};
 
@@ -130,6 +132,7 @@ namespace sevenWD
 		Card(CardTag<CardType::Yellow>, const char* _name, u8 _victoryPoints);
 		Card(CardTag<CardType::Science>, const char* _name, ScienceSymbol _science, u8 _victoryPoints);
 		Card(CardTag<CardType::Guild>, const char* _name, CardType _cardColorForBonus, u8 _goldReward, u8 _victoryPointReward);
+		Card(ScienceToken _scienceToken, const char* _name, u8 _goldReward = 0, u8 _victoryPointReward = 0);
 		Card(Wonders _wonders, const char* _name, u8 _victoryPointReward, bool _extraTurn = false);
 
 		u8 getId() const { return m_id; }
@@ -187,6 +190,7 @@ namespace sevenWD
 		std::default_random_engine& rand() const { return m_rand; }
 		const Card& getCard(u8 _cardId) const { return *m_allCards[_cardId]; }
 		const Card& getWonder(Wonders _wonder) const { return m_wonders[u32(_wonder)]; }
+		const Card& getScienceToken(ScienceToken _token) const { return m_scienceTokens[u32(_token)]; }
 
 	private:
 		mutable std::default_random_engine m_rand;
@@ -195,6 +199,7 @@ namespace sevenWD
 		std::vector<Card> m_age3Cards;
 		std::vector<Card> m_guildCards;
 		std::vector<Card> m_wonders;
+		std::vector<Card> m_scienceTokens;
 		std::vector<const Card*> m_allCards;
 
 	private:
@@ -203,6 +208,7 @@ namespace sevenWD
 		void fillAge3();
 		void fillGuildCards();
 		void fillWonders();
+		void fillScienceTokens();
 	};
 
 	//----------------------------------------------------------------------------
@@ -210,7 +216,7 @@ namespace sevenWD
 	{
 		u32 m_chainingSymbols = 0; // bitfield
 		u16 m_ownedGuildCards = 0; // bitfield
-		u32 m_ownedScienceTokens = 0; // bitfield
+		u16 m_ownedScienceTokens = 0; // bitfield
 		u8 m_ownedScienceSymbols = 0; // bitfield
 		u8 m_gold = 0;
 		u8 m_victoryPoints = 0;
@@ -226,6 +232,8 @@ namespace sevenWD
 		u32 computeCost(const Card& _card, const PlayerCity& _otherPlayer);
 		SpecialAction addCard(const Card& _card, const PlayerCity& _otherCity);
 
+		bool ownScienceToken(ScienceToken _token) const { return ((1u << u32(_token)) & m_ownedScienceTokens) > 0; }
+
 		void print();
 	};
 
@@ -235,13 +243,16 @@ namespace sevenWD
 	public:
 		GameState(const GameContext& _context);
 
+		bool nextAge();
 		void nextPlayer() { m_playerTurn = (m_playerTurn + 1) % 2; }
 
 		SpecialAction pick(u32 _playableCardIndex);
 		void burn(u32 _playableCardIndex);
 		SpecialAction buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex);
+		void pickScienceToken(u32 _tokenIndex);
 
 		void printPlayablCards();
+		void printAvailableTokens();
 
 	private:
 		

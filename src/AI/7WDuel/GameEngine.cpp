@@ -34,6 +34,7 @@ namespace sevenWD
 			case CardType::Science:	return "Science";
 			case CardType::Military:return "Military";
 			case CardType::Guild:	return "Guild";
+			case CardType::ScienceToken: return "Token";
 			case CardType::Wonder:	return "Wonder";
 
 			default:
@@ -52,7 +53,7 @@ namespace sevenWD
 			case ScienceSymbol::SolarClock:	return "SolarClock";
 			case ScienceSymbol::Balance:	return "Balance";
 			case ScienceSymbol::Globe:		return "Globe";
-
+			case ScienceSymbol::Law:		return "Law";
 
 			default:
 				return "None";
@@ -61,38 +62,53 @@ namespace sevenWD
 	}
 
 	//----------------------------------------------------------------------------
-	Card::Card(CardTag<CardType::Blue>, const char* _name, u8 _victoryPoints) : m_type{ CardType::Blue }, m_name { _name }, m_victoryPoints{ _victoryPoints }
+	Card::Card(CardTag<CardType::Blue>, const char* _name, u8 _victoryPoints) 
+		: m_type{ CardType::Blue }, m_name { _name }, m_victoryPoints{ _victoryPoints }
 	{
 	}
 
-	Card::Card(CardTag<CardType::Brown>, const char* _name, ResourceType _resource, u8 _num) : m_type{ CardType::Brown }, m_name{ _name }
+	Card::Card(CardTag<CardType::Brown>, const char* _name, ResourceType _resource, u8 _num) 
+		: m_type{ CardType::Brown }, m_name{ _name }
 	{
 		m_production[u32(_resource)] = _num;
 	}
 
-	Card::Card(CardTag<CardType::Grey>, const char* _name, ResourceType _resource) : m_type{ CardType::Grey }, m_name{ _name }
+	Card::Card(CardTag<CardType::Grey>, const char* _name, ResourceType _resource) 
+		: m_type{ CardType::Grey }, m_name{ _name }
 	{
 		m_production[u32(_resource)] = 1;
 	}
 
-	Card::Card(CardTag<CardType::Military>, const char* _name, u8 _numShields) : m_type{ CardType::Military }, m_name{ _name }, m_military{ _numShields }
+	Card::Card(CardTag<CardType::Military>, const char* _name, u8 _numShields) 
+		: m_type{ CardType::Military }, m_name{ _name }, m_military{ _numShields }
 	{
 	}
 
-	Card::Card(CardTag<CardType::Science>, const char* _name, ScienceSymbol _science, u8 _victoryPoints) : m_type{ CardType::Science }, m_name{ _name }, m_victoryPoints{ _victoryPoints }, m_science{ _science }
+	Card::Card(CardTag<CardType::Science>, const char* _name, ScienceSymbol _science, u8 _victoryPoints) 
+		: m_type{ CardType::Science }, m_name{ _name }, m_victoryPoints{ _victoryPoints }, m_science{ _science }
 	{
 	}
 
-	Card::Card(CardTag<CardType::Guild>, const char* _name, CardType _cardColorForBonus, u8 _goldReward, u8 _victoryPointReward) : m_type{ CardType::Guild }, m_name{ _name }, m_victoryPoints{ _victoryPointReward }, m_goldReward{ _goldReward }
+	Card::Card(CardTag<CardType::Guild>, const char* _name, CardType _cardColorForBonus, u8 _goldReward, u8 _victoryPointReward) 
+		: m_type{ CardType::Guild }, m_name{ _name }, m_victoryPoints{ _victoryPointReward }, m_goldReward{ _goldReward }
 	{
 		m_secondaryType = u8(_cardColorForBonus);
 	}
 
-	Card::Card(CardTag<CardType::Yellow>, const char* _name, u8 _victoryPoints) : m_type{ CardType::Yellow }, m_name{ _name }, m_victoryPoints{ _victoryPoints }
+	Card::Card(CardTag<CardType::Yellow>, const char* _name, u8 _victoryPoints) 
+		: m_type{ CardType::Yellow }, m_name{ _name }, m_victoryPoints{ _victoryPoints }
 	{
 	}
 
-	Card::Card(Wonders _wonder, const char* _name, u8 _victoryPointReward, bool _extraTurn) : m_type{ CardType::Wonder }, m_name{ _name }, m_victoryPoints{ _victoryPointReward }, m_secondaryType{ u8(_wonder)}, m_extraTurn{_extraTurn}
+	Card::Card(ScienceToken _scienceToken, const char* _name, u8 _goldReward, u8 _victoryPointReward)
+		: m_type{ CardType::ScienceToken }, m_name{ _name }, m_secondaryType{ u8(_scienceToken) }, m_goldReward{_goldReward}, m_victoryPoints{_victoryPointReward}
+	{
+		if (ScienceToken(m_secondaryType) == ScienceToken::Law)
+			m_science = ScienceSymbol::Law;
+	}
+
+	Card::Card(Wonders _wonder, const char* _name, u8 _victoryPointReward, bool _extraTurn) 
+		: m_type{ CardType::Wonder }, m_name{ _name }, m_victoryPoints{ _victoryPointReward }, m_secondaryType{ u8(_wonder)}, m_extraTurn{_extraTurn}
 	{
 	}
 
@@ -221,6 +237,7 @@ namespace sevenWD
 		fillAge3();
 		fillGuildCards();
 		fillWonders();
+		fillScienceTokens();
 	}
 
 	//----------------------------------------------------------------------------
@@ -252,6 +269,16 @@ namespace sevenWD
 
 		std::shuffle(age1Index.begin(), age1Index.end(), rand());
 		std::copy(age1Index.begin(), age1Index.begin() + 20, _permut.begin());
+	}
+
+	void GameContext::initAge2Permutation(std::array<u8, 20>& _permut) const
+	{
+		std::array<u8, 23> age2Index;
+		for (u32 i = 0; i < m_age2Cards.size(); ++i)
+			age2Index[i] = m_age2Cards[i].getId();
+
+		std::shuffle(age2Index.begin(), age2Index.end(), rand());
+		std::copy(age2Index.begin(), age2Index.begin() + 20, _permut.begin());
 	}
 
 	void GameContext::fillAge1()
@@ -405,14 +432,31 @@ namespace sevenWD
 		}
 	}
 
+	void GameContext::fillScienceTokens()
+	{
+		m_scienceTokens.resize(u32(ScienceToken::Count));
+
+		m_scienceTokens[u32(ScienceToken::Agriculture)] = Card(ScienceToken::Agriculture, "Agriculture", 6, 4);
+		m_scienceTokens[u32(ScienceToken::Architecture)] = Card(ScienceToken::Architecture, "Architecture");
+		m_scienceTokens[u32(ScienceToken::Economy)] = Card(ScienceToken::Economy, "Economy");
+		m_scienceTokens[u32(ScienceToken::Law)] = Card(ScienceToken::Law, "Law");
+		m_scienceTokens[u32(ScienceToken::Masonry)] = Card(ScienceToken::Masonry, "Masonry");
+		m_scienceTokens[u32(ScienceToken::Mathematics)] = Card(ScienceToken::Mathematics, "Mathematics");
+		m_scienceTokens[u32(ScienceToken::Philosophy)] = Card(ScienceToken::Philosophy, "Philosophy", 0, 7);
+		m_scienceTokens[u32(ScienceToken::Strategy)] = Card(ScienceToken::Strategy, "Strategy");
+		m_scienceTokens[u32(ScienceToken::Theology)] = Card(ScienceToken::Theology, "Theology");
+		m_scienceTokens[u32(ScienceToken::TownPlanning)] = Card(ScienceToken::TownPlanning, "TownPlanning", 6);
+	}
+
 	//----------------------------------------------------------------------------
 	GameState::GameState(const GameContext& _context) : m_context{ _context }
 	{
 		initScienceTokens();
-		initAge1Graph();
-		
 		m_context.initCityWithRandomWonders(m_playerCity[0], m_playerCity[1]);
+
+		initAge1Graph();
 		m_context.initAge1Permutation(m_cardsPermutation);
+		m_currentAge = 0;
 	}
 
 	SpecialAction GameState::pick(u32 _playableCardIndex)
@@ -467,6 +511,40 @@ namespace sevenWD
 		getCurrentPlayerCity().m_gold -= u8(cost);
 
 		return getCurrentPlayerCity().addCard(wonder, otherPlayer);
+	}
+
+	void GameState::pickScienceToken(u32 _tokenIndex)
+	{
+		ScienceToken pickedToken = m_scienceTokens[_tokenIndex];
+		std::swap(m_scienceTokens[_tokenIndex], m_scienceTokens[m_numScienceToken - 1]);
+		m_numScienceToken--;
+
+		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
+		getCurrentPlayerCity().addCard(m_context.getScienceToken(pickedToken), otherPlayer);
+	}
+
+	bool GameState::nextAge()
+	{
+		if (m_numPlayableCards == 0)
+		{
+			m_currentAge++;
+
+			if (m_currentAge == 1)
+			{
+				initAge2Graph();
+				m_context.initAge2Permutation(m_cardsPermutation);
+			}
+
+			if (m_military < 0) // player 1 is advanced in military, player 0 to play
+				m_playerTurn = 0;
+			else if (m_military > 0)
+				m_playerTurn = 1;
+			else
+				; // nothing to do, last player is the player to start the turn
+
+			return true;
+		}
+		return false;
 	}
 
 	u32 GameState::genPyramidGraph(u32 _numRow, u32 _startNodeIndex)
@@ -665,6 +743,16 @@ namespace sevenWD
 		}
 	}
 
+	void GameState::printAvailableTokens()
+	{
+		for (u32 i = 0; i < m_numScienceToken; ++i)
+		{
+			const Card& card = m_context.getScienceToken(m_scienceTokens[i]);
+			std::cout << i << ": ";
+			card.print();
+		}
+	}
+
 	u32 PlayerCity::computeCost(const Card& _card, const PlayerCity& _otherPlayer)
 	{
 		if (_card.m_chainIn != ChainingSymbol::None && m_chainingSymbols & (1u << u32(_card.m_chainIn)))
@@ -780,6 +868,10 @@ namespace sevenWD
 
 		case CardType::Guild:
 			m_ownedGuildCards |= 1u << _card.m_secondaryType;
+			break;
+
+		case CardType::ScienceToken:
+			m_ownedScienceTokens |= 1u << _card.m_secondaryType;
 			break;
 
 		case CardType::Wonder:
