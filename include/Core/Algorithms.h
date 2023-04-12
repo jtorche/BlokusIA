@@ -5,6 +5,20 @@
 
 namespace core
 {
+    template<typename T>
+    T countBits(T _x)
+    {
+        // Brian Kernighan’s Algorithm
+        T result = 0;
+
+        while (_x) {
+
+            _x = _x & (_x - 1);
+            ++result;
+        }
+        return result;
+    }
+
     template<typename Iterator, typename Predicate, typename Operation>
     void for_each_if(Iterator _begin, Iterator _end, Predicate _predicate, Operation _operation)
     {

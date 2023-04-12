@@ -1,5 +1,6 @@
 #include "AI/7WDuel/GameEngine.h"
 #include "AI/blockusAI/BlokusAI.h"
+#include "Core/Algorithms.h"
 
 #include <sstream>
 
@@ -7,6 +8,26 @@ namespace sevenWD
 {
 	namespace Helper
 	{
+		template<typename T>
+		T safeSub(T x, T y)
+		{
+			return x > y ? x - y : 0;
+		}
+
+		bool isReplayWonder(Wonders _wonder)
+		{
+			switch (_wonder)
+			{
+			case Wonders::HangingGarden:
+			case Wonders::Atremis:
+			case Wonders::Sphinx:
+			case Wonders::ViaAppia:
+			case Wonders::Piraeus:
+				return true;
+			}
+			return false;
+		}
+
 		const char * toString(ResourceType _type)
 		{
 			switch (_type)
@@ -51,7 +72,6 @@ namespace sevenWD
 			case ScienceSymbol::Triangle:	return "Triangle";
 			case ScienceSymbol::Bowl:		return "Bowl";
 			case ScienceSymbol::SolarClock:	return "SolarClock";
-			case ScienceSymbol::Balance:	return "Balance";
 			case ScienceSymbol::Globe:		return "Globe";
 			case ScienceSymbol::Law:		return "Law";
 
@@ -261,26 +281,6 @@ namespace sevenWD
 			_player2.m_unbuildWonders[i] = wonders[i];
 	}
 
-	void GameContext::initAge1Permutation(std::array<u8, 20>& _permut) const
-	{
-		std::array<u8, 23> age1Index;
-		for (u32 i = 0; i < m_age1Cards.size(); ++i)
-			age1Index[i] = m_age1Cards[i].getId();
-
-		std::shuffle(age1Index.begin(), age1Index.end(), rand());
-		std::copy(age1Index.begin(), age1Index.begin() + 20, _permut.begin());
-	}
-
-	void GameContext::initAge2Permutation(std::array<u8, 20>& _permut) const
-	{
-		std::array<u8, 23> age2Index;
-		for (u32 i = 0; i < m_age2Cards.size(); ++i)
-			age2Index[i] = m_age2Cards[i].getId();
-
-		std::shuffle(age2Index.begin(), age2Index.end(), rand());
-		std::copy(age2Index.begin(), age2Index.begin() + 20, _permut.begin());
-	}
-
 	void GameContext::fillAge1()
 	{
 		m_age1Cards.push_back(Card(CardTag<CardType::Blue>{}, "Autel", 3).setChainOut(ChainingSymbol::Moon));
@@ -398,7 +398,7 @@ namespace sevenWD
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesMagistrats", CardType::Blue, 1, 1).setResourceCost({ RT::Wood, RT::Wood, RT::Clay, RT::Papyrus }));
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesSciences", CardType::Science, 1, 1).setResourceCost({ RT::Clay, RT::Clay, RT::Wood, RT::Wood }));
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesBatisseurs", CardType::Wonder, 0, 2).setResourceCost({ RT::Stone, RT::Stone, RT::Clay, RT::Wood, RT::Glass }));
-		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesUsuriers", CardType::Count, 3, 1).setResourceCost({ RT::Stone, RT::Stone, RT::Wood, RT::Wood }));
+		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesUsuriers", CardType::Count, 0, 0).setResourceCost({ RT::Stone, RT::Stone, RT::Wood, RT::Wood }));
 
 		for (Card& card : m_guildCards)
 		{
@@ -449,38 +449,71 @@ namespace sevenWD
 	}
 
 	//----------------------------------------------------------------------------
-	GameState::GameState(const GameContext& _context) : m_context{ _context }
+	GameState::GameState(const GameContext& _context) : m_context{ _context }, m_playerCity{ _context, _context }
 	{
 		initScienceTokens();
 		m_context.initCityWithRandomWonders(m_playerCity[0], m_playerCity[1]);
 
 		initAge1Graph();
-		m_context.initAge1Permutation(m_cardsPermutation);
-		m_currentAge = 0;
 	}
 
 	SpecialAction GameState::pick(u32 _playableCardIndex)
 	{
+		DEBUG_ASSERT(_playableCardIndex < m_numPlayableCards);
 		u8 pickedCard = m_playableCards[_playableCardIndex];
 		std::swap(m_playableCards[_playableCardIndex], m_playableCards[m_numPlayableCards - 1]);
 		m_numPlayableCards--;
 
 		unlinkNodeFromGraph(pickedCard);
 
-		const Card& card = m_context.getCard(m_cardsPermutation[pickedCard]);
-		m_military += (m_playerTurn == 0 ? card.getMilitary() : -card.getMilitary());
+		const Card& card = m_context.getCard(m_graph[pickedCard].m_cardId);
+		if (card.getMilitary() != 0)
+		{ 
+			u8 militaryBonus = getCurrentPlayerCity().ownScienceToken(ScienceToken::Strategy);
+			m_military += (m_playerTurn == 0 ? (card.getMilitary() + militaryBonus) : -(card.getMilitary() + militaryBonus));
 
-		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
+			if (m_military >= 3 && !militaryToken2[0])
+			{
+				militaryToken2[0] = true;
+				m_playerCity[1].m_gold = Helper::safeSub<u8>(m_playerCity[1].m_gold, 2);
+			}
+			if (m_military >= 6 && !militaryToken5[0])
+			{
+				militaryToken5[0] = true;
+				m_playerCity[1].m_gold = Helper::safeSub<u8>(m_playerCity[1].m_gold, 5);
+			}
+			if (m_military <= -3 && !militaryToken2[1])
+			{
+				militaryToken2[1] = true;
+				m_playerCity[0].m_gold = Helper::safeSub<u8>(m_playerCity[0].m_gold, 2);
+			}
+			if (m_military <= -6 && !militaryToken5[1])
+			{
+				militaryToken5[1] = true;
+				m_playerCity[0].m_gold = Helper::safeSub<u8>(m_playerCity[0].m_gold, 5);
+			}
+		}
+
+		auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
 		u32 cost = getCurrentPlayerCity().computeCost(card, otherPlayer);
 
 		DEBUG_ASSERT(getCurrentPlayerCity().m_gold >= cost);
 		getCurrentPlayerCity().m_gold -= u8(cost);
 
-		return getCurrentPlayerCity().addCard(card, otherPlayer);
+		if (otherPlayer.ownScienceToken(ScienceToken::Economy))
+			otherPlayer.m_gold += u8(cost);
+
+		SpecialAction action = getCurrentPlayerCity().addCard(card, otherPlayer);
+
+		if (abs(m_military) >= 9)
+			return SpecialAction::MilitaryWin;
+		else 
+			return action;
 	}
 
 	void GameState::burn(u32 _playableCardIndex)
 	{
+		DEBUG_ASSERT(_playableCardIndex < m_numPlayableCards);
 		u8 pickedCard = m_playableCards[_playableCardIndex];
 		std::swap(m_playableCards[_playableCardIndex], m_playableCards[m_numPlayableCards - 1]);
 		m_numPlayableCards--;
@@ -491,8 +524,9 @@ namespace sevenWD
 		getCurrentPlayerCity().m_gold += burnValue;
 	}
 
-	SpecialAction GameState::buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex)
+	SpecialAction GameState::buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex, u8 _additionalEffect)
 	{
+		DEBUG_ASSERT(_withPlayableCardIndex < m_numPlayableCards);
 		u8 pickedCard = m_playableCards[_withPlayableCardIndex];
 		std::swap(m_playableCards[_withPlayableCardIndex], m_playableCards[m_numPlayableCards - 1]);
 		m_numPlayableCards--;
@@ -504,36 +538,51 @@ namespace sevenWD
 		getCurrentPlayerCity().m_unbuildWonderCount--;
 
 		const Card& wonder = m_context.getWonder(pickedWonder);
-		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
+		auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
 		u32 cost = getCurrentPlayerCity().computeCost(wonder, otherPlayer);
 
 		DEBUG_ASSERT(getCurrentPlayerCity().m_gold >= cost);
 		getCurrentPlayerCity().m_gold -= u8(cost);
 
-		return getCurrentPlayerCity().addCard(wonder, otherPlayer);
+		if (pickedWonder == Wonders::ViaAppia)
+			otherPlayer.m_gold = Helper::safeSub<u8>(otherPlayer.m_gold, 3);
+
+		else if (_additionalEffect != u8(-1) && (pickedWonder == Wonders::Zeus || pickedWonder == Wonders::CircusMaximus))
+			otherPlayer.removeCard(m_context.getCard(_additionalEffect));
+
+		else if (_additionalEffect != u8(-1) && pickedWonder == Wonders::Mausoleum)
+		{
+			const Card& card = m_context.getCard(_additionalEffect);
+			getCurrentPlayerCity().addCard(card, otherPlayer);
+		}
+
+		SpecialAction action =  getCurrentPlayerCity().addCard(wonder, otherPlayer);
+		if (abs(m_military) >= 9)
+			return SpecialAction::MilitaryWin;
+		else
+			return action;
 	}
 
-	void GameState::pickScienceToken(u32 _tokenIndex)
+	SpecialAction GameState::pickScienceToken(u32 _tokenIndex)
 	{
 		ScienceToken pickedToken = m_scienceTokens[_tokenIndex];
 		std::swap(m_scienceTokens[_tokenIndex], m_scienceTokens[m_numScienceToken - 1]);
 		m_numScienceToken--;
 
 		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
-		getCurrentPlayerCity().addCard(m_context.getScienceToken(pickedToken), otherPlayer);
+		return getCurrentPlayerCity().addCard(m_context.getScienceToken(pickedToken), otherPlayer);
 	}
 
-	bool GameState::nextAge()
+	GameState::NextAge GameState::nextAge()
 	{
 		if (m_numPlayableCards == 0)
 		{
-			m_currentAge++;
-
-			if (m_currentAge == 1)
-			{
+			if (m_currentAge == 0)
 				initAge2Graph();
-				m_context.initAge2Permutation(m_cardsPermutation);
-			}
+			else if (m_currentAge == 1)
+				initAge3Graph();
+			else if (m_currentAge == 2)
+				return NextAge::EndGame;
 
 			if (m_military < 0) // player 1 is advanced in military, player 0 to play
 				m_playerTurn = 0;
@@ -542,9 +591,33 @@ namespace sevenWD
 			else
 				; // nothing to do, last player is the player to start the turn
 
-			return true;
+			return NextAge::Next;
 		}
-		return false;
+		return NextAge::None;
+	}
+
+	u32 GameState::findWinner()
+	{
+		u32 vp0 = m_playerCity[0].computeVictoryPoint(m_playerCity[1]);
+		u32 vp1 = m_playerCity[1].computeVictoryPoint(m_playerCity[0]);
+		if (m_military >= 6)
+			vp0 += 10;
+		else if (m_military >= 3)
+			vp0 += 5;
+		else if (m_military >= 1)
+			vp0 += 2;
+
+		if (m_military <= 6)
+			vp1 += 10;
+		else if (m_military <= 3)
+			vp1 += 5;
+		else if (m_military <= 1)
+			vp1 += 2;
+
+		if (vp0 == vp1)
+			return m_playerCity[0].m_numCardPerType[u32(CardType::Blue)] > m_playerCity[1].m_numCardPerType[u32(CardType::Blue)] ? 0 : 1;
+		else
+			return vp0 < vp1 ? 1 : 0;
 	}
 
 	u32 GameState::genPyramidGraph(u32 _numRow, u32 _startNodeIndex)
@@ -556,10 +629,10 @@ namespace sevenWD
 		{
 			for (u32 i = 0; i < 2 + row; ++i)
 			{
+				m_graph[curNodeIndex + i].m_isGuildCard = 0;
 				m_graph[curNodeIndex + i].m_visible = row % 2 == 0;
 				m_graph[curNodeIndex + i].m_child0 = CardNode::InvalidNode;
 				m_graph[curNodeIndex + i].m_child1 = CardNode::InvalidNode;
-				m_graph[curNodeIndex + i].m_unused = 0;
 
 				if (prevRowStartIndex != u32(-1)) // not first row
 				{
@@ -609,10 +682,10 @@ namespace sevenWD
 		{
 			for (u32 i = 0; i < _baseSize - row; ++i)
 			{
+				m_graph[curNodeIndex + i].m_isGuildCard = 0;
 				m_graph[curNodeIndex + i].m_visible = row % 2 == 0;
 				m_graph[curNodeIndex + i].m_child0 = CardNode::InvalidNode;
 				m_graph[curNodeIndex + i].m_child1 = CardNode::InvalidNode;
-				m_graph[curNodeIndex + i].m_unused = 0;
 
 				if (prevRowStartIndex != u32(-1))
 				{
@@ -649,13 +722,39 @@ namespace sevenWD
 
 				if (m_graph[parent].m_child0 == CardNode::InvalidNode && m_graph[parent].m_child1 == CardNode::InvalidNode)
 				{
-					m_graph[parent].m_visible = true;
+					if(m_graph[parent].m_visible == 0)
+						pickCardAdnInitNode(m_graph[parent]);
 					m_playableCards[m_numPlayableCards++] = parent;
 				}
 			}
 		};
 		removeFromParent(m_graph[_nodeIndex].m_parent0);
 		removeFromParent(m_graph[_nodeIndex].m_parent1);
+	}
+
+	void GameState::pickCardAdnInitNode(CardNode& _node)
+	{
+		_node.m_visible = 1;
+		if (_node.m_isGuildCard)
+		{
+			u8 index = pickCardIndex(m_availableGuildCards, m_numAvailableGuildCards);
+			_node.m_cardId = m_context.getGuildCard(index).getId();
+		}
+		else
+		{
+			u8 index = pickCardIndex(m_availableAgeCards, m_numAvailableAgeCards);
+			switch (m_currentAge)
+			{
+			default:
+				DEBUG_ASSERT(0);
+			case 0:
+				_node.m_cardId = m_context.getAge1Card(index).getId(); break;
+			case 1:
+				_node.m_cardId = m_context.getAge2Card(index).getId(); break;
+			case 2:
+				_node.m_cardId = m_context.getAge3Card(index).getId(); break;
+			};
+		}
 	}
 
 	void GameState::initScienceTokens()
@@ -679,24 +778,47 @@ namespace sevenWD
 
 	void GameState::initAge1Graph()
 	{
+		m_currentAge = 0;
 		u32 end = genPyramidGraph(5, 0);
 
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 6; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 6 + i);
+
+		m_numAvailableAgeCards = m_context.getAge1CardCount();
+		for (u32 i = 0; i < m_numAvailableAgeCards; ++i)
+			m_availableAgeCards[i] = u8(i);
+
+		for (CardNode& node : m_graph)
+		{
+			if (node.m_visible)
+				pickCardAdnInitNode(node);
+		}
 	}
 
 	void GameState::initAge2Graph()
 	{
+		m_currentAge = 1;
 		u32 end = genInversePyramidGraph(6, 5, 0);
 
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 2; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 2 + i);
+
+		m_numAvailableAgeCards = m_context.getAge2CardCount();
+		for (u32 i = 0; i < m_numAvailableAgeCards; ++i)
+			m_availableAgeCards[i] = u8(i);
+		
+		for (CardNode& node : m_graph)
+		{
+			if (node.m_visible)
+				pickCardAdnInitNode(node);
+		}
 	}
 
 	void GameState::initAge3Graph()
 	{
+		m_currentAge = 2;
 		u32 end = genPyramidGraph(3, 0);
 
 		const u32 connectNode0 = end;
@@ -704,6 +826,8 @@ namespace sevenWD
 
 		m_graph[connectNode0].m_visible = 0;
 		m_graph[connectNode1].m_visible = 0;
+		m_graph[connectNode0].m_isGuildCard = 0;
+		m_graph[connectNode1].m_isGuildCard = 0;
 
 		m_graph[connectNode0].m_parent0 = 5;
 		m_graph[connectNode0].m_parent1 = 6;
@@ -727,9 +851,32 @@ namespace sevenWD
 		m_graph[13].m_parent1 = connectNode1;
 		m_graph[14].m_parent0 = connectNode1;
 
+		// assign randomely guild cards tag
+		std::vector<u8> guildCarTag(m_graph.size(), 0);
+		guildCarTag[0] = 1;
+		guildCarTag[1] = 1;
+		guildCarTag[2] = 1;
+		std::shuffle(guildCarTag.begin(), guildCarTag.end(), m_context.rand());
+		for (u32 i = 0; i < m_graph.size(); ++i)
+			m_graph[i].m_isGuildCard = guildCarTag[i];
+
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 2; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 2 + i);
+
+		m_numAvailableAgeCards = m_context.getAge3CardCount();
+		m_numAvailableGuildCards = m_context.getGuildCardCount();
+
+		for (u32 i = 0; i < m_numAvailableAgeCards; ++i)
+			m_availableAgeCards[i] = u8(i);
+		for (u32 i = 0; i < m_numAvailableGuildCards; ++i)
+			m_availableGuildCards[i] = u8(i);
+		
+		for (CardNode& node : m_graph)
+		{
+			if (node.m_visible)
+				pickCardAdnInitNode(node);
+		}
 	}
 
 	void GameState::printPlayablCards()
@@ -737,9 +884,9 @@ namespace sevenWD
 		std::cout << "Player turn : " << u32(m_playerTurn) << std::endl;
 		for (u32 i = 0; i < m_numPlayableCards; ++i)
 		{
-			const Card& card = m_context.getCard(m_cardsPermutation[m_playableCards[i]]);
-			std::cout << i << ", Cost= "<< getCurrentPlayerCity().computeCost(card, m_playerCity[(m_playerTurn + 1) % 2]) << " :";
-			m_context.getCard(m_cardsPermutation[m_playableCards[i]]).print();
+			const Card& card = m_context.getCard(m_graph[m_playableCards[i]].m_cardId);
+			std::cout << i+1 << ", Cost= "<< getCurrentPlayerCity().computeCost(card, m_playerCity[(m_playerTurn + 1) % 2]) << " :";
+			card.print();
 		}
 	}
 
@@ -748,7 +895,7 @@ namespace sevenWD
 		for (u32 i = 0; i < m_numScienceToken; ++i)
 		{
 			const Card& card = m_context.getScienceToken(m_scienceTokens[i]);
-			std::cout << i << ": ";
+			std::cout << i+1 << ": ";
 			card.print();
 		}
 	}
@@ -778,9 +925,25 @@ namespace sevenWD
 			ResourceType normalResources[] = { RT::Wood, RT::Clay, RT::Stone };
 			ResourceType rareResources[] = { RT::Glass, RT::Papyrus };
 			std::sort(std::begin(normalResources), std::end(normalResources), [&](ResourceType _1, ResourceType _2) { return goldCostPerResource[u32(_1)] > goldCostPerResource[u32(_2)]; });
+			std::sort(std::begin(rareResources), std::end(rareResources), [&](ResourceType _1, ResourceType _2) { return goldCostPerResource[u32(_1)] > goldCostPerResource[u32(_2)]; });
+			
 
-			if (goldCostPerResource[u32(rareResources[1])] > goldCostPerResource[u32(rareResources[0])])
-				std::swap(rareResources[0], rareResources[1]);
+			if (ownScienceToken(ScienceToken::Masonry) && _card.m_type == CardType::Blue ||
+				ownScienceToken(ScienceToken::Architecture) && _card.m_type == CardType::Wonder)
+			{
+				ResourceType allResources[] = { RT::Wood, RT::Clay, RT::Stone, RT::Glass, RT::Papyrus };
+				std::sort(std::begin(allResources), std::end(allResources), [&](ResourceType _1, ResourceType _2) { return goldCostPerResource[u32(_1)] > goldCostPerResource[u32(_2)]; });
+
+				u32 freeResources = 2;
+				for (ResourceType r : allResources)
+				{
+					while (freeResources > 0 && cardResourceCost[u32(r)] > 0)
+					{
+						cardResourceCost[u32(r)]--;
+						freeResources--;
+					}
+				}
+			}
 
 			// first spend normal resource
 			for (u32 i = 0; i < m_weakProduction.first; ++i)
@@ -821,19 +984,29 @@ namespace sevenWD
 	{
 		SpecialAction action = SpecialAction::Nothing;
 
+		if (_card.m_chainIn != ChainingSymbol::None && m_chainingSymbols & (1u << u32(_card.m_chainIn)) && ownScienceToken(ScienceToken::TownPlanning))
+			m_gold += 4;
+
 		m_chainingSymbols |= (1u << u32(_card.m_chainOut));
 
 		if (_card.m_goldPerNumberOfCardColorTypeCard)
 			m_gold += m_numCardPerType[_card.m_secondaryType] * _card.m_goldReward;
-		else if(_card.m_type == CardType::Guild)
+		else if(_card.m_type == CardType::Guild && _card.m_secondaryType < u32(CardType::Count))
 			m_gold += std::max(m_numCardPerType[_card.m_secondaryType], _otherCity.m_numCardPerType[_card.m_secondaryType]) * _card.m_goldReward;
 		else
 			m_gold += _card.m_goldReward;
 
-		if (_card.m_type == CardType::Brown)
-			m_brownCardIndexes[m_numCardPerType[u32(CardType::Brown)]] = u8(_card.m_id);
-		if (_card.m_type == CardType::Grey)
-			m_greyCardIndexes[m_numCardPerType[u32(CardType::Grey)]] = u8(_card.m_id);
+		if (_card.m_type == CardType::Brown || _card.m_type == CardType::Grey)
+		{
+			for (u32 type = 0; type < u32(ResourceType::Count); ++type)
+			{
+				if (m_bestProductionCardIndex[type] == u8(-1) ||
+					_card.m_production[type] > m_context.getCard(m_bestProductionCardIndex[type]).m_production[type])
+				{
+					m_bestProductionCardIndex[type] = _card.getId();
+				}
+			}
+		}
 
 		m_numCardPerType[u32(_card.m_type)]++;
 		m_victoryPoints += m_victoryPoints;
@@ -863,15 +1036,30 @@ namespace sevenWD
 		case CardType::Science:
 			if (m_ownedScienceSymbols & (1u << u32(_card.m_science)))
 				action = SpecialAction::TakeScienceToken;
-			m_ownedScienceSymbols |=  1u << u32(_card.m_science);
+			else
+			{
+				m_ownedScienceSymbols |= 1u << u32(_card.m_science);
+				m_numScienceSymbols++;
+			}
 			break;
 
 		case CardType::Guild:
-			m_ownedGuildCards |= 1u << _card.m_secondaryType;
+			m_ownedGuildCards |= (1u << _card.m_secondaryType);
 			break;
 
 		case CardType::ScienceToken:
+			if(ScienceToken(_card.m_secondaryType) == ScienceToken::Mathematics)
+				m_victoryPoints += 3 * u8(core::countBits(m_ownedScienceTokens));
+
+			if (ScienceToken(_card.m_secondaryType) == ScienceToken::Law)
+			{
+				m_ownedScienceSymbols |= 1u << u32(ScienceSymbol::Law);
+				m_numScienceSymbols++;
+			}
+
 			m_ownedScienceTokens |= 1u << _card.m_secondaryType;
+			if (ownScienceToken(ScienceToken::Mathematics))
+				m_victoryPoints += 3;
 			break;
 
 		case CardType::Wonder:
@@ -882,15 +1070,81 @@ namespace sevenWD
 			std::swap(m_unbuildWonders[m_unbuildWonderCount-1], m_unbuildWonders[index]);
 			m_unbuildWonderCount--;
 			
-			// Apply Wonder special effect
-			//switch (Wonders(_card.m_secondaryType))
-			//{
-			//	case 
-			//}
+			if (Helper::isReplayWonder(Wonders(_card.m_secondaryType)) || ownScienceToken(ScienceToken::Theology))
+				action = SpecialAction::Replay;
 			break;
 		}
 		}
 		
+		if (m_numScienceSymbols == 6)
+			return SpecialAction::ScienceWin;
+
 		return action;
+	}
+
+	void PlayerCity::removeCard(const Card& _card)
+	{
+		DEBUG_ASSERT(_card.getType() == CardType::Brown || _card.getType() == CardType::Grey);
+		DEBUG_ASSERT(_card.m_chainIn == ChainingSymbol::None && _card.m_chainOut == ChainingSymbol::None);
+
+		for(u32 i=0 ; i < u32(ResourceType::Count) ; ++i)
+			m_production[i] -= _card.m_production[i];
+	}
+
+	u32 PlayerCity::computeVictoryPoint(const PlayerCity& _otherCity) const
+	{
+		u32 goldVP = m_gold / 3;
+		if (m_ownedGuildCards & (1 << u32(CardType::Count)))
+			goldVP *= 2;
+
+		u32 guildVP = 0;
+		for (const Card& card : m_context.getAllGuildCards())
+		{
+			if (m_ownedGuildCards & (1 << card.getSecondaryType()))
+			{
+				u32 numCards = std::max(m_numCardPerType[card.getSecondaryType()], _otherCity.m_numCardPerType[card.getSecondaryType()]);
+				guildVP += card.m_victoryPoints * numCards;
+			}
+		}
+
+		return m_victoryPoints + goldVP + guildVP;
+	}
+
+	DiscardedCards::DiscardedCards()
+	{
+		for (u8& x : scienceCards)
+			x = u8(-1);
+		for (u8& x : guildCards)
+			x = u8(-1);
+	}
+
+	void DiscardedCards::add(const GameContext& _context, const Card& _card)
+	{
+		if (_card.getMilitary() > 0)
+		{
+			if (militaryCard == u8(-1) || _card.getMilitary() > _context.getCard(militaryCard).getMilitary())
+				militaryCard = _card.getId();
+		}
+
+		if (_card.m_victoryPoints > 0)
+		{
+			if (bestVictoryPoint == u8(-1) || _card.m_victoryPoints > _context.getCard(bestVictoryPoint).m_victoryPoints)
+				bestVictoryPoint = _card.getId();
+		}
+
+		if (_card.getType() == CardType::Science)
+		{
+			u32 scienceIndex = u32(_card.m_science);
+			if (scienceCards[scienceIndex] != u8(-1))
+			{
+				if(_card.m_victoryPoints > _context.getCard(bestVictoryPoint).m_victoryPoints)
+					scienceCards[scienceIndex] = _card.getId();
+			}
+			else
+				scienceCards[scienceIndex] = _card.getId();
+		}
+
+		if (_card.getType() == CardType::Guild)
+			guildCards[numGuildCards++] = _card.getId();
 	}
 }
