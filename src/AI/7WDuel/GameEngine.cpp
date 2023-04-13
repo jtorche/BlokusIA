@@ -457,6 +457,14 @@ namespace sevenWD
 		initAge1Graph();
 	}
 
+	//----------------------------------------------------------------------------
+	const Card& GameState::getPlayableCard(u32 _index) const
+	{
+		DEBUG_ASSERT(_index < m_numPlayableCards);
+		u8 pickedCard = m_playableCards[_index];
+		return m_context.getCard(m_graph[pickedCard].m_cardId);
+	}
+
 	SpecialAction GameState::pick(u32 _playableCardIndex)
 	{
 		DEBUG_ASSERT(_playableCardIndex < m_numPlayableCards);
@@ -569,8 +577,7 @@ namespace sevenWD
 		std::swap(m_scienceTokens[_tokenIndex], m_scienceTokens[m_numScienceToken - 1]);
 		m_numScienceToken--;
 
-		const auto& otherPlayer = m_playerCity[(m_playerTurn + 1) % 2];
-		return getCurrentPlayerCity().addCard(m_context.getScienceToken(pickedToken), otherPlayer);
+		return getCurrentPlayerCity().addCard(m_context.getScienceToken(pickedToken), getOtherPlayerCity());
 	}
 
 	GameState::NextAge GameState::nextAge()
@@ -607,11 +614,11 @@ namespace sevenWD
 		else if (m_military >= 1)
 			vp0 += 2;
 
-		if (m_military <= 6)
+		if (m_military <= -6)
 			vp1 += 10;
-		else if (m_military <= 3)
+		else if (m_military <= -3)
 			vp1 += 5;
-		else if (m_military <= 1)
+		else if (m_military <= -1)
 			vp1 += 2;
 
 		if (vp0 == vp1)
@@ -885,7 +892,7 @@ namespace sevenWD
 		for (u32 i = 0; i < m_numPlayableCards; ++i)
 		{
 			const Card& card = m_context.getCard(m_graph[m_playableCards[i]].m_cardId);
-			std::cout << i+1 << ", Cost= "<< getCurrentPlayerCity().computeCost(card, m_playerCity[(m_playerTurn + 1) % 2]) << " :";
+			std::cout << i+1 << ", Cost= "<< getCurrentPlayerCity().computeCost(card, getOtherPlayerCity()) << " :";
 			card.print();
 		}
 	}
@@ -916,7 +923,7 @@ namespace sevenWD
 		bool empty = true;
 		for (u32 i = 0; i < u32(RT::Count); ++i)
 		{
-			cardResourceCost[i] = m_production[i] > cardResourceCost[i] ? 0 : cardResourceCost[i] - m_production[i];
+			cardResourceCost[i] = Helper::safeSub(cardResourceCost[i], m_production[i]);
 			empty &= cardResourceCost[i] == 0;
 		}
 		
@@ -1009,7 +1016,7 @@ namespace sevenWD
 		}
 
 		m_numCardPerType[u32(_card.m_type)]++;
-		m_victoryPoints += m_victoryPoints;
+		m_victoryPoints += _card.m_victoryPoints;
 
 		for (u32 i = 0; i < u32(ResourceType::Count); ++i)
 		{
@@ -1100,7 +1107,7 @@ namespace sevenWD
 		u32 guildVP = 0;
 		for (const Card& card : m_context.getAllGuildCards())
 		{
-			if (m_ownedGuildCards & (1 << card.getSecondaryType()))
+			if (card.getSecondaryType() < u32(CardType::Count) && m_ownedGuildCards & (1 << card.getSecondaryType()))
 			{
 				u32 numCards = std::max(m_numCardPerType[card.getSecondaryType()], _otherCity.m_numCardPerType[card.getSecondaryType()]);
 				guildVP += card.m_victoryPoints * numCards;

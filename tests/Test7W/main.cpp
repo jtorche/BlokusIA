@@ -2,13 +2,41 @@
 #include <iostream>
 #include <windows.h>
 
-#include "AI/7WDuel/GameEngine.h"
+#include "AI/7WDuel/GameController.h"
 
 namespace sevenWD
 {
 	void costTest();
 }
 
+int main()
+{
+	using namespace sevenWD;
+	GameContext sevenWDContext(u32(time(nullptr)));
+	GameController game(sevenWDContext);
+
+	std::vector<Move> moves;
+	Move move;
+	u32 turn = 0;
+	do
+	{
+		game.enumerateMoves(moves);
+		move = moves[sevenWDContext.rand()() % moves.size()];
+
+		const Card& card = game.m_gameState.getPlayableCard(move.playableCard);
+		std::cout << "Turn " << turn++ << ", Player " << game.m_gameState.getCurrentPlayerTurn() << ", Action " << u32(move.action) << " with ";
+		card.print();
+		std::cout << std::endl;
+		
+	} 
+	while (!game.play(move));
+
+	std::cout << "Player " << (game.m_state == GameController::State::WinPlayer0 ? "0" : "1") << " has won a " << u32(game.m_winType) << " win.\n";
+	system("pause");
+	return 0;
+}
+
+#if 0
 int main()
 {
 	sevenWD::costTest();
@@ -71,3 +99,4 @@ int main()
 
 	return 0;
 }
+#endif
