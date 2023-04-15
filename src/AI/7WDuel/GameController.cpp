@@ -47,6 +47,16 @@ namespace sevenWD
 				}
 			}
 		}
+		else if (m_state == State::PickScienceToken)
+		{
+			for (u8 i = 0; i < m_gameState.m_numScienceToken; ++i)
+			{
+				Move move{ u8(-1), Move::Action::ScienceToken };
+				move.playableCard = i;
+
+				_moves.push_back(move);
+			}
+		}
 		else
 		{
 			DEBUG_ASSERT(0);
@@ -58,10 +68,15 @@ namespace sevenWD
 		sevenWD::SpecialAction action = sevenWD::SpecialAction::Nothing;
 		if (_move.action == Move::Pick)
 			action = m_gameState.pick(_move.playableCard);
-		else if(_move.action == Move::Burn)
+		else if (_move.action == Move::Burn)
 			m_gameState.burn(_move.playableCard);
 		else if (_move.action == Move::BuildWonder)
 			action = m_gameState.buildWonder(_move.playableCard, _move.wonderIndex, _move.additionalId);
+		else if (_move.action == Move::ScienceToken)
+		{
+			m_gameState.pickScienceToken(_move.playableCard);
+			DEBUG_ASSERT(m_state == State::PickScienceToken);
+		}
 
 		if (action == sevenWD::SpecialAction::TakeScienceToken)
 		{

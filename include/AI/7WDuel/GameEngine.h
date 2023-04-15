@@ -284,11 +284,14 @@ namespace sevenWD
 			Next,
 			EndGame
 		};
+		u32 getCurrentAge() const { return m_currentAge; }
 		NextAge nextAge();
 		u32 getCurrentPlayerTurn() const { return m_playerTurn; }
 		void nextPlayer() { m_playerTurn = (m_playerTurn + 1) % 2; }
 
 		const Card& getPlayableCard(u32 _index) const;
+		const Card& getPlayableScienceToken(u32 _index) const;
+		const Card& getCurrentPlayerWonder(u32 _index) const;
 
 		SpecialAction pick(u32 _playableCardIndex);
 		void burn(u32 _playableCardIndex);
@@ -339,6 +342,7 @@ namespace sevenWD
 		u32 genInversePyramidGraph(u32 _baseSize, u32 _numRow, u32 _startNodeIndex);
 
 		PlayerCity& getCurrentPlayerCity() { return m_playerCity[m_playerTurn]; }
+		const PlayerCity& getCurrentPlayerCity() const { return m_playerCity[m_playerTurn]; }
 		const PlayerCity& getOtherPlayerCity() const { return m_playerCity[(m_playerTurn + 1) % 2]; }
 		void unlinkNodeFromGraph(u32 _nodeIndex);
 

@@ -422,7 +422,7 @@ namespace sevenWD
 		m_wonders[u32(Wonders::Sphinx)] = Card(Wonders::Sphinx, "Sphinx", 6, true).setResourceCost({ RT::Stone, RT::Clay, RT::Glass, RT::Glass });
 		m_wonders[u32(Wonders::ViaAppia)] = Card(Wonders::ViaAppia, "LaViaAppia", 3, true).setGoldReward(3).setResourceCost({ RT::Clay, RT::Clay, RT::Stone, RT::Stone, RT::Papyrus });
 		m_wonders[u32(Wonders::Piraeus)] = Card(Wonders::Piraeus, "LaPiree", 2, true).setWeakResourceProduction({ RT::Papyrus, RT::Glass }).setResourceCost({ RT::Clay, RT::Stone, RT::Wood, RT::Wood });
-		m_wonders[u32(Wonders::HangingGarden)] = Card(Wonders::HangingGarden, "JardinSuspendus", 3, true).setGoldCost(6).setResourceCost({ RT::Papyrus, RT::Glass, RT::Wood, RT::Wood });
+		m_wonders[u32(Wonders::HangingGarden)] = Card(Wonders::HangingGarden, "JardinSuspendus", 3, true).setGoldReward(6).setResourceCost({ RT::Papyrus, RT::Glass, RT::Wood, RT::Wood });
 		m_wonders[u32(Wonders::Mausoleum)] = Card(Wonders::Mausoleum, "Mausoleum", 2).setResourceCost({ RT::Papyrus, RT::Glass, RT::Glass, RT::Clay, RT::Clay });
 
 		for (Card& card : m_wonders)
@@ -463,6 +463,21 @@ namespace sevenWD
 		DEBUG_ASSERT(_index < m_numPlayableCards);
 		u8 pickedCard = m_playableCards[_index];
 		return m_context.getCard(m_graph[pickedCard].m_cardId);
+	}
+
+	//----------------------------------------------------------------------------
+	const Card& GameState::getPlayableScienceToken(u32 _index) const
+	{
+		DEBUG_ASSERT(_index < m_numScienceToken);
+		return m_context.getScienceToken(m_scienceTokens[_index]);
+	}
+
+	//----------------------------------------------------------------------------
+	const Card& GameState::getCurrentPlayerWonder(u32 _index) const
+	{
+		DEBUG_ASSERT(_index < getCurrentPlayerCity().m_unbuildWonderCount);
+		Wonders wonder = getCurrentPlayerCity().m_unbuildWonders[_index];
+		return m_context.getWonder(wonder);
 	}
 
 	SpecialAction GameState::pick(u32 _playableCardIndex)

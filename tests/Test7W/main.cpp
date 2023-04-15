@@ -7,6 +7,40 @@
 namespace sevenWD
 {
 	void costTest();
+
+	const char* toString(WinType _type)
+	{
+		switch (_type)
+		{
+		case WinType::Civil:
+			return "Civil";
+		case WinType::Military:
+			return "Military";
+		case WinType::Science:
+			return "Science";
+		default:
+			return "None";
+		}
+	}
+
+	const char* toString(Move::Action _action)
+	{
+		switch (_action)
+		{
+		case Move::Action::BuildWonder:
+			return "BuildWonder";
+		case Move::Action::Pick:
+			return "Pick";
+		case Move::Action::Burn:
+			return "Burn";
+		case Move::Action::ScienceToken:
+			return "ScienceToken";
+		default:
+			return "None";
+		}
+	}
+
+
 }
 
 int main()
@@ -17,21 +51,35 @@ int main()
 
 	std::vector<Move> moves;
 	Move move;
-	u32 turn = 0;
 	do
 	{
 		game.enumerateMoves(moves);
 		move = moves[sevenWDContext.rand()() % moves.size()];
 
-		const Card& card = game.m_gameState.getPlayableCard(move.playableCard);
-		std::cout << "Turn " << turn++ << ", Player " << game.m_gameState.getCurrentPlayerTurn() << ", Action " << u32(move.action) << " with ";
-		card.print();
+		std::cout << "Age " << game.m_gameState.getCurrentAge() + 1 << ", Player " << game.m_gameState.getCurrentPlayerTurn() + 1 << ": ";
+
+		if (move.action == Move::Action::ScienceToken)
+		{
+			const Card& card = game.m_gameState.getPlayableScienceToken(move.playableCard);
+			std::cout << "Take science token "; card.print();
+		}
+		else if (move.action == Move::Action::BuildWonder)
+		{
+			const Card& card = game.m_gameState.getCurrentPlayerWonder(move.wonderIndex);
+			std::cout << "Build wonder "; card.print(); 
+		}
+		else
+		{
+			const Card& card = game.m_gameState.getPlayableCard(move.playableCard);
+			std::cout << toString(move.action) << " "; card.print();
+		}
+
 		std::cout << std::endl;
 		
 	} 
 	while (!game.play(move));
 
-	std::cout << "Player " << (game.m_state == GameController::State::WinPlayer0 ? "0" : "1") << " has won a " << u32(game.m_winType) << " win.\n";
+	std::cout << "Player " << (game.m_state == GameController::State::WinPlayer0 ? "0" : "1") << " has won a " << toString(game.m_winType) << " win.\n";
 	system("pause");
 	return 0;
 }
