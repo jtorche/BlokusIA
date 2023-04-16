@@ -19,7 +19,11 @@ namespace sevenWD
 		Stone,
 		Glass,
 		Papyrus,
-		Count
+		Count,
+		FirstBrown = Wood,
+		LastBrown = Stone,
+		FirstGrey = Glass,
+		LastGrey = Papyrus
 	};
 
 	using RT = ResourceType;
@@ -114,7 +118,6 @@ namespace sevenWD
 		Nothing,
 		Replay,
 		TakeScienceToken,
-		GreatLibraryScienceToken,
 		MilitaryWin,
 		ScienceWin
 	};
@@ -152,6 +155,7 @@ namespace sevenWD
 		Card& setResourceCost(ResourceSet _cost);
 		Card& setGoldCost(u8 _num);
 
+		const char* getName() const { return m_name; }
 		void print() const;
 
 	private:
@@ -238,17 +242,17 @@ namespace sevenWD
 		std::array<u8, u32(ResourceType::Count)> m_production = {};
 		std::pair<u8, u8> m_weakProduction = {};
 		std::array<bool, u32(CardType::Count)> m_resourceDiscount = {};
-		std::array<u8, u32(ResourceType::Count)> m_bestProductionCardIndex;
+		std::array<u8, u32(ResourceType::Count)> m_bestProductionCardId;
 		std::array<Wonders, 4> m_unbuildWonders = {};
 		u8 m_unbuildWonderCount = 4;
 
 		PlayerCity(const GameContext& _context) : m_context{ _context } 
 		{
-			for (u8& index : m_bestProductionCardIndex)
+			for (u8& index : m_bestProductionCardId)
 				index = u8(-1);
 		}
 
-		u32 computeCost(const Card& _card, const PlayerCity& _otherPlayer);
+		u32 computeCost(const Card& _card, const PlayerCity& _otherPlayer) const;
 		SpecialAction addCard(const Card& _card, const PlayerCity& _otherCity);
 		void removeCard(const Card& _card);
 
@@ -293,14 +297,17 @@ namespace sevenWD
 		const Card& getPlayableScienceToken(u32 _index) const;
 		const Card& getCurrentPlayerWonder(u32 _index) const;
 
+		std::array<ScienceToken, 5> getUnusedScienceToken() const;
+
 		SpecialAction pick(u32 _playableCardIndex);
 		void burn(u32 _playableCardIndex);
 		SpecialAction buildWonder(u32 _withPlayableCardIndex, u32 _wondersIndex, u8 _additionalEffect = u8(-1));
 		SpecialAction pickScienceToken(u32 _tokenIndex);
 		u32 findWinner();
 
-		void printPlayablCards();
-		void printAvailableTokens();
+		void printGameState() const;
+		void printPlayablCards() const;
+		void printAvailableTokens() const;
 
 	private:
 		

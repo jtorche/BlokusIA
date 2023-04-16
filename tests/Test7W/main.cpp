@@ -54,13 +54,25 @@ int main()
 	do
 	{
 		game.enumerateMoves(moves);
-		move = moves[sevenWDContext.rand()() % moves.size()];
 
+		if (game.m_gameState.getCurrentPlayerTurn() == 0)
+		{
+			constexpr std::array<u8, 4> actionScore{ { 2, 0, 1, 0 } };
+			std::sort(moves.begin(), moves.end(), [&](const Move& _a, const Move& _b)
+				{
+					return actionScore[u32(_a.action)] > actionScore[u32(_b.action)];
+				});
+			move = moves[0];
+		}
+		else
+			move = moves[sevenWDContext.rand()() % moves.size()];
+
+		game.m_gameState.printGameState();
 		std::cout << "Age " << game.m_gameState.getCurrentAge() + 1 << ", Player " << game.m_gameState.getCurrentPlayerTurn() + 1 << ": ";
 
 		if (move.action == Move::Action::ScienceToken)
 		{
-			const Card& card = game.m_gameState.getPlayableScienceToken(move.playableCard);
+			const Card& card = move.playableCard != u8(-1) ? game.m_gameState.getPlayableScienceToken(move.playableCard) : sevenWDContext.getCard(move.additionalId);
 			std::cout << "Take science token "; card.print();
 		}
 		else if (move.action == Move::Action::BuildWonder)
@@ -79,7 +91,7 @@ int main()
 	} 
 	while (!game.play(move));
 
-	std::cout << "Player " << (game.m_state == GameController::State::WinPlayer0 ? "0" : "1") << " has won a " << toString(game.m_winType) << " win.\n";
+	std::cout << "Player " << (game.m_state == GameController::State::WinPlayer0 ? "1" : "2") << " has won a " << toString(game.m_winType) << " win.\n";
 	system("pause");
 	return 0;
 }

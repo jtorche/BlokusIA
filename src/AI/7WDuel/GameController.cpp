@@ -32,13 +32,39 @@ namespace sevenWD
 						switch (wonder)
 						{
 						case Wonders::Zeus:
+						{
+							size_t prevMoveCount = _moves.size();
+							for (u32 r = u32(ResourceType::FirstBrown); r <= u32(ResourceType::LastBrown); ++r)
+							{
+								if (m_gameState.getOtherPlayerCity().m_bestProductionCardId[r] != u8(-1))
+								{
+									move.additionalId = m_gameState.getOtherPlayerCity().m_bestProductionCardId[r];
+									_moves.push_back(move);
+								}
+							}
+							if (prevMoveCount == _moves.size())
+								_moves.push_back(move);
+						}
 							break;
+
 						case Wonders::CircusMaximus:
+						{
+							size_t prevMoveCount = _moves.size();
+							for (u32 r = u32(ResourceType::FirstGrey); r <= u32(ResourceType::LastGrey); ++r)
+							{
+								if (m_gameState.getOtherPlayerCity().m_bestProductionCardId[r] != u8(-1))
+								{
+									move.additionalId = m_gameState.getOtherPlayerCity().m_bestProductionCardId[r];
+									_moves.push_back(move);
+								}
+							}
+							if (prevMoveCount == _moves.size())
+								_moves.push_back(move);
+						}
 							break;
-						case Wonders::GreatLibrary:
-							break;
+
 						case Wonders::Mausoleum:
-							break;
+							
 						default:
 							_moves.push_back(move);
 							break;
@@ -57,6 +83,21 @@ namespace sevenWD
 				_moves.push_back(move);
 			}
 		}
+		else if (m_state == State::GreatLibraryToken || m_state == State::GreatLibraryTokenThenReplay)
+		{
+			auto unusedTokens = m_gameState.getUnusedScienceToken();
+			for (u8 i = 0; i < 3; ++i)
+			{
+				u32 numRemainingTokens = 5 - i;
+				u32 index = m_gameState.m_context.rand()() % numRemainingTokens;
+
+				Move move{ u8(-1), Move::Action::ScienceToken };
+				move.additionalId = m_gameState.m_context.getScienceToken(unusedTokens[index]).getId();
+				_moves.push_back(move);
+
+				std::swap(unusedTokens[index], unusedTokens[numRemainingTokens - 1]);
+			}
+		}
 		else
 		{
 			DEBUG_ASSERT(0);
@@ -65,23 +106,41 @@ namespace sevenWD
 
 	bool GameController::play(Move _move)
 	{
-		sevenWD::SpecialAction action = sevenWD::SpecialAction::Nothing;
+		SpecialAction action = sevenWD::SpecialAction::Nothing;
+
 		if (_move.action == Move::Pick)
+		{
 			action = m_gameState.pick(_move.playableCard);
+			if (action == sevenWD::SpecialAction::TakeScienceToken)
+			{
+				m_state = State::PickScienceToken;
+				return false;
+			}
+		}
 		else if (_move.action == Move::Burn)
 			m_gameState.burn(_move.playableCard);
 		else if (_move.action == Move::BuildWonder)
+		{
+			Wonders wonder = Wonders(m_gameState.getCurrentPlayerWonder(_move.wonderIndex).getSecondaryType());
 			action = m_gameState.buildWonder(_move.playableCard, _move.wonderIndex, _move.additionalId);
+			if (wonder == Wonders::GreatLibrary)
+			{
+				m_state = action == SpecialAction::Replay ? State::GreatLibraryTokenThenReplay : State::GreatLibraryToken;
+				return false;
+			}
+		}
 		else if (_move.action == Move::ScienceToken)
 		{
-			m_gameState.pickScienceToken(_move.playableCard);
-			DEBUG_ASSERT(m_state == State::PickScienceToken);
-		}
-
-		if (action == sevenWD::SpecialAction::TakeScienceToken)
-		{
-			m_state = State::PickScienceToken;
-			return false;
+			if(m_state == State::PickScienceToken)
+				m_gameState.pickScienceToken(_move.playableCard);
+			else if (m_state == State::GreatLibraryToken || m_state == State::GreatLibraryTokenThenReplay)
+			{
+				action = m_gameState.getCurrentPlayerCity().addCard(m_gameState.m_context.getCard(_move.additionalId), m_gameState.getOtherPlayerCity());
+				if (action == SpecialAction::Nothing && m_state == State::GreatLibraryTokenThenReplay)
+					action = SpecialAction::Replay;
+			}
+			else
+				DEBUG_ASSERT(0);
 		}
 
 		if (action == sevenWD::SpecialAction::MilitaryWin || action == sevenWD::SpecialAction::ScienceWin)

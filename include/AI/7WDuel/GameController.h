@@ -35,6 +35,8 @@ namespace sevenWD
 		{
 			Play,
 			PickScienceToken,
+			GreatLibraryToken,
+			GreatLibraryTokenThenReplay,
 			WinPlayer0,
 			WinPlayer1
 		};

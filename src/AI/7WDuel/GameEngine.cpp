@@ -446,6 +446,12 @@ namespace sevenWD
 		m_scienceTokens[u32(ScienceToken::Strategy)] = Card(ScienceToken::Strategy, "Strategy");
 		m_scienceTokens[u32(ScienceToken::Theology)] = Card(ScienceToken::Theology, "Theology");
 		m_scienceTokens[u32(ScienceToken::TownPlanning)] = Card(ScienceToken::TownPlanning, "TownPlanning", 6);
+
+		for (Card& card : m_scienceTokens)
+		{
+			card.setId(u8(m_allCards.size()));
+			m_allCards.push_back(&card);
+		}
 	}
 
 	//----------------------------------------------------------------------------
@@ -901,7 +907,16 @@ namespace sevenWD
 		}
 	}
 
-	void GameState::printPlayablCards()
+	std::array<ScienceToken, 5> GameState::getUnusedScienceToken() const
+	{
+		std::array<ScienceToken, 5> tokens;
+		for (u32 i = 5; i < u32(ScienceToken::Count); ++i)
+			tokens[i - 5] = m_scienceTokens[i];
+
+		return tokens;
+	}
+
+	void GameState::printPlayablCards() const
 	{
 		std::cout << "Player turn : " << u32(m_playerTurn) << std::endl;
 		for (u32 i = 0; i < m_numPlayableCards; ++i)
@@ -912,7 +927,7 @@ namespace sevenWD
 		}
 	}
 
-	void GameState::printAvailableTokens()
+	void GameState::printAvailableTokens() const
 	{
 		for (u32 i = 0; i < m_numScienceToken; ++i)
 		{
@@ -922,7 +937,30 @@ namespace sevenWD
 		}
 	}
 
-	u32 PlayerCity::computeCost(const Card& _card, const PlayerCity& _otherPlayer)
+	void GameState::printGameState() const
+	{
+		std::cout << "Military = " << int(m_military) << ", Science Token = { ";
+		for (u32 i = 0; i < m_numScienceToken; ++i)
+			std::cout << m_context.getScienceToken(m_scienceTokens[i]).getName() << " ";
+		
+		std::cout << "}\n";
+
+		auto printCity = [&](const PlayerCity& _city)
+		{
+			std::cout << "Gold=" << u32(_city.m_gold) << ", VP=" << u32(_city.m_victoryPoints) << ", Prod={";
+			for (u32 i = 0; i < u32(ResourceType::Count); ++i)
+				std::cout << u32(_city.m_production[i]) << " ";
+			std::cout << "}, Discount={";
+			for (u32 i = 0; i < u32(ResourceType::Count); ++i)
+				std::cout << u32(_city.m_resourceDiscount[i]) << " ";
+			std::cout << "}\n";
+		};
+
+		printCity(m_playerCity[0]);
+		printCity(m_playerCity[1]);
+	}
+
+	u32 PlayerCity::computeCost(const Card& _card, const PlayerCity& _otherPlayer) const
 	{
 		if (_card.m_chainIn != ChainingSymbol::None && m_chainingSymbols & (1u << u32(_card.m_chainIn)))
 			return 0;
@@ -1022,10 +1060,13 @@ namespace sevenWD
 		{
 			for (u32 type = 0; type < u32(ResourceType::Count); ++type)
 			{
-				if (m_bestProductionCardIndex[type] == u8(-1) ||
-					_card.m_production[type] > m_context.getCard(m_bestProductionCardIndex[type]).m_production[type])
+				if (_card.m_production[type] > 0)
 				{
-					m_bestProductionCardIndex[type] = _card.getId();
+					if (m_bestProductionCardId[type] == u8(-1) ||
+						_card.m_production[type] > m_context.getCard(m_bestProductionCardId[type]).m_production[type])
+					{
+						m_bestProductionCardId[type] = _card.getId();
+					}
 				}
 			}
 		}
@@ -1085,17 +1126,9 @@ namespace sevenWD
 			break;
 
 		case CardType::Wonder:
-		{
-			auto it = std::remove(std::begin(m_unbuildWonders), std::begin(m_unbuildWonders) + m_unbuildWonderCount, Wonders(_card.m_secondaryType));
-			DEBUG_ASSERT(it != std::end(m_unbuildWonders));
-			size_t index = std::distance(std::begin(m_unbuildWonders), it);
-			std::swap(m_unbuildWonders[m_unbuildWonderCount-1], m_unbuildWonders[index]);
-			m_unbuildWonderCount--;
-			
 			if (Helper::isReplayWonder(Wonders(_card.m_secondaryType)) || ownScienceToken(ScienceToken::Theology))
 				action = SpecialAction::Replay;
 			break;
-		}
 		}
 		
 		if (m_numScienceSymbols == 6)
