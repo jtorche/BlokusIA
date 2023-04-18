@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-if (BUILD_ML_PROJECTS)
+if (BUILD_ML_PROJECTS AND ENABLE_BLOCKUS_PROJECT)
 	project(ML DESCRIPTION "Blockus ML library" LANGUAGES CXX)
 	
 	# Note that headers are optional, and do not affect add_library, but they will

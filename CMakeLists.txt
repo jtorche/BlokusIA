@@ -16,6 +16,8 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
+option(ENABLE_BLOCKUS_PROJECT "Check it to generate the Blokus project." ON)
+option(ENABLE_7W_PROJECT "Check it to generate the 7W project." ON)
 option(BUILD_UI "Check it to generate the Blokus UI projects." OFF)
 
 option(BUILD_ML_PROJECTS "Check it to generate the Blokus ML projects." ON)

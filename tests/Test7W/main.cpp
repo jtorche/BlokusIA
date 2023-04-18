@@ -3,6 +3,7 @@
 #include <windows.h>
 
 #include "AI/7WDuel/GameController.h"
+#include "AI/7WDuel/MinMaxAI.h"
 
 namespace sevenWD
 {
@@ -43,6 +44,32 @@ namespace sevenWD
 
 }
 
+#if 0
+int main()
+{
+	using namespace sevenWD;
+
+	GameContext sevenWDContext(u32(time(nullptr)));
+	GameController game(sevenWDContext);
+
+	for (u32 i = 0; i < 5; ++i)
+	{
+		std::vector<Move> moves;
+		game.enumerateMoves(moves);
+	
+		Move move = moves[sevenWDContext.rand()() % moves.size()];
+		game.play(move);
+	}
+
+	MinMaxAI ai(15);
+	auto[move, score] = ai.findBestMove(game);
+	std::cout << "Player " << game.m_gameState.getCurrentPlayerTurn() << " : " << score << std::endl;
+	std::cout << "Avg moves per node : " << ai.getAvgMovesPerTurn() << std::endl;
+	system("pause");
+}
+#endif
+
+#if 1
 int main()
 {
 	using namespace sevenWD;
@@ -95,6 +122,7 @@ int main()
 	system("pause");
 	return 0;
 }
+#endif
 
 #if 0
 int main()

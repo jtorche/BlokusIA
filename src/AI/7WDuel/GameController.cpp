@@ -2,7 +2,7 @@
 
 namespace sevenWD
 {
-	void GameController::enumerateMoves(std::vector<Move>& _moves)
+	void GameController::enumerateMoves(std::vector<Move>& _moves) const
 	{
 		_moves.clear();
 		if (m_state == State::Play)
@@ -12,9 +12,15 @@ namespace sevenWD
 				const Card& card = m_gameState.getPlayableCard(i);
 				u32 cost = m_gameState.getCurrentPlayerCity().computeCost(card, m_gameState.getOtherPlayerCity());
 				if (cost <= m_gameState.getCurrentPlayerCity().m_gold)
-					_moves.push_back(Move{ i, Move::Action::Pick });
+				{
+					Move move = Move{ i, Move::Action::Pick };
+					if (!filterMove(move))
+						_moves.push_back(Move{ i, Move::Action::Pick });
+				}
 
-				_moves.push_back(Move{ i, Move::Action::Burn });
+				Move move = Move{ i, Move::Action::Burn };
+				if(!filterMove(move))
+					_moves.push_back(Move{ i, Move::Action::Burn });
 			}
 
 			for (u8 i = 0; i < m_gameState.getCurrentPlayerCity().m_unbuildWonderCount; ++i)
@@ -164,6 +170,17 @@ namespace sevenWD
 		}
 
 		m_state = State::Play;
+		return false;
+	}
+
+	bool GameController::filterMove(Move _move) const
+	{
+		//if (_move.action == Move::Burn)
+		//{
+		//	if (m_gameState.getCurrentPlayerCity().m_gold > 10)
+		//		return true;
+		//}
+
 		return false;
 	}
 }

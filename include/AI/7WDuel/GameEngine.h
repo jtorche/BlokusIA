@@ -297,6 +297,8 @@ namespace sevenWD
 		const Card& getPlayableScienceToken(u32 _index) const;
 		const Card& getCurrentPlayerWonder(u32 _index) const;
 
+		const PlayerCity& getPlayerCity(u32 _player) const { return m_playerCity[_player]; };
+
 		std::array<ScienceToken, 5> getUnusedScienceToken() const;
 
 		SpecialAction pick(u32 _playableCardIndex);

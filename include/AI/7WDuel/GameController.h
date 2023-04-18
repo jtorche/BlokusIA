@@ -25,8 +25,10 @@ namespace sevenWD
 	{
 		GameController(const GameContext& _context) : m_gameState(_context) {}
 
-		void enumerateMoves(std::vector<Move>&);
+		void enumerateMoves(std::vector<Move>&) const;
 		bool play(Move _move);
+
+		bool filterMove(Move _move) const;
 	
 		GameState m_gameState;
 		WinType m_winType = WinType::None;

@@ -4,8 +4,17 @@ project(AI DESCRIPTION "Blokus AI core library" LANGUAGES CXX)
 
 # Note that headers are optional, and do not affect add_library, but they will
 # not show up in IDEs unless they are listed in add_library.
-file(GLOB_RECURSE ai_headers ${CMAKE_SOURCE_DIR}/include/AI/*.h)
-file(GLOB_RECURSE ai_sources *.cpp)
+
+if(ENABLE_BLOCKUS_PROJECT)
+	file(GLOB_RECURSE ai_headers ${CMAKE_SOURCE_DIR}/include/AI/blockusAI/*.h)
+	file(GLOB_RECURSE ai_sources blockusAI/*.cpp)
+endif()
+
+if(ENABLE_7W_PROJECT)
+	file(GLOB_RECURSE ai_headers ${CMAKE_SOURCE_DIR}/include/AI/blockusAI/7WDuel/*.h)
+	file(GLOB_RECURSE ai_sources 7WDuel/*.cpp)
+endif()
+
 set(ai_precompile_header "${CMAKE_CURRENT_SOURCE_DIR}/precompile/precompile_ai.h")
 
 add_library(${PROJECT_NAME} ${ai_headers} ${ai_sources} ${ai_precompile_header})
