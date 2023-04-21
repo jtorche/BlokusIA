@@ -91,7 +91,7 @@ namespace sevenWD
         for (size_t i = 0; i < moves.size(); ++i)
         {
             GameController newGameState = _gameState;
-            newGameState.play(moves[i]);
+            bool hasWin = newGameState.play(moves[i]);
 
             score = minmax(evalRec(_maxPlayer, newGameState, _depth + 1, _a_b), score);
             if (isMaxPlayerTurn)
