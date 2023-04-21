@@ -173,7 +173,7 @@ namespace sevenWD
 		return false;
 	}
 
-	bool GameController::filterMove(Move _move) const
+	bool GameController::filterMove(Move /*_move*/) const
 	{
 		//if (_move.action == Move::Burn)
 		//{

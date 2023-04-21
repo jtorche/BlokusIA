@@ -31,9 +31,21 @@ namespace sevenWD
         auto evalPosLambda = [&](const Move& _move)
         {
             GameController newGameState = _gameState;
-            newGameState.play(_move);
 
-            float score = evalRec(_gameState.m_gameState.getCurrentPlayerTurn(), newGameState, 1, { -std::numeric_limits<float>::max(), b });
+            u32 curPlayer = _gameState.m_gameState.getCurrentPlayerTurn();
+            float score;
+            if (newGameState.play(_move))
+            {
+                if (curPlayer == 0 && newGameState.m_state == GameController::State::WinPlayer0)
+                    score = std::numeric_limits<float>::max();
+                else if (curPlayer == 1 && newGameState.m_state == GameController::State::WinPlayer1)
+                    score = std::numeric_limits<float>::max();
+                else
+                    score = -std::numeric_limits<float>::max();
+            }
+            else
+                score = evalRec(curPlayer, newGameState, 1, { -std::numeric_limits<float>::max(), b });
+            
             b.store(std::min(b.load(), score));
             return score;
         };
@@ -91,9 +103,23 @@ namespace sevenWD
         for (size_t i = 0; i < moves.size(); ++i)
         {
             GameController newGameState = _gameState;
-            bool hasWin = newGameState.play(moves[i]);
+            bool gameTerminated = newGameState.play(moves[i]);
 
-            score = minmax(evalRec(_maxPlayer, newGameState, _depth + 1, _a_b), score);
+            float moveScore;
+            if (gameTerminated)
+            {
+                if (_maxPlayer == 0 && newGameState.m_state == GameController::State::WinPlayer0)
+                    moveScore = std::numeric_limits<float>::max();
+                else if(_maxPlayer == 1 && newGameState.m_state == GameController::State::WinPlayer1)
+                    moveScore = std::numeric_limits<float>::max();
+                else
+                    moveScore = -std::numeric_limits<float>::max();
+            }
+            else
+                moveScore = evalRec(_maxPlayer, newGameState, _depth + 1, _a_b);
+
+            score = minmax(moveScore, score);
+
             if (isMaxPlayerTurn)
             {
                 if (score <= _a_b.x)
