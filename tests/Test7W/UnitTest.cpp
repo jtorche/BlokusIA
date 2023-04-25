@@ -1,4 +1,5 @@
 #include "AI/7WDuel/GameEngine.h"
+#include "Core/Common.h"
 
 namespace sevenWD
 {

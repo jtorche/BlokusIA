@@ -11,7 +11,7 @@ if(ENABLE_BLOCKUS_PROJECT)
 endif()
 
 if(ENABLE_7W_PROJECT)
-	file(GLOB_RECURSE ai_headers ${CMAKE_SOURCE_DIR}/include/AI/blockusAI/7WDuel/*.h)
+	file(GLOB_RECURSE ai_headers ${CMAKE_SOURCE_DIR}/include/AI/7WDuel/*.h)
 	file(GLOB_RECURSE ai_sources 7WDuel/*.cpp)
 endif()
 
