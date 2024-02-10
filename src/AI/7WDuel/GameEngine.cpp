@@ -150,8 +150,10 @@ namespace sevenWD
 		DEBUG_ASSERT(getCurrentPlayerCity().m_gold >= cost);
 		getCurrentPlayerCity().m_gold -= u8(cost);
 
-		if (otherPlayer.ownScienceToken(ScienceToken::Economy))
-			otherPlayer.m_gold += u8(cost);
+		if (otherPlayer.ownScienceToken(ScienceToken::Economy) && cost >= card.getGoldCost())
+		{
+			otherPlayer.m_gold += (u8(cost) - card.getGoldCost());
+		}
 
 		SpecialAction action = getCurrentPlayerCity().addCard(card, otherPlayer);
 
@@ -395,7 +397,7 @@ namespace sevenWD
 			switch (m_currentAge)
 			{
 			default:
-				DEBUG_ASSERT(0);
+				DEBUG_ASSERT(0); break;
 			case 0:
 				_node.m_cardId = m_context.getAge1Card(index).getId(); break;
 			case 1:
@@ -574,6 +576,7 @@ namespace sevenWD
 			std::cout << "}, Discount={";
 			for (u32 i = 0; i < u32(ResourceType::Count); ++i)
 				std::cout << u32(_city.m_resourceDiscount[i]) << " ";
+			std::cout << " ScienceToken:" << std::bitset<8>(_city.m_ownedScienceTokens) << " ";
 			std::cout << "}\n";
 		};
 
@@ -824,8 +827,80 @@ namespace sevenWD
 			guildCards[numGuildCards++] = _card.getId();
 	}
 
-	void GameState::fillTensorData(float* _data) const
+	template<typename T>
+	u32 GameState::fillTensorData(T* _data) const
 	{
-		&_data;
+		u32 i = 0;
+		_data[i++] = (T)m_currentAge;
+		_data[i++] = (T)(getCurrentPlayerTurn() == 0 ? m_military : -m_military);
+		_data[i++] = (T)militaryToken2[getCurrentPlayerTurn()];
+		_data[i++] = (T)militaryToken5[getCurrentPlayerTurn()];
+		_data[i++] = (T)militaryToken2[(getCurrentPlayerTurn() + 1) % 2];
+		_data[i++] = (T)militaryToken5[(getCurrentPlayerTurn() + 1) % 2];
+
+		for (u32 j = 0; j < u32(ScienceToken::Count); ++j) {
+			_data[i + j] = 0;
+		}
+		for (u32 j = 0; j < m_numScienceToken; ++j)
+			_data[i + u32(m_scienceTokens[j])] = 1;
+
+		i += u32(ScienceToken::Count);
+
+		const PlayerCity& myCity = m_playerCity[getCurrentPlayerTurn()];
+		const PlayerCity& opponentCity = m_playerCity[(getCurrentPlayerTurn() + 1) % 2];
+		for (u8 j = 0; j < u8(Wonders::Count); ++j)
+		{
+			if (std::find(myCity.m_unbuildWonders.begin(), myCity.m_unbuildWonders.end(), (Wonders)j) != myCity.m_unbuildWonders.end())
+				_data[i] = 1;
+			else if (std::find(opponentCity.m_unbuildWonders.begin(), opponentCity.m_unbuildWonders.end(), (Wonders)j) != opponentCity.m_unbuildWonders.end())
+				_data[i] = -1;
+			else
+				_data[i] = 0;
+			
+			i++;
+		}
+		
+
+		auto fillCity = [&](const PlayerCity& _city)
+		{
+			for(u8 j=0 ; j<u8(ChainingSymbol::Count) ; ++j)
+				_data[i++] = (T)((_city.m_chainingSymbols & (1 << j)) > 0 ? 1 : 0);
+
+			for (size_t j=0 ; i<m_context.getAllGuildCards().size() ; ++j)
+				_data[i++] = (T)((_city.m_ownedGuildCards & (1 << j)) > 0 ? 1 : 0);
+
+			for (u8 j = 0; j < u8(ScienceToken::Count); ++j)
+				_data[i++] = (T)((_city.m_ownedScienceTokens & (1 << j)) > 0 ? 1 : 0);
+
+			_data[i++] = _city.m_numScienceSymbols;
+			for (u8 j = 0; j < u8(ScienceSymbol::Count); ++j)
+				_data[i++] = (T)((_city.m_ownedScienceSymbols & (1 << j)) > 0 ? 1 : 0);
+
+			_data[i++] = (T)_city.m_gold;
+			_data[i++] = (T)_city.m_victoryPoints;
+			
+			for (u8 j = 0; j < u8(CardType::Count); ++j)
+			{
+				_data[i++] = (T)_city.m_numCardPerType[j];
+				_data[i++] = (T)(_city.m_resourceDiscount[j] ? 1 : 0);
+			}
+
+			for (u8 j = 0; j < u8(ResourceType::Count); ++j)
+			{
+				_data[i++] = (T)_city.m_production[j];
+				_data[i++] = (T)_city.m_bestProductionCardId[j];
+			}
+
+			_data[i++] = (T)_city.m_weakProduction.first;
+			_data[i++] = (T)_city.m_weakProduction.second;
+		};
+
+		fillCity(myCity);
+		fillCity(opponentCity);
+
+		return i;
 	}
+
+	template u32 GameState::fillTensorData<float>(float* _data) const;
+	template u32 GameState::fillTensorData<int16_t>(int16_t* _data) const;
 }

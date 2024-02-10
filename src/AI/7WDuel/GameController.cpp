@@ -1,5 +1,5 @@
 #include "AI/7WDuel/GameController.h"
-
+#pragma optimize("", off)
 namespace sevenWD
 {
 	void GameController::enumerateMoves(std::vector<Move>& _moves) const
@@ -81,6 +81,7 @@ namespace sevenWD
 		}
 		else if (m_state == State::PickScienceToken)
 		{
+			DEBUG_ASSERT(m_gameState.m_numScienceToken > 0);
 			for (u8 i = 0; i < m_gameState.m_numScienceToken; ++i)
 			{
 				Move move{ u8(-1), Move::Action::ScienceToken };
@@ -117,7 +118,7 @@ namespace sevenWD
 		if (_move.action == Move::Pick)
 		{
 			action = m_gameState.pick(_move.playableCard);
-			if (action == sevenWD::SpecialAction::TakeScienceToken)
+			if (action == sevenWD::SpecialAction::TakeScienceToken && m_gameState.m_numScienceToken)
 			{
 				m_state = State::PickScienceToken;
 				return false;

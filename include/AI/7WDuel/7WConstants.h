@@ -84,7 +84,8 @@ namespace sevenWD
 		Harp,
 		Gear,
 		Book,
-		Lamp
+		Lamp,
+		Count,
 	};
 
 	template<CardType T>

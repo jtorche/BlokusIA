@@ -4,6 +4,10 @@
 
 #include "AI/7WDuel/GameController.h"
 #include "AI/7WDuel/MinMaxAI.h"
+#include "AI/7WDuel/AI.h"
+#include <torch/torch.h>
+
+#include "ML.h"
 
 namespace sevenWD
 {
@@ -44,6 +48,72 @@ namespace sevenWD
 
 }
 
+int main()
+{
+	using namespace sevenWD;
+	GameContext sevenWDContext(u32(time(nullptr)));
+	
+	BaseLine* net = new BaseLine(GameState::TensorSize);
+	using OptimizerType = torch::optim::AdamW;
+	std::unique_ptr<OptimizerType> optimizer = std::make_unique<OptimizerType>(net->parameters(), 0.001);
+
+	sevenWD::AIInterface* AIs[2] = {
+		new sevenWD::MixAI(new RandAI, new NoBurnAI, 1),
+		new sevenWD::MixAI(new RandAI, new NoBurnAI, 1),
+	};
+
+	float avgLoss = 0;
+	float avgPrecision = 0;
+	constexpr u32 numBatch = 100000;
+	for (unsigned int batchIndex = 0; batchIndex < numBatch; ++batchIndex)
+	{
+		std::vector<GameState> savedStates[3];
+		std::vector<int> labels[3];
+		for (unsigned int i = 0; i < 32; ++i)
+		{
+			std::vector<GameState> states[3];
+			WinType winType = WinType::None;
+			
+			u32 winner = ML_Toolbox::generateOneGameDatasSet(sevenWDContext, AIs, states, winType);
+
+			//std::cout << i << " Winner is Player " << winner << "( " << AIs[winner]->getName() << " ) " << " " << toString(winType) << std::endl;
+			for (int age = 0; age < 3; ++age) {
+				if (!states[age].empty()) {
+					savedStates[age].push_back(states[age][rand() % states[age].size()]); // sample one state per age
+					labels[age].push_back(winner);
+				}
+			}
+		}
+
+		torch::Tensor datasetTensor;
+		torch::Tensor labelTensor;
+		torch::Tensor weights;
+		ML_Toolbox::fillTensors(datasetTensor, labelTensor, weights, savedStates[2], labels[2]);
+
+		optimizer->zero_grad();
+		torch::Tensor prediction = net->forward(datasetTensor);
+		torch::Tensor loss = torch::binary_cross_entropy(prediction, labelTensor);
+		loss.backward();
+		optimizer->step();
+
+		avgLoss += loss.item<float>();
+		avgPrecision += ML_Toolbox::evalPrecision(prediction, labelTensor);
+
+		constexpr u32 reportingInterval = 1000;
+		if (batchIndex % reportingInterval == 0) {
+			std::cout << "Dataset: " << 0 << " | Batch: " << batchIndex << "/" << numBatch << " | Loss: " << avgLoss / reportingInterval << " Precision: " << avgPrecision / reportingInterval << std::endl;
+			//std::cout << net->fully1->weight << std::endl;
+			//std::cout << torch::round(prediction) << std::endl;
+			//std::cout << labelTensor << std::endl;
+			optimizer->zero_grad();
+			avgLoss = 0;
+			avgPrecision = 0;
+		}
+	}
+
+	return 0;
+}
+
 #if 0
 int main()
 {
@@ -56,25 +126,28 @@ int main()
 	{
 		std::vector<Move> moves;
 		game.enumerateMoves(moves);
-	
+
 		Move move = moves[sevenWDContext.rand()() % moves.size()];
 		game.play(move);
 	}
 
 	MinMaxAI ai(15);
-	auto[move, score] = ai.findBestMove(game);
+	auto [move, score] = ai.findBestMove(game);
 	std::cout << "Player " << game.m_gameState.getCurrentPlayerTurn() << " : " << score << std::endl;
 	std::cout << "Avg moves per node : " << ai.getAvgMovesPerTurn() << std::endl;
 	system("pause");
 }
 #endif
 
-#if 1
+#if 0
 int main()
 {
 	using namespace sevenWD;
 	GameContext sevenWDContext(u32(time(nullptr)));
 	GameController game(sevenWDContext);
+
+	int16_t data[1024];
+	std::cout << "Tensor size " << game.m_gameState.fillTensorData(data) << std::endl;
 
 	std::vector<Move> moves;
 	Move move;

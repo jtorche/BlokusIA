@@ -33,7 +33,7 @@ namespace sevenWD
 
 		_player2.m_unbuildWonderCount = 4;
 		for (u32 i = 0; i < 4; ++i)
-			_player2.m_unbuildWonders[i] = wonders[i];
+			_player2.m_unbuildWonders[i] = wonders[4+i];
 	}
 
 	void GameContext::fillAge1()

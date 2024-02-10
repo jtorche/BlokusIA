@@ -18,7 +18,7 @@ if (BUILD_TESTING)
     target_precompile_headers(${PROJECT_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${7W_tests_precompile_header}>")
 
     # Linked libraries
-    target_link_libraries(${PROJECT_NAME} PRIVATE Core AI)
+    target_link_libraries(${PROJECT_NAME} PRIVATE Core AI "${TORCH_LIBRARIES}")
 
     # For nicer IDE views
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "tests")

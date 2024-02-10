@@ -93,8 +93,9 @@ namespace sevenWD
 		void printPlayablCards() const;
 		void printAvailableTokens() const;
 
-		static const u32 TensorSize = 64;
-		void fillTensorData(float* _data) const;
+		static const u32 TensorSize = 164;
+		template<typename T>
+		u32 fillTensorData(T* _data) const;
 
 	private:
 		
