@@ -828,15 +828,16 @@ namespace sevenWD
 	}
 
 	template<typename T>
-	u32 GameState::fillTensorData(T* _data) const
+	u32 GameState::fillTensorData(T* _data, u32 _mainPlayer) const
 	{
 		u32 i = 0;
+		_data[i++] = (T)m_numTurnPlayed;
 		_data[i++] = (T)m_currentAge;
-		_data[i++] = (T)(getCurrentPlayerTurn() == 0 ? m_military : -m_military);
-		_data[i++] = (T)militaryToken2[getCurrentPlayerTurn()];
-		_data[i++] = (T)militaryToken5[getCurrentPlayerTurn()];
-		_data[i++] = (T)militaryToken2[(getCurrentPlayerTurn() + 1) % 2];
-		_data[i++] = (T)militaryToken5[(getCurrentPlayerTurn() + 1) % 2];
+		_data[i++] = (T)(_mainPlayer == 0 ? m_military : -m_military);
+		_data[i++] = (T)militaryToken2[_mainPlayer];
+		_data[i++] = (T)militaryToken5[_mainPlayer];
+		_data[i++] = (T)militaryToken2[(_mainPlayer + 1) % 2];
+		_data[i++] = (T)militaryToken5[(_mainPlayer + 1) % 2];
 
 		for (u32 j = 0; j < u32(ScienceToken::Count); ++j) {
 			_data[i + j] = 0;
@@ -846,8 +847,8 @@ namespace sevenWD
 
 		i += u32(ScienceToken::Count);
 
-		const PlayerCity& myCity = m_playerCity[getCurrentPlayerTurn()];
-		const PlayerCity& opponentCity = m_playerCity[(getCurrentPlayerTurn() + 1) % 2];
+		const PlayerCity& myCity = m_playerCity[_mainPlayer];
+		const PlayerCity& opponentCity = m_playerCity[(_mainPlayer + 1) % 2];
 		for (u8 j = 0; j < u8(Wonders::Count); ++j)
 		{
 			if (std::find(myCity.m_unbuildWonders.begin(), myCity.m_unbuildWonders.end(), (Wonders)j) != myCity.m_unbuildWonders.end())
@@ -901,6 +902,6 @@ namespace sevenWD
 		return i;
 	}
 
-	template u32 GameState::fillTensorData<float>(float* _data) const;
-	template u32 GameState::fillTensorData<int16_t>(int16_t* _data) const;
+	template u32 GameState::fillTensorData<float>(float* _data, u32 _mainPlayer) const;
+	template u32 GameState::fillTensorData<int16_t>(int16_t* _data, u32 _mainPlayer) const;
 }

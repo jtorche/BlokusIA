@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(7W_Tests DESCRIPTION "Console application to easily test Blokus AI" LANGUAGES CXX)
+project(7W_Tests DESCRIPTION "Console application to easily test 7W AI" LANGUAGES CXX)
 
 if (BUILD_TESTING)
     file(GLOB_RECURSE 7W_tests_headers *.h)

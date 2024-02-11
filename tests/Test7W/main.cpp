@@ -8,6 +8,7 @@
 #include <torch/torch.h>
 
 #include "ML.h"
+#include "Tournament.h"
 
 namespace sevenWD
 {
@@ -52,63 +53,29 @@ int main()
 {
 	using namespace sevenWD;
 	GameContext sevenWDContext(u32(time(nullptr)));
+
+	Tournament tournament;
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 1));
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 10));
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 25));
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 50));
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 75));
+	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 99));
+	//tournament.addAI(new NetworkAI("NetworkAI", net));
+	tournament.generateDataset(1000, sevenWDContext);
+	tournament.print();
+
+	ML_Toolbox::Dataset dataset[3];
+	tournament.fillDataset(dataset);
+
 	
-	BaseLine* net = new BaseLine(GameState::TensorSize);
-	using OptimizerType = torch::optim::AdamW;
-	std::unique_ptr<OptimizerType> optimizer = std::make_unique<OptimizerType>(net->parameters(), 0.001);
-
-	sevenWD::AIInterface* AIs[2] = {
-		new sevenWD::MixAI(new RandAI, new NoBurnAI, 1),
-		new sevenWD::MixAI(new RandAI, new NoBurnAI, 1),
-	};
-
-	float avgLoss = 0;
-	float avgPrecision = 0;
-	constexpr u32 numBatch = 100000;
-	for (unsigned int batchIndex = 0; batchIndex < numBatch; ++batchIndex)
+	for (u32 i = 0; i < 3; ++i)
 	{
-		std::vector<GameState> savedStates[3];
-		std::vector<int> labels[3];
-		for (unsigned int i = 0; i < 32; ++i)
-		{
-			std::vector<GameState> states[3];
-			WinType winType = WinType::None;
-			
-			u32 winner = ML_Toolbox::generateOneGameDatasSet(sevenWDContext, AIs, states, winType);
+		std::cout << "Train age " << i+1 << std::endl;
+		std::vector<ML_Toolbox::Batch> batches;
+		dataset[i].fillBatches(sevenWDContext, 64, batches);
 
-			//std::cout << i << " Winner is Player " << winner << "( " << AIs[winner]->getName() << " ) " << " " << toString(winType) << std::endl;
-			for (int age = 0; age < 3; ++age) {
-				if (!states[age].empty()) {
-					savedStates[age].push_back(states[age][rand() % states[age].size()]); // sample one state per age
-					labels[age].push_back(winner);
-				}
-			}
-		}
-
-		torch::Tensor datasetTensor;
-		torch::Tensor labelTensor;
-		torch::Tensor weights;
-		ML_Toolbox::fillTensors(datasetTensor, labelTensor, weights, savedStates[2], labels[2]);
-
-		optimizer->zero_grad();
-		torch::Tensor prediction = net->forward(datasetTensor);
-		torch::Tensor loss = torch::binary_cross_entropy(prediction, labelTensor);
-		loss.backward();
-		optimizer->step();
-
-		avgLoss += loss.item<float>();
-		avgPrecision += ML_Toolbox::evalPrecision(prediction, labelTensor);
-
-		constexpr u32 reportingInterval = 1000;
-		if (batchIndex % reportingInterval == 0) {
-			std::cout << "Dataset: " << 0 << " | Batch: " << batchIndex << "/" << numBatch << " | Loss: " << avgLoss / reportingInterval << " Precision: " << avgPrecision / reportingInterval << std::endl;
-			//std::cout << net->fully1->weight << std::endl;
-			//std::cout << torch::round(prediction) << std::endl;
-			//std::cout << labelTensor << std::endl;
-			optimizer->zero_grad();
-			avgLoss = 0;
-			avgPrecision = 0;
-		}
+		ML_Toolbox::trainNet(batches, new BaseLine(GameState::TensorSize));
 	}
 
 	return 0;

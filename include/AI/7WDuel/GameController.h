@@ -6,7 +6,7 @@ namespace sevenWD
 {
 	struct Move
 	{
-		enum Action : u8 { Pick, Burn, BuildWonder, ScienceToken };
+		enum Action : u8 { Pick, Burn, BuildWonder, ScienceToken, Count };
 		u8 playableCard;
 		Action action;
 		u8 wonderIndex = u8(-1);

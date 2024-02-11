@@ -43,7 +43,7 @@ namespace sevenWD
 		}
 
 		Move selectMove(const GameContext& _sevenWDContext, const GameController& _game, const std::vector<Move>& _moves) override {
-			return m_precentage < _sevenWDContext.rand()() % 100 ? m_AIs[0]->selectMove(_sevenWDContext, _game, _moves) : m_AIs[1]->selectMove(_sevenWDContext, _game, _moves);
+			return m_precentage >= _sevenWDContext.rand()() % 100 ? m_AIs[0]->selectMove(_sevenWDContext, _game, _moves) : m_AIs[1]->selectMove(_sevenWDContext, _game, _moves);
 		}
 
 		std::string getName() const {

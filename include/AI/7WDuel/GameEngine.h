@@ -64,6 +64,8 @@ namespace sevenWD
 	public:
 		GameState(const GameContext& _context);
 
+		GameState& operator=(const GameState&) = default;
+
 		enum class NextAge
 		{
 			None,
@@ -73,7 +75,7 @@ namespace sevenWD
 		u32 getCurrentAge() const { return m_currentAge; }
 		NextAge nextAge();
 		u32 getCurrentPlayerTurn() const { return m_playerTurn; }
-		void nextPlayer() { m_playerTurn = (m_playerTurn + 1) % 2; }
+		void nextPlayer() { m_numTurnPlayed++; m_playerTurn = (m_playerTurn + 1) % 2; }
 
 		const Card& getPlayableCard(u32 _index) const;
 		const Card& getPlayableScienceToken(u32 _index) const;
@@ -93,9 +95,9 @@ namespace sevenWD
 		void printPlayablCards() const;
 		void printAvailableTokens() const;
 
-		static const u32 TensorSize = 164;
+		static const u32 TensorSize = 165;
 		template<typename T>
-		u32 fillTensorData(T* _data) const;
+		u32 fillTensorData(T* _data, u32 _mainPlayer) const;
 
 	private:
 		
@@ -126,6 +128,7 @@ namespace sevenWD
 		u8 m_numAvailableAgeCards = 0;
 		u8 m_numAvailableGuildCards = 0;
 
+		u8 m_numTurnPlayed = 0;
 		u8 m_playerTurn = 0;
 		u8 m_currentAge = u8(-1);
 		int8_t m_military = 0;
