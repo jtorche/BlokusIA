@@ -91,40 +91,47 @@ std::pair<float, float> ML_Toolbox::evalMeanLoss(torch::Tensor predictions, torc
 }
 
 template<typename T>
-void ML_Toolbox::trainNet(const std::vector<Batch>& batches, T* pNet)
+void ML_Toolbox::trainNet(u32 epoch, const std::vector<Batch>& batches, T* pNet)
 {
 	using OptimizerType = torch::optim::AdamW;
-	std::unique_ptr<OptimizerType> optimizer = std::make_unique<OptimizerType>(pNet->parameters(), 1e-3);
+	std::unique_ptr<OptimizerType> optimizer = std::make_unique<OptimizerType>(pNet->parameters(), 1e-4);
 
-	float avgLoss = 0;
-	float avgPrecision = 0;
-	for (u32 b = 0; b < batches.size(); ++b)
+	for (u32 i = 0; i < epoch; ++i)
 	{
-		optimizer->zero_grad();
-		//std::cout << *optimizer << std::endl;
-		torch::Tensor prediction = pNet->forward(batches[b].data);
-		torch::Tensor loss = torch::binary_cross_entropy(prediction, batches[b].labels);
-		//std::cout << batches[b].labels << std::endl;
-		//std::cout << prediction << std::endl;
-		//std::cout << loss << std::endl;
-		loss.backward();
-		optimizer->step();
+		
+		float avgLoss = 0;
+		float avgPrecision = 0;
 
-		avgLoss += loss.item<float>();
-		avgPrecision += ML_Toolbox::evalPrecision(prediction, batches[b].labels);
-
-		constexpr u32 reportingInterval = 100;
-		if (b % reportingInterval == 0) 
+		for (u32 b = 0; b < batches.size(); ++b)
 		{
-			avgLoss /= reportingInterval;
-			avgPrecision /= reportingInterval;
-
-			std::cout << "Batch:" << b << "/" << batches.size() << " | " << "Loss: " << avgLoss << " Precision : " << avgPrecision << std::endl;
 			optimizer->zero_grad();
-			avgLoss = 0;
-			avgPrecision = 0;
+			torch::Tensor prediction = pNet->forward(batches[b].data);
+			torch::Tensor loss = torch::binary_cross_entropy(prediction, batches[b].labels);
+
+			loss.backward();
+			optimizer->step();
+
+			avgLoss += loss.item<float>();
+			avgPrecision += ML_Toolbox::evalPrecision(prediction, batches[b].labels);
+
+			//constexpr u32 reportingInterval = 100;
+			//if (b % reportingInterval == 0)
+			//{
+			//	avgLoss /= reportingInterval;
+			//	avgPrecision /= reportingInterval;
+			//
+			//	std::cout << "Batch:" << b << "/" << batches.size() << " | " << "Loss: " << avgLoss << " Precision : " << avgPrecision << std::endl;
+			//	optimizer->zero_grad();
+			//	avgLoss = 0;
+			//	avgPrecision = 0;
+			//}
 		}
+
+		avgLoss /= batches.size();
+		avgPrecision /= batches.size();
+		
+		std::cout << "Epoch:" << i << "/" << epoch << " | " << "Loss: " << avgLoss << " Precision : " << avgPrecision << std::endl;
 	}
 }
 
-template void ML_Toolbox::trainNet<BaseLine>(const std::vector<Batch>& batches, BaseLine* pNet);
+template void ML_Toolbox::trainNet<BaseLine>(u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);

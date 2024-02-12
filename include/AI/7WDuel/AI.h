@@ -7,6 +7,7 @@ namespace sevenWD
 {
 	struct AIInterface 
 	{
+		virtual ~AIInterface() {}
 		virtual Move selectMove(const GameContext& _sevenWDContext, const GameController& _game, const std::vector<Move>& _moves) = 0;
 		virtual std::string getName() const = 0;
 	};
@@ -17,7 +18,7 @@ namespace sevenWD
 			return _moves[_sevenWDContext.rand()() % _moves.size()];
 		}
 
-		std::string getName() const {
+		std::string getName() const override {
 			return "RandAI";
 		}
 	};
@@ -26,7 +27,7 @@ namespace sevenWD
 	{
 		Move selectMove(const GameContext& _sevenWDContext, const GameController&, const std::vector<Move>& _moves) override;
 
-		std::string getName() const {
+		std::string getName() const override {
 			return "NoBurnAI";
 		}
 	};

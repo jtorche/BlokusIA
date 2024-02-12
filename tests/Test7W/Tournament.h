@@ -10,10 +10,11 @@ public:
 	Tournament();
 
 	void addAI(sevenWD::AIInterface* pAI) { m_AIs.push_back(pAI); m_numWins.push_back(std::make_pair(0u, 0u)); m_winTypes.emplace_back(); }
+	void removeWorstAI();
 
 	void generateDataset(u32 size, sevenWD::GameContext& context);
 	void fillDataset(ML_Toolbox::Dataset (&dataset)[3]) const;
-
+	void resetTournament();
 
 	void print() const;
 

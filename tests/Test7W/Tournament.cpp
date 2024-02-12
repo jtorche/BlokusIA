@@ -23,7 +23,7 @@ void Tournament::generateDataset(u32 numRound, sevenWD::GameContext& context)
 		{
 			for (u32 j = 0; j < m_AIs.size(); ++j)
 			{
-				if (i == j) continue;
+				//if (i == j) continue;
 
 				AIInterface* AIs[2] = { m_AIs[i], m_AIs[j] };
 
@@ -68,17 +68,47 @@ void Tournament::generateDataset(u32 numRound, sevenWD::GameContext& context)
 	}
 }
 
+void Tournament::removeWorstAI()
+{
+	auto it = std::min_element(m_numWins.begin(), m_numWins.end());
+	size_t index = std::distance(m_numWins.begin(), it);
+	m_numWins.erase(m_numWins.begin() + index);
+	m_winTypes.erase(m_winTypes.begin() + index);
+
+	delete m_AIs[index];
+	m_AIs.erase(m_AIs.begin() + index);
+}
+
 void Tournament::fillDataset(ML_Toolbox::Dataset(&dataset)[3]) const
 {
-	for (u32 i = 0; i < 3; ++i) {
+	for (u32 i = 0; i < 3; ++i) 
+	{
 		dataset[i] += m_civilWin[i];
 		dataset[i] += m_militaryWin[i];
 		dataset[i] += m_scienceWin[i];
 	}
 }
 
+void Tournament::resetTournament()
+{
+	for (u32 i = 0; i < 3; ++i)
+	{
+		m_civilWin[i].clear();
+		m_militaryWin[i].clear();
+		m_scienceWin[i].clear();
+	}
+
+	m_numWins.clear();
+	m_winTypes.clear();
+	for (u32 i = 0; i < m_AIs.size(); ++i) {
+		m_numWins.push_back(std::make_pair(0u, 0u));
+		m_winTypes.emplace_back();
+	}
+}
+
 void Tournament::print() const
 {
+	std::cout << "Tournament result:" << std::endl;
 	for (u32 i = 0; i < m_AIs.size(); ++i)
 		std::cout << m_AIs[i]->getName() << " : " << m_numWins[i].first << " / " << m_numWins[i].second << "(" << m_winTypes[i].civil << "," << m_winTypes[i].military << "," << m_winTypes[i].science << ")" << std::endl;
 

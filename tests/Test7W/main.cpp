@@ -55,27 +55,49 @@ int main()
 	GameContext sevenWDContext(u32(time(nullptr)));
 
 	Tournament tournament;
+	tournament.addAI(new RandAI);
+	tournament.addAI(new NoBurnAI);
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 1));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 10));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 25));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 50));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 75));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 99));
-	//tournament.addAI(new NetworkAI("NetworkAI", net));
-	tournament.generateDataset(1000, sevenWDContext);
-	tournament.print();
 
-	ML_Toolbox::Dataset dataset[3];
-	tournament.fillDataset(dataset);
-
-	
-	for (u32 i = 0; i < 3; ++i)
+	u32 generation = 0;
+	while (1)
 	{
-		std::cout << "Train age " << i+1 << std::endl;
-		std::vector<ML_Toolbox::Batch> batches;
-		dataset[i].fillBatches(sevenWDContext, 64, batches);
+		generation++;
 
-		ML_Toolbox::trainNet(batches, new BaseLine(GameState::TensorSize));
+		tournament.resetTournament();
+		tournament.generateDataset(300, sevenWDContext);
+		tournament.print();
+
+		ML_Toolbox::Dataset dataset[3];
+		tournament.fillDataset(dataset);
+
+		std::unique_ptr<BaseLine> net[3] = {
+			std::make_unique<BaseLine>(GameState::TensorSize),
+			std::make_unique<BaseLine>(GameState::TensorSize),
+			std::make_unique<BaseLine>(GameState::TensorSize)
+		};
+
+		std::cout << "\nStart train generation " << generation << " over " << dataset[0].m_winners.size() << " batches." << std::endl;
+		for (u32 i = 0; i < 3; ++i)
+		{
+			std::cout << "Train age " << i + 1 << std::endl;
+			std::vector<ML_Toolbox::Batch> batches;
+			dataset[i].fillBatches(sevenWDContext, 64, batches);
+
+			ML_Toolbox::trainNet(10, batches, net[i].get());
+		}
+
+		std::stringstream networkName;
+		networkName << "Generation " << generation;
+		tournament.removeWorstAI();
+		tournament.addAI(new NetworkAI<BaseLine>(networkName.str(), net));
+
+		//system("pause");
 	}
 
 	return 0;

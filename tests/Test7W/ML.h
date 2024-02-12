@@ -16,6 +16,12 @@ struct ML_Toolbox
 		std::vector<u32> m_winners;
 		std::vector<sevenWD::WinType> m_winTypes;
 
+		void clear() {
+			m_states.clear();
+			m_winners.clear();
+			m_winTypes.clear();
+		}
+
 		void operator+=(const Dataset& dataset) {
 			for (const sevenWD::GameState& d : dataset.m_states)
 				m_states.push_back(d);
@@ -34,7 +40,7 @@ struct ML_Toolbox
 	static std::pair<float, float> evalMeanLoss(torch::Tensor predictions, torch::Tensor labels, torch::Tensor weights);
 
 	template<typename T>
-	static void trainNet(const std::vector<Batch>& batches, T* pNet);
+	static void trainNet(u32 epoch, const std::vector<Batch>& batches, T* pNet);
 };
 
 struct TwoLayers : torch::nn::Module
@@ -129,7 +135,7 @@ struct NetworkAI : sevenWD::AIInterface
 		return _moves[std::distance(scores.begin(), it)];
 	}
 
-	std::string getName() const {
+	std::string getName() const override {
 		return m_name;
 	}
 
