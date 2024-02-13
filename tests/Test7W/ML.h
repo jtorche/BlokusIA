@@ -12,25 +12,25 @@ struct ML_Toolbox
 	};
 	struct Dataset
 	{
-		std::vector<sevenWD::GameState> m_states;
-		std::vector<u32> m_winners;
-		std::vector<sevenWD::WinType> m_winTypes;
+		struct Point {
+			sevenWD::GameState m_state;
+			u32 m_winner;
+			sevenWD::WinType m_winType;
+		};
+		std::vector<Point> m_data;
 
 		void clear() {
-			m_states.clear();
-			m_winners.clear();
-			m_winTypes.clear();
+			m_data.clear();
 		}
-
+		void shuffle(const sevenWD::GameContext& sevenWDContext) {
+			std::shuffle(m_data.begin(), m_data.end(), sevenWDContext.rand());
+		}
 		void operator+=(const Dataset& dataset) {
-			for (const sevenWD::GameState& d : dataset.m_states)
-				m_states.push_back(d);
-			
-			m_winners.insert(m_winners.end(), dataset.m_winners.begin(), dataset.m_winners.end());
-			m_winTypes.insert(m_winTypes.end(), dataset.m_winTypes.begin(), dataset.m_winTypes.end());
+			for (const Point& d : dataset.m_data)
+				m_data.push_back(d);
 		}
 
-		void fillBatches(const sevenWD::GameContext& sevenWDContext, u32 batchSize, std::vector<Batch>& batches) const;
+		void fillBatches(u32 batchSize, std::vector<Batch>& batches) const;
 	};
 
 	static u32 generateOneGameDatasSet(const sevenWD::GameContext& sevenWDContext, sevenWD::AIInterface* AIs[2], std::vector<sevenWD::GameState>(&data)[3], sevenWD::WinType& winType);
@@ -40,7 +40,7 @@ struct ML_Toolbox
 	static std::pair<float, float> evalMeanLoss(torch::Tensor predictions, torch::Tensor labels, torch::Tensor weights);
 
 	template<typename T>
-	static void trainNet(u32 epoch, const std::vector<Batch>& batches, T* pNet);
+	static void trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches, T* pNet);
 };
 
 struct TwoLayers : torch::nn::Module
@@ -131,7 +131,6 @@ struct NetworkAI : sevenWD::AIInterface
 		}
 		
 		auto it = std::max_element(scores.begin(), scores.end());
-
 		return _moves[std::distance(scores.begin(), it)];
 	}
 

@@ -26,7 +26,7 @@ namespace sevenWD
 			for (u8 i = 0; i < m_gameState.getCurrentPlayerCity().m_unbuildWonderCount; ++i)
 			{
 				Wonders wonder = m_gameState.getCurrentPlayerCity().m_unbuildWonders[i];
-				const Card& wonderCard = m_gameState.m_context.getWonder(wonder);
+				const Card& wonderCard = m_gameState.m_context->getWonder(wonder);
 
 				u32 cost = m_gameState.getCurrentPlayerCity().computeCost(wonderCard, m_gameState.getOtherPlayerCity());
 				if (cost <= m_gameState.getCurrentPlayerCity().m_gold)
@@ -96,10 +96,10 @@ namespace sevenWD
 			for (u8 i = 0; i < 3; ++i)
 			{
 				u32 numRemainingTokens = 5 - i;
-				u32 index = m_gameState.m_context.rand()() % numRemainingTokens;
+				u32 index = m_gameState.m_context->rand()() % numRemainingTokens;
 
 				Move move{ u8(-1), Move::Action::ScienceToken };
-				move.additionalId = m_gameState.m_context.getScienceToken(unusedTokens[index]).getId();
+				move.additionalId = m_gameState.m_context->getScienceToken(unusedTokens[index]).getId();
 				_moves.push_back(move);
 
 				std::swap(unusedTokens[index], unusedTokens[numRemainingTokens - 1]);
@@ -142,7 +142,7 @@ namespace sevenWD
 				m_gameState.pickScienceToken(_move.playableCard);
 			else if (m_state == State::GreatLibraryToken || m_state == State::GreatLibraryTokenThenReplay)
 			{
-				action = m_gameState.getCurrentPlayerCity().addCard(m_gameState.m_context.getCard(_move.additionalId), m_gameState.getOtherPlayerCity());
+				action = m_gameState.getCurrentPlayerCity().addCard(m_gameState.m_context->getCard(_move.additionalId), m_gameState.getOtherPlayerCity());
 				if (action == SpecialAction::Nothing && m_state == State::GreatLibraryTokenThenReplay)
 					action = SpecialAction::Replay;
 			}

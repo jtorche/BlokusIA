@@ -4,7 +4,6 @@ namespace sevenWD
 {
 	Move NoBurnAI::selectMove(const GameContext& _sevenWDContext, const GameController&, const std::vector<Move>& _moves) 
 	{
-
 		std::vector<Move> cpyMoves = _moves;
 		std::sort(cpyMoves.begin(), cpyMoves.end(), [&](const Move& _a, const Move& _b)
 			{

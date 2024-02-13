@@ -1,6 +1,7 @@
 #include <array>
 #include <iostream>
 #include <windows.h>
+#include <execution>
 
 #include "AI/7WDuel/GameController.h"
 #include "AI/7WDuel/MinMaxAI.h"
@@ -55,22 +56,26 @@ int main()
 	GameContext sevenWDContext(u32(time(nullptr)));
 
 	Tournament tournament;
-	tournament.addAI(new RandAI);
-	tournament.addAI(new NoBurnAI);
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 1));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 10));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 25));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 50));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 75));
 	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 99));
+	tournament.addAI(new RandAI);
+	tournament.addAI(new RandAI);
+	tournament.addAI(new RandAI);
+	tournament.addAI(new RandAI);
+
+	AIInterface* newGenAI = new NoBurnAI;
 
 	u32 generation = 0;
 	while (1)
 	{
 		generation++;
 
-		tournament.resetTournament();
-		tournament.generateDataset(300, sevenWDContext);
+		tournament.resetTournament(0.7f);
+		tournament.generateDatasetFromAI(sevenWDContext, newGenAI, 300000);
 		tournament.print();
 
 		ML_Toolbox::Dataset dataset[3];
@@ -82,22 +87,21 @@ int main()
 			std::make_unique<BaseLine>(GameState::TensorSize)
 		};
 
-		std::cout << "\nStart train generation " << generation << " over " << dataset[0].m_winners.size() << " batches." << std::endl;
-		for (u32 i = 0; i < 3; ++i)
-		{
-			std::cout << "Train age " << i + 1 << std::endl;
-			std::vector<ML_Toolbox::Batch> batches;
-			dataset[i].fillBatches(sevenWDContext, 64, batches);
+		std::cout << "\nStart train generation " << generation << " over " << dataset[0].m_data.size() << " batches." << std::endl;
 
-			ML_Toolbox::trainNet(10, batches, net[i].get());
-		}
+		auto range = { 0,1,2 };
+		std::for_each(std::execution::par, range.begin(), range.end(), [&](int i)
+		{
+			std::vector<ML_Toolbox::Batch> batches;
+			dataset[i].fillBatches(64, batches);
+
+			ML_Toolbox::trainNet(i, 10, batches, net[i].get());
+		});
 
 		std::stringstream networkName;
 		networkName << "Generation " << generation;
 		tournament.removeWorstAI();
-		tournament.addAI(new NetworkAI<BaseLine>(networkName.str(), net));
-
-		//system("pause");
+		newGenAI = new NetworkAI<BaseLine>(networkName.str(), net);
 	}
 
 	return 0;

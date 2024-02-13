@@ -28,38 +28,32 @@ void ML_Toolbox::fillTensors(const Dataset& dataset, torch::Tensor& outData, tor
 {
 	using namespace sevenWD;
 
-	float* pData = new float[dataset.m_states.size() * GameState::TensorSize];
+	float* pData = new float[dataset.m_data.size() * GameState::TensorSize];
 	float* pWritePtr = pData;
-	float* pLabels = new float[dataset.m_winners.size()];
+	float* pLabels = new float[dataset.m_data.size()];
 
-	for (size_t i = 0; i < dataset.m_winners.size(); ++i) {
-		pLabels[i] = (dataset.m_winners[i] == 0) ? 1.0f : 0.0f;
-		dataset.m_states[i].fillTensorData(pWritePtr, 0);
+	for (size_t i = 0; i < dataset.m_data.size(); ++i) {
+		pLabels[i] = (dataset.m_data[i].m_winner == 0) ? 1.0f : 0.0f;
+		dataset.m_data[i].m_state.fillTensorData(pWritePtr, 0);
 		pWritePtr += GameState::TensorSize;	
 	}
 
-	outData = torch::from_blob(pData, { int(dataset.m_winners.size()), sevenWD::GameState::TensorSize }, torch::kFloat).clone();
-	outLabels = torch::from_blob(pLabels, { int(dataset.m_winners.size()), 1 }, torch::kFloat).clone();
+	outData = torch::from_blob(pData, { int(dataset.m_data.size()), sevenWD::GameState::TensorSize }, torch::kFloat).clone();
+	outLabels = torch::from_blob(pLabels, { int(dataset.m_data.size()), 1 }, torch::kFloat).clone();
 	delete[] pData;
 	delete[] pLabels;
 }
 
-void ML_Toolbox::Dataset::fillBatches(const sevenWD::GameContext& sevenWDContext, u32 batchSize, std::vector<Batch>& batches) const
+void ML_Toolbox::Dataset::fillBatches(u32 batchSize, std::vector<Batch>& batches) const
 {
-	std::vector<u32> indexes(m_winners.size());
-	for (u32 i = 0; i < indexes.size(); ++i)
-		indexes[i] = i;
-
-	std::shuffle(indexes.begin(), indexes.end(), sevenWDContext.rand());
-
 	float* pData = new float[batchSize * sevenWD::GameState::TensorSize];
 	float* pWritePtr = pData;
 	float* pLabels = new float[batchSize];
 	float* pWriteLabelsPtr = pLabels;
 
-	for (u32 i = 0; i < indexes.size(); ++i) {
-		*pWriteLabelsPtr = (m_winners[indexes[i]] == 0) ? 1.0f : 0.0f;
-		m_states[indexes[i]].fillTensorData(pWritePtr, 0);
+	for (u32 i = 0; i < m_data.size(); ++i) {
+		*pWriteLabelsPtr = (m_data[i].m_winner == 0) ? 1.0f : 0.0f;
+		m_data[i].m_state.fillTensorData(pWritePtr, 0);
 
 		pWritePtr += sevenWD::GameState::TensorSize;
 		pWriteLabelsPtr++;
@@ -91,7 +85,7 @@ std::pair<float, float> ML_Toolbox::evalMeanLoss(torch::Tensor predictions, torc
 }
 
 template<typename T>
-void ML_Toolbox::trainNet(u32 epoch, const std::vector<Batch>& batches, T* pNet)
+void ML_Toolbox::trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches, T* pNet)
 {
 	using OptimizerType = torch::optim::AdamW;
 	std::unique_ptr<OptimizerType> optimizer = std::make_unique<OptimizerType>(pNet->parameters(), 1e-4);
@@ -130,8 +124,13 @@ void ML_Toolbox::trainNet(u32 epoch, const std::vector<Batch>& batches, T* pNet)
 		avgLoss /= batches.size();
 		avgPrecision /= batches.size();
 		
-		std::cout << "Epoch:" << i << "/" << epoch << " | " << "Loss: " << avgLoss << " Precision : " << avgPrecision << std::endl;
+		std::cout << std::setprecision(4) << "Epoch:" << i << "/" << epoch << " | ";
+
+		for (u32 j = 0; j < age; ++j)
+			std::cout << "                                ";
+
+		std::cout << "Loss:" << avgLoss << " | Acc: " << avgPrecision << std::endl;
 	}
 }
 
-template void ML_Toolbox::trainNet<BaseLine>(u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);
+template void ML_Toolbox::trainNet<BaseLine>(u32 age, u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);

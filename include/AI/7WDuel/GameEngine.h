@@ -12,7 +12,7 @@ namespace sevenWD
 	//----------------------------------------------------------------------------
 	struct PlayerCity
 	{
-		const GameContext& m_context;
+		const GameContext* m_context;
 		u32 m_chainingSymbols = 0; // bitfield
 		u16 m_ownedGuildCards = 0; // bitfield
 		u16 m_ownedScienceTokens = 0; // bitfield
@@ -28,7 +28,7 @@ namespace sevenWD
 		std::array<Wonders, 4> m_unbuildWonders = {};
 		u8 m_unbuildWonderCount = 4;
 
-		PlayerCity(const GameContext& _context) : m_context{ _context } 
+		PlayerCity(const GameContext* _context) : m_context{ _context } 
 		{
 			for (u8& index : m_bestProductionCardId)
 				index = u8(-1);
@@ -62,9 +62,14 @@ namespace sevenWD
 		friend struct GameController;
 
 	public:
+		GameState();
 		GameState(const GameContext& _context);
+		~GameState() = default;
 
+		GameState(const GameState&) = default;
 		GameState& operator=(const GameState&) = default;
+		GameState(GameState&&) = default;
+		GameState& operator=(GameState&&) = default;
 
 		enum class NextAge
 		{
@@ -114,7 +119,7 @@ namespace sevenWD
 			u32 m_isGuildCard : 1;
 		};
 
-		const GameContext& m_context;
+		const GameContext* m_context;
 		std::array<PlayerCity, 2> m_playerCity;
 		std::array<ScienceToken, u8(ScienceToken::Count)> m_scienceTokens;
 		u8 m_numScienceToken = 0;
@@ -158,7 +163,7 @@ namespace sevenWD
 	template<typename T>
 	u8 GameState::pickCardIndex(T& _availableCards, u8& _numAvailableCard)
 	{
-		u32 index = m_context.rand()() % _numAvailableCard;
+		u32 index = m_context->rand()() % _numAvailableCard;
 
 		u8 cardIndex = _availableCards[index];
 		std::swap(_availableCards[index], _availableCards[_numAvailableCard - 1]);
