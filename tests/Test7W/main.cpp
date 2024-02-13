@@ -68,23 +68,24 @@ int main()
 	tournament.addAI(new RandAI);
 
 	AIInterface* newGenAI = new NoBurnAI;
+	using NetworkAIType = TwoLayers;
 
 	u32 generation = 0;
 	while (1)
 	{
 		generation++;
 
-		tournament.resetTournament(0.7f);
+		tournament.resetTournament(0.5f);
 		tournament.generateDatasetFromAI(sevenWDContext, newGenAI, 300000);
 		tournament.print();
 
 		ML_Toolbox::Dataset dataset[3];
 		tournament.fillDataset(dataset);
 
-		std::unique_ptr<BaseLine> net[3] = {
-			std::make_unique<BaseLine>(GameState::TensorSize),
-			std::make_unique<BaseLine>(GameState::TensorSize),
-			std::make_unique<BaseLine>(GameState::TensorSize)
+		std::unique_ptr<NetworkAIType> net[3] = {
+			std::make_unique<NetworkAIType>(GameState::TensorSize),
+			std::make_unique<NetworkAIType>(GameState::TensorSize),
+			std::make_unique<NetworkAIType>(GameState::TensorSize)
 		};
 
 		std::cout << "\nStart train generation " << generation << " over " << dataset[0].m_data.size() << " batches." << std::endl;
@@ -101,7 +102,7 @@ int main()
 		std::stringstream networkName;
 		networkName << "Generation " << generation;
 		tournament.removeWorstAI();
-		newGenAI = new NetworkAI<BaseLine>(networkName.str(), net);
+		newGenAI = new NetworkAI<NetworkAIType>(networkName.str(), net);
 	}
 
 	return 0;

@@ -134,3 +134,4 @@ void ML_Toolbox::trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches,
 }
 
 template void ML_Toolbox::trainNet<BaseLine>(u32 age, u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);
+template void ML_Toolbox::trainNet<TwoLayers>(u32 age, u32 epoch, const std::vector<Batch>& batches, TwoLayers* pNet);
