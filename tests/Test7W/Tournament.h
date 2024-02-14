@@ -12,7 +12,7 @@ public:
 	void addAI(sevenWD::AIInterface* pAI) { m_AIs.push_back(pAI); m_numWins.push_back(std::make_pair(0u, 0u)); m_winTypes.emplace_back(); }
 	void generateDataset(sevenWD::GameContext& context, u32 datasetSize);
 	void generateDatasetFromAI(sevenWD::GameContext& context, sevenWD::AIInterface* pAI, u32 datasetSize);
-	void removeWorstAI();
+	void removeWorstAI(u32 amountOfAIsToKeep);
 
 	void fillDataset(ML_Toolbox::Dataset (&dataset)[3]) const;
 	void resetTournament(float percentageOfGamesToKeep);

@@ -1,5 +1,6 @@
 
 #include "ML.h"
+#include <filesystem>
 
 u32 ML_Toolbox::generateOneGameDatasSet(const sevenWD::GameContext& sevenWDContext, sevenWD::AIInterface* AIs[2], std::vector<sevenWD::GameState>(&data)[3], sevenWD::WinType& winType)
 {
@@ -135,3 +136,36 @@ void ML_Toolbox::trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches,
 
 template void ML_Toolbox::trainNet<BaseLine>(u32 age, u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);
 template void ML_Toolbox::trainNet<TwoLayers>(u32 age, u32 epoch, const std::vector<Batch>& batches, TwoLayers* pNet);
+
+template<typename T>
+void ML_Toolbox::saveNet(u32 generation, std::shared_ptr<T>(&net)[3])
+{
+	for (u32 i = 0; i < 3; ++i) {
+		std::stringstream str;
+		str << "../7wDataset/dataset_" << T::getNetName() << "_gen" << generation << "_age" << i << ".bin";
+		torch::save(net[i], str.str());
+	}
+}
+
+template void ML_Toolbox::saveNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3]);
+template void ML_Toolbox::saveNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3]);
+
+template<typename T>
+bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3])
+{
+	for (u32 i = 0; i < 3; ++i) {
+		std::stringstream str;
+		str << "../7wDataset/dataset_" << T::getNetName() << "_gen" << generation << "_age" << i << "_" << T::getNetName() << ".bin";
+		if (std::filesystem::exists(str.str()))
+		{
+			net[i] = std::make_shared<T>(sevenWD::GameState::TensorSize);
+			torch::load(net[i], str.str());
+		}
+		else return false;
+	}
+
+	return true;
+}
+
+template bool ML_Toolbox::loadNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3]);
+template bool ML_Toolbox::loadNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3]);

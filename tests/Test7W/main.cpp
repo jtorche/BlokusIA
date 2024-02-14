@@ -55,26 +55,51 @@ int main()
 	using namespace sevenWD;
 	GameContext sevenWDContext(u32(time(nullptr)));
 
-	Tournament tournament;
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 1));
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 10));
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 25));
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 50));
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 75));
-	tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 99));
-	tournament.addAI(new RandAI);
-	tournament.addAI(new RandAI);
-	tournament.addAI(new RandAI);
-	tournament.addAI(new RandAI);
-
-	AIInterface* newGenAI = new NoBurnAI;
-	using NetworkAIType = TwoLayers;
+	using NetworkAIType = BaseLine;
 
 	u32 generation = 0;
+	Tournament tournament;
+	AIInterface* newGenAI;
+
+	{
+		std::shared_ptr<TwoLayers> net[3];
+		if (ML_Toolbox::loadNet(10, net))
+		{
+			std::stringstream networkName;
+			networkName << "TwoLayers_Gen" << 10;
+			tournament.addAI(new NetworkAI<TwoLayers>(networkName.str(), net));
+		}
+	}
+
+	{
+		std::shared_ptr<NetworkAIType> net[3];
+		if (ML_Toolbox::loadNet(generation, net))
+		{
+			std::stringstream networkName;
+			networkName << "Gen" << generation;
+			tournament.addAI(new NetworkAI<NetworkAIType>(networkName.str(), net));
+			newGenAI = new NetworkAI<NetworkAIType>(networkName.str(), net);
+			generation++;
+		} 
+		else
+		{
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 1));
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 10));
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 25));
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 50));
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 75));
+			tournament.addAI(new sevenWD::MixAI(new RandAI, new NoBurnAI, 99));
+			tournament.addAI(new RandAI);
+			tournament.addAI(new RandAI);
+			tournament.addAI(new RandAI);
+			tournament.addAI(new RandAI);
+			newGenAI = new NoBurnAI;
+			generation = 0;
+		}
+	}
+	
 	while (1)
 	{
-		generation++;
-
 		tournament.resetTournament(0.5f);
 		tournament.generateDatasetFromAI(sevenWDContext, newGenAI, 300000);
 		tournament.print();
@@ -82,10 +107,10 @@ int main()
 		ML_Toolbox::Dataset dataset[3];
 		tournament.fillDataset(dataset);
 
-		std::unique_ptr<NetworkAIType> net[3] = {
-			std::make_unique<NetworkAIType>(GameState::TensorSize),
-			std::make_unique<NetworkAIType>(GameState::TensorSize),
-			std::make_unique<NetworkAIType>(GameState::TensorSize)
+		std::shared_ptr<NetworkAIType> net[3] = {
+			std::make_shared<NetworkAIType>(GameState::TensorSize),
+			std::make_shared<NetworkAIType>(GameState::TensorSize),
+			std::make_shared<NetworkAIType>(GameState::TensorSize)
 		};
 
 		std::cout << "\nStart train generation " << generation << " over " << dataset[0].m_data.size() << " batches." << std::endl;
@@ -96,13 +121,17 @@ int main()
 			std::vector<ML_Toolbox::Batch> batches;
 			dataset[i].fillBatches(64, batches);
 
-			ML_Toolbox::trainNet(i, 10, batches, net[i].get());
+			ML_Toolbox::trainNet(i, 6, batches, net[i].get());
 		});
 
+		ML_Toolbox::saveNet(generation, net);
+
 		std::stringstream networkName;
-		networkName << "Generation " << generation;
-		tournament.removeWorstAI();
+		networkName << "Gen" << generation;
+		tournament.removeWorstAI(12);
 		newGenAI = new NetworkAI<NetworkAIType>(networkName.str(), net);
+
+		generation++;
 	}
 
 	return 0;

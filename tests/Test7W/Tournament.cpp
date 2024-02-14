@@ -116,19 +116,21 @@ void Tournament::generateDatasetFromAI(sevenWD::GameContext& context, sevenWD::A
 	m_dataset[2].shuffle(context);
 }
 
-void Tournament::removeWorstAI()
+void Tournament::removeWorstAI(u32 amountOfAIsToKeep)
 {
-	auto it = std::min_element(m_numWins.begin(), m_numWins.end(), [](const auto& a, const auto& b) 
-		{ 
-			return (double(a.first) / a.second) < (double(b.first) / b.second); 
-		});
+	while (m_AIs.size() > amountOfAIsToKeep) {
+		auto it = std::min_element(m_numWins.begin(), m_numWins.end(), [](const auto& a, const auto& b)
+			{
+				return (double(a.first) / a.second) < (double(b.first) / b.second);
+			});
 
-	size_t index = std::distance(m_numWins.begin(), it);
-	m_numWins.erase(m_numWins.begin() + index);
-	m_winTypes.erase(m_winTypes.begin() + index);
+		size_t index = std::distance(m_numWins.begin(), it);
+		m_numWins.erase(m_numWins.begin() + index);
+		m_winTypes.erase(m_winTypes.begin() + index);
 
-	delete m_AIs[index];
-	m_AIs.erase(m_AIs.begin() + index);
+		delete m_AIs[index];
+		m_AIs.erase(m_AIs.begin() + index);
+	}
 }
 
 void Tournament::fillDataset(ML_Toolbox::Dataset(&dataset)[3]) const

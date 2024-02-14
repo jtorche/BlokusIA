@@ -41,10 +41,18 @@ struct ML_Toolbox
 
 	template<typename T>
 	static void trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches, T* pNet);
+
+	template<typename T>
+	static void saveNet(u32 generation, std::shared_ptr<T>(&net)[3]);
+	template<typename T>
+	static bool loadNet(u32 generation, std::shared_ptr<T>(&net)[3]);
+	
 };
 
 struct TwoLayers : torch::nn::Module
 {
+	static const char* getNetName() { return "TwoLayers"; }
+
 	TwoLayers(u32 _inChannelCount)
 	{
 		using namespace torch;
@@ -67,6 +75,8 @@ struct TwoLayers : torch::nn::Module
 
 struct ThreeLayers : torch::nn::Module
 {
+	static const char* getNetName() { return "ThreeLayers"; }
+
 	ThreeLayers(u32 _inChannelCount)
 	{
 		using namespace torch;
@@ -91,6 +101,8 @@ struct ThreeLayers : torch::nn::Module
 
 struct BaseLine : torch::nn::Module
 {
+	static const char* getNetName() { return "BaseLine"; }
+
 	BaseLine(u32 _inChannelCount)
 	{
 		using namespace torch;
@@ -110,7 +122,7 @@ struct BaseLine : torch::nn::Module
 template<typename T>
 struct NetworkAI : sevenWD::AIInterface
 {
-	NetworkAI(std::string name, std::unique_ptr<T>(&network)[3]) : m_name(name), m_network{ std::move(network[0]), std::move(network[1]), std::move(network[2]) } {}
+	NetworkAI(std::string name, std::shared_ptr<T>(&network)[3]) : m_name(name), m_network{ network[0], network[1], network[2] } {}
 
 	sevenWD::Move selectMove(const sevenWD::GameContext& /*_sevenWDContext*/, const sevenWD::GameController& controller, const std::vector<sevenWD::Move>& _moves) override
 	{
@@ -139,5 +151,5 @@ struct NetworkAI : sevenWD::AIInterface
 	}
 
 	std::string m_name;
-	std::unique_ptr<T> m_network[3];
+	std::shared_ptr<T> m_network[3];
 };
