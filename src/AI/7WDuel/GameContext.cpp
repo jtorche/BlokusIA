@@ -67,9 +67,12 @@ namespace sevenWD
 		m_age1Cards.push_back(Card(CardTag<CardType::Science>{}, "Scriptorium", ScienceSymbol::Script,	 0).setGoldCost(2).setChainOut(ChainingSymbol::Book));
 		m_age1Cards.push_back(Card(CardTag<CardType::Science>{}, "Officine",	ScienceSymbol::Bowl,	 0).setGoldCost(2).setChainOut(ChainingSymbol::Gear));
 
+		DEBUG_ASSERT(m_age1Cards.size() <= MaxCardsPerAge);
+
+		u8 localId = 0;
 		for (Card& card : m_age1Cards)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), localId++);
 			m_allCards.push_back(&card);
 		}
 	}
@@ -105,9 +108,12 @@ namespace sevenWD
 		m_age2Cards.push_back(Card(CardTag<CardType::Science>{}, "Bibliotheque", ScienceSymbol::Script, 2).setResourceCost({ RT::Stone, RT::Wood, RT::Glass }).setChainIn(ChainingSymbol::Book));
 		m_age2Cards.push_back(Card(CardTag<CardType::Science>{}, "Dispensaire", ScienceSymbol::Bowl, 2).setResourceCost({ RT::Clay, RT::Clay, RT::Stone }).setChainIn(ChainingSymbol::Gear));
 
+		DEBUG_ASSERT(m_age2Cards.size() <= MaxCardsPerAge);
+
+		u8 localId = 0;
 		for (Card& card : m_age2Cards)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), localId++);
 			m_allCards.push_back(&card);
 		}
 	}
@@ -138,9 +144,12 @@ namespace sevenWD
 		m_age3Cards.push_back(Card(CardTag<CardType::Science>{}, "Etude", ScienceSymbol::SolarClock, 3).setResourceCost({ RT::Wood, RT::Wood, RT::Glass, RT::Papyrus }));
 		m_age3Cards.push_back(Card(CardTag<CardType::Science>{}, "Academie", ScienceSymbol::SolarClock, 3).setResourceCost({ RT::Stone, RT::Wood, RT::Glass, RT::Glass }));
 
+		DEBUG_ASSERT((m_age3Cards.size() + m_guildCards.size()) <= MaxCardsPerAge);
+
+		u8 localId = (u8)m_guildCards.size();
 		for (Card& card : m_age3Cards)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), localId++);
 			m_allCards.push_back(&card);
 		}
 	}
@@ -155,9 +164,12 @@ namespace sevenWD
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesBatisseurs", CardType::Wonder, 0, 2).setResourceCost({ RT::Stone, RT::Stone, RT::Clay, RT::Wood, RT::Glass }));
 		m_guildCards.push_back(Card(CardTag<CardType::Guild>{}, "GuildeDesUsuriers", CardType::Count, 0, 0).setResourceCost({ RT::Stone, RT::Stone, RT::Wood, RT::Wood }));
 
+		DEBUG_ASSERT((m_age3Cards.size() + m_guildCards.size()) <= MaxCardsPerAge);
+
+		u8 localId = (u8)m_age3Cards.size();
 		for (Card& card : m_guildCards)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), localId++);
 			m_allCards.push_back(&card);
 		}
 	}
@@ -182,7 +194,7 @@ namespace sevenWD
 
 		for (Card& card : m_wonders)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), 0xFF);
 			m_allCards.push_back(&card);
 		}
 	}
@@ -204,7 +216,7 @@ namespace sevenWD
 
 		for (Card& card : m_scienceTokens)
 		{
-			card.setId(u8(m_allCards.size()));
+			card.setId(u8(m_allCards.size()), 0xFF);
 			m_allCards.push_back(&card);
 		}
 	}

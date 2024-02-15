@@ -122,6 +122,8 @@ namespace sevenWD
 		unlinkNodeFromGraph(pickedCard);
 
 		const Card& card = m_context->getCard(m_graph[pickedCard].m_cardId);
+		m_playedAgeCards[m_numPlayedAgeCards++] = card.getAgeId();
+
 		if (card.getMilitary() != 0)
 		{ 
 			u8 militaryBonus = getCurrentPlayerCity().ownScienceToken(ScienceToken::Strategy);
@@ -176,6 +178,8 @@ namespace sevenWD
 		m_numPlayableCards--;
 
 		unlinkNodeFromGraph(pickedCard);
+		const Card& card = m_context->getCard(m_graph[pickedCard].m_cardId);
+		m_playedAgeCards[m_numPlayedAgeCards++] = card.getAgeId();
 
 		u8 burnValue = 2 + getCurrentPlayerCity().m_numCardPerType[u32(CardType::Yellow)];
 		getCurrentPlayerCity().m_gold += burnValue;
@@ -189,6 +193,8 @@ namespace sevenWD
 		m_numPlayableCards--;
 
 		unlinkNodeFromGraph(pickedCard);
+		const Card& card = m_context->getCard(m_graph[pickedCard].m_cardId);
+		m_playedAgeCards[m_numPlayedAgeCards++] = card.getAgeId();
 
 		Wonders pickedWonder = getCurrentPlayerCity().m_unbuildWonders[_wondersIndex];
 		std::swap(getCurrentPlayerCity().m_unbuildWonders[_wondersIndex], getCurrentPlayerCity().m_unbuildWonders[getCurrentPlayerCity().m_unbuildWonderCount - 1]);
@@ -209,8 +215,8 @@ namespace sevenWD
 
 		else if (_additionalEffect != u8(-1) && pickedWonder == Wonders::Mausoleum)
 		{
-			const Card& card = m_context->getCard(_additionalEffect);
-			getCurrentPlayerCity().addCard(card, otherPlayer);
+			const Card& revivedCard = m_context->getCard(_additionalEffect);
+			getCurrentPlayerCity().addCard(revivedCard, otherPlayer);
 		}
 
 		SpecialAction action =  getCurrentPlayerCity().addCard(wonder, otherPlayer);
@@ -437,6 +443,7 @@ namespace sevenWD
 		m_currentAge = 0;
 		u32 end = genPyramidGraph(5, 0);
 
+		m_numPlayedAgeCards = 0;
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 6; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 6 + i);
@@ -457,6 +464,7 @@ namespace sevenWD
 		m_currentAge = 1;
 		u32 end = genInversePyramidGraph(6, 5, 0);
 
+		m_numPlayedAgeCards = 0;
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 2; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 2 + i);
@@ -516,6 +524,7 @@ namespace sevenWD
 		for (u32 i = 0; i < m_graph.size(); ++i)
 			m_graph[i].m_isGuildCard = guildCarTag[i];
 
+		m_numPlayedAgeCards = 0;
 		m_numPlayableCards = 0;
 		for (u32 i = 0; i < 2; ++i)
 			m_playableCards[m_numPlayableCards++] = u8(end - 2 + i);
@@ -726,13 +735,12 @@ namespace sevenWD
 		switch (_card.m_type)
 		{
 		case CardType::Science:
-			if (m_ownedScienceSymbols & (1u << u32(_card.m_science)))
+			m_ownedScienceSymbol[u32(_card.m_science)]++;
+			DEBUG_ASSERT(m_ownedScienceSymbol[u32(_card.m_science)] < 3);
+			if (m_ownedScienceSymbol[u32(_card.m_science)] == 2)
 				action = SpecialAction::TakeScienceToken;
 			else
-			{
-				m_ownedScienceSymbols |= 1u << u32(_card.m_science);
 				m_numScienceSymbols++;
-			}
 			break;
 
 		case CardType::Guild:
@@ -745,7 +753,7 @@ namespace sevenWD
 
 			if (ScienceToken(_card.m_secondaryType) == ScienceToken::Law)
 			{
-				m_ownedScienceSymbols |= 1u << u32(ScienceSymbol::Law);
+				m_ownedScienceSymbol[u32(ScienceSymbol::Law)]++;
 				m_numScienceSymbols++;
 			}
 
@@ -865,7 +873,6 @@ namespace sevenWD
 			
 			i++;
 		}
-		
 
 		auto fillCity = [&](const PlayerCity& _city)
 		{
@@ -880,7 +887,7 @@ namespace sevenWD
 
 			_data[i++] = _city.m_numScienceSymbols;
 			for (u8 j = 0; j < u8(ScienceSymbol::Count); ++j)
-				_data[i++] = (T)((_city.m_ownedScienceSymbols & (1 << j)) > 0 ? 1 : 0);
+				_data[i++] = (T)_city.m_ownedScienceSymbol[j];
 
 			_data[i++] = (T)_city.m_gold;
 			_data[i++] = (T)_city.m_victoryPoints;
@@ -909,4 +916,65 @@ namespace sevenWD
 
 	template u32 GameState::fillTensorData<float>(float* _data, u32 _mainPlayer) const;
 	template u32 GameState::fillTensorData<int16_t>(int16_t* _data, u32 _mainPlayer) const;
+
+	template<typename T>
+	void GameState::fillExtraTensorData(T* _data) const
+	{
+		for (u32 i = 0; i < GameContext::MaxCardsPerAge; ++i) {
+			_data[i] = 0;
+			_data[i+GameContext::MaxCardsPerAge] = -1;
+		}
+
+		// Cards that have already been picked/burn by a player
+		for (u32 i = 0; i < m_numPlayedAgeCards; ++i)
+			_data[m_playedAgeCards[i]] = -1;
+
+		// Cards that have not been revealed in the graph
+		for (u32 i = 0; i < m_numAvailableAgeCards; ++i)
+			_data[m_availableAgeCards[i]] = 1;
+
+		// go through the graph, process visible cards
+		std::array<bool, 20> visitedNodes = {};
+
+		u32 numNodeToExplore = m_numPlayableCards;
+		std::array <u8, 6> nodesToExplore = m_playableCards;
+		u32 nextNumNodeToExplore = 0;
+		std::array <u8, 6> nextNodesToExplore = {};
+		
+		u32 depth = 0;
+		while (numNodeToExplore > 0)
+		{
+			for (u32 i = 0; i < numNodeToExplore; ++i)
+			{
+				if (m_graph[nodesToExplore[i]].m_visible)
+				{
+					u8 id = m_context->getCard(m_graph[nodesToExplore[i]].m_cardId).getAgeId();
+					_data[id] = 2; // card visible in the graph
+					_data[GameContext::MaxCardsPerAge + id] = (T)(depth + 1);
+				}
+
+				auto gatherParent = [&](u8 parent) {
+					if (parent != CardNode::InvalidNode)
+					{
+						if (!visitedNodes[parent])
+						{
+							visitedNodes[parent] = true;
+							nextNodesToExplore[nextNumNodeToExplore++] = parent;
+						}
+					}
+				};
+				gatherParent(m_graph[nodesToExplore[i]].m_parent0);
+				gatherParent(m_graph[nodesToExplore[i]].m_parent1);
+				
+			}
+
+			numNodeToExplore = nextNumNodeToExplore;
+			nodesToExplore = nextNodesToExplore;
+			nextNumNodeToExplore = 0;
+			depth++;
+		}
+	}
+
+	template void GameState::fillExtraTensorData<float>(float* _data) const;
+	template void GameState::fillExtraTensorData<int16_t>(int16_t* _data) const;
 }

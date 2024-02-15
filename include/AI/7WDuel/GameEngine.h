@@ -16,10 +16,10 @@ namespace sevenWD
 		u32 m_chainingSymbols = 0; // bitfield
 		u16 m_ownedGuildCards = 0; // bitfield
 		u16 m_ownedScienceTokens = 0; // bitfield
-		u8 m_ownedScienceSymbols = 0; // bitfield
 		u8 m_numScienceSymbols = 0;
 		u8 m_gold = 0;
 		u8 m_victoryPoints = 0;
+		std::array<u8, u32(ScienceSymbol::Count)> m_ownedScienceSymbol = {};
 		std::array<u8, u32(CardType::Count)> m_numCardPerType = {};
 		std::array<u8, u32(ResourceType::Count)> m_production = {};
 		std::pair<u8, u8> m_weakProduction = {};
@@ -104,6 +104,10 @@ namespace sevenWD
 		template<typename T>
 		u32 fillTensorData(T* _data, u32 _mainPlayer) const;
 
+		static const u32 ExtraTensorSize = GameContext::MaxCardsPerAge * 2;
+		template<typename T>
+		void fillExtraTensorData(T* _data) const;
+
 	private:
 		
 		struct CardNode
@@ -132,6 +136,9 @@ namespace sevenWD
 		std::array<u8, 7> m_availableGuildCards;
 		u8 m_numAvailableAgeCards = 0;
 		u8 m_numAvailableGuildCards = 0;
+
+		std::array<u8, GameContext::MaxCardsPerAge> m_playedAgeCards;
+		u8 m_numPlayedAgeCards = 0;
 
 		u8 m_numTurnPlayed = 0;
 		u8 m_playerTurn = 0;

@@ -20,13 +20,14 @@ namespace sevenWD
 		Card(Wonders _wonders, const char* _name, u8 _victoryPointReward, bool _extraTurn = false);
 
 		u8 getId() const { return m_id; }
+		u8 getAgeId() const { return m_ageId; }
 		u8 getMilitary() const { return m_military; }
 		u8 getGoldCost() const { return m_goldCost; }
 
 		CardType getType() const { return m_type; }
 		u8 getSecondaryType() const { return m_secondaryType; }
 
-		void setId(u8 _id);
+		void setId(u8 _id, u8 _ageId);
 		Card& setResourceDiscount(ResourceSet _resources);
 		Card& setWeakResourceProduction(ResourceSet _resources);
 		Card& setMilitary(u8 _shield);
@@ -49,6 +50,7 @@ namespace sevenWD
 	private:
 		const char* m_name = nullptr;
 		u8 m_id = u8(-1);
+		u8 m_ageId = u8(-1);
 		CardType m_type = CardType::Count;
 
 		ChainingSymbol m_chainIn = ChainingSymbol::None;

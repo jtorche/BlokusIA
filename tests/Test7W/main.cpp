@@ -50,6 +50,7 @@ namespace sevenWD
 
 }
 
+#if 1
 int main()
 {
 	using namespace sevenWD;
@@ -136,6 +137,7 @@ int main()
 
 	return 0;
 }
+#endif
 
 #if 0
 int main()
@@ -168,9 +170,6 @@ int main()
 	using namespace sevenWD;
 	GameContext sevenWDContext(u32(time(nullptr)));
 	GameController game(sevenWDContext);
-
-	int16_t data[1024];
-	std::cout << "Tensor size " << game.m_gameState.fillTensorData(data) << std::endl;
 
 	std::vector<Move> moves;
 	Move move;
@@ -210,7 +209,6 @@ int main()
 		}
 
 		std::cout << std::endl;
-		
 	} 
 	while (!game.play(move));
 

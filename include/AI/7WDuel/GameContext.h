@@ -32,6 +32,8 @@ namespace sevenWD
 
 		const std::vector<Card>& getAllGuildCards() const { return m_guildCards; }
 
+		static constexpr u32 MaxCardsPerAge = 30;
+
 	private:
 		mutable std::default_random_engine m_rand;
 		std::vector<Card> m_age1Cards;
