@@ -22,6 +22,8 @@ if (BUILD_TESTING)
 
     # For nicer IDE views
     set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "tests")
+	
+	target_compile_definitions(${PROJECT_NAME} PRIVATE NOMINMAX)
 
     source_group(
       TREE ${CMAKE_CURRENT_SOURCE_DIR}
