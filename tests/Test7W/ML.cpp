@@ -25,6 +25,7 @@ u32 ML_Toolbox::generateOneGameDatasSet(const sevenWD::GameContext& sevenWDConte
 	return game.m_state == GameController::State::WinPlayer0 ? 0 : 1;
 }
 
+#if 0
 void ML_Toolbox::fillTensors(const Dataset& dataset, torch::Tensor& outData, torch::Tensor& outLabels)
 {
 	using namespace sevenWD;
@@ -44,10 +45,14 @@ void ML_Toolbox::fillTensors(const Dataset& dataset, torch::Tensor& outData, tor
 	delete[] pData;
 	delete[] pLabels;
 }
+#endif
 
-void ML_Toolbox::Dataset::fillBatches(u32 batchSize, std::vector<Batch>& batches) const
+void ML_Toolbox::Dataset::fillBatches(u32 batchSize, std::vector<Batch>& batches, bool useExtraTensorData) const
 {
-	float* pData = new float[batchSize * sevenWD::GameState::TensorSize];
+	using namespace sevenWD;
+
+	const u32 tensorSize = GameState::TensorSize + (useExtraTensorData ? GameState::ExtraTensorSize : 0);
+	float* pData = new float[batchSize * tensorSize];
 	float* pWritePtr = pData;
 	float* pLabels = new float[batchSize];
 	float* pWriteLabelsPtr = pLabels;
@@ -57,16 +62,24 @@ void ML_Toolbox::Dataset::fillBatches(u32 batchSize, std::vector<Batch>& batches
 		m_data[i].m_state.fillTensorData(pWritePtr, 0);
 
 		pWritePtr += sevenWD::GameState::TensorSize;
+		if (useExtraTensorData)
+		{
+			m_data[i].m_state.fillExtraTensorData(pWritePtr);
+			pWritePtr += GameState::ExtraTensorSize;
+		}
 		pWriteLabelsPtr++;
 
 		if ((i + 1) % batchSize == 0) {
 			batches.emplace_back();
-			batches.back().data = torch::from_blob(pData, { int(batchSize), sevenWD::GameState::TensorSize }, torch::kFloat).clone();
+			batches.back().data = torch::from_blob(pData, { int(batchSize), tensorSize }, torch::kFloat).clone();
 			batches.back().labels = torch::from_blob(pLabels, { int(batchSize), 1 }, torch::kFloat).clone();
 			pWritePtr = pData;
 			pWriteLabelsPtr = pLabels;
 		}
 	}
+
+	delete[] pData;
+	delete[] pLabels;
 }
 
 float ML_Toolbox::evalPrecision(torch::Tensor predictions, torch::Tensor labels)
@@ -93,7 +106,6 @@ void ML_Toolbox::trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches,
 
 	for (u32 i = 0; i < epoch; ++i)
 	{
-		
 		float avgLoss = 0;
 		float avgPrecision = 0;
 
@@ -142,7 +154,7 @@ void ML_Toolbox::saveNet(u32 generation, std::shared_ptr<T>(&net)[3])
 {
 	for (u32 i = 0; i < 3; ++i) {
 		std::stringstream str;
-		str << "../7wDataset/dataset_" << T::getNetName() << "_gen" << generation << "_age" << i << ".bin";
+		str << "../7wDataset/dataset_" << T::getNetName() << (net[i]->m_extraTensorData ? "_extra" : "") << "_gen" << generation << "_age" << i << ".bin";
 		torch::save(net[i], str.str());
 	}
 }
@@ -151,14 +163,14 @@ template void ML_Toolbox::saveNet<BaseLine>(u32 generation, std::shared_ptr<Base
 template void ML_Toolbox::saveNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3]);
 
 template<typename T>
-bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3])
+bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3], bool useExtraTensorData)
 {
 	for (u32 i = 0; i < 3; ++i) {
 		std::stringstream str;
-		str << "../7wDataset/dataset_" << T::getNetName() << "_gen" << generation << "_age" << i << "_" << T::getNetName() << ".bin";
+		str << "../7wDataset/dataset_" << T::getNetName() << (useExtraTensorData ? "_extra" : "") << "_gen" << generation << "_age" << i << ".bin";
 		if (std::filesystem::exists(str.str()))
 		{
-			net[i] = std::make_shared<T>(sevenWD::GameState::TensorSize);
+			net[i] = std::make_shared<T>(useExtraTensorData);
 			torch::load(net[i], str.str());
 		}
 		else return false;
@@ -167,5 +179,32 @@ bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3])
 	return true;
 }
 
-template bool ML_Toolbox::loadNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3]);
-template bool ML_Toolbox::loadNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3]);
+template bool ML_Toolbox::loadNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3], bool useExtraTensorData);
+template bool ML_Toolbox::loadNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3], bool useExtraTensorData);
+
+template<typename T>
+std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile(bool useExtraTensorData)
+{
+	sevenWD::AIInterface* pAI = nullptr;
+	u32 i = 0;
+
+	for (; i < 100; ++i)
+	{
+		std::shared_ptr<T> net[3];
+		if (loadNet<T>(i, net, useExtraTensorData))
+		{
+			std::stringstream networkName;
+			networkName << T::getNetName() << (useExtraTensorData ? "_extra" : "") << "_gen" << i;
+			delete pAI;
+			pAI = new NetworkAI<T>(networkName.str(), net);
+		}
+		else {
+			break;
+		}
+	}
+
+	return std::make_pair(pAI, i);
+}
+
+template std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile<BaseLine>(bool useExtraTensorData);
+template std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile<TwoLayers>(bool useExtraTensorData);

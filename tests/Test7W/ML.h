@@ -30,7 +30,7 @@ struct ML_Toolbox
 				m_data.push_back(d);
 		}
 
-		void fillBatches(u32 batchSize, std::vector<Batch>& batches) const;
+		void fillBatches(u32 batchSize, std::vector<Batch>& batches, bool useExtraTensorData) const;
 	};
 
 	static u32 generateOneGameDatasSet(const sevenWD::GameContext& sevenWDContext, sevenWD::AIInterface* AIs[2], std::vector<sevenWD::GameState>(&data)[3], sevenWD::WinType& winType);
@@ -45,7 +45,10 @@ struct ML_Toolbox
 	template<typename T>
 	static void saveNet(u32 generation, std::shared_ptr<T>(&net)[3]);
 	template<typename T>
-	static bool loadNet(u32 generation, std::shared_ptr<T>(&net)[3]);
+	static bool loadNet(u32 generation, std::shared_ptr<T>(&net)[3], bool useExtraTensorData);
+
+	template<typename T>
+	static std::pair<sevenWD::AIInterface*, u32> loadAIFromFile(bool useExtraTensorData);
 	
 };
 
@@ -53,10 +56,11 @@ struct TwoLayers : torch::nn::Module
 {
 	static const char* getNetName() { return "TwoLayers"; }
 
-	TwoLayers(u32 _inChannelCount)
+	TwoLayers(bool useExtraTensorData) : m_extraTensorData(useExtraTensorData)
 	{
 		using namespace torch;
-		fully1 = register_module("fully1", nn::Linear(_inChannelCount, 64));
+		u32 tensorSize = sevenWD::GameState::TensorSize + (useExtraTensorData ? sevenWD::GameState::ExtraTensorSize : 0);
+		fully1 = register_module("fully1", nn::Linear(tensorSize, 64));
 		fully2 = register_module("fully2", nn::Linear(64, 1));
 	}
 
@@ -71,16 +75,18 @@ struct TwoLayers : torch::nn::Module
 	}
 
 	torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
+	bool m_extraTensorData;
 };
 
 struct ThreeLayers : torch::nn::Module
 {
 	static const char* getNetName() { return "ThreeLayers"; }
 
-	ThreeLayers(u32 _inChannelCount)
+	ThreeLayers(bool useExtraTensorData) : m_extraTensorData(useExtraTensorData)
 	{
 		using namespace torch;
-		fully1 = register_module("fully1", nn::Linear(_inChannelCount, 64));
+		u32 tensorSize = sevenWD::GameState::TensorSize + (useExtraTensorData ? sevenWD::GameState::ExtraTensorSize : 0);
+		fully1 = register_module("fully1", nn::Linear(tensorSize, 64));
 		fully2 = register_module("fully2", nn::Linear(64, 32));
 		fully3 = register_module("fully3", nn::Linear(32, 1));
 	}
@@ -97,16 +103,18 @@ struct ThreeLayers : torch::nn::Module
 	}
 
 	torch::nn::Linear fully1 = nullptr, fully2 = nullptr, fully3 = nullptr;
+	bool m_extraTensorData;
 };
 
 struct BaseLine : torch::nn::Module
 {
 	static const char* getNetName() { return "BaseLine"; }
 
-	BaseLine(u32 _inChannelCount)
+	BaseLine(bool useExtraTensorData) : m_extraTensorData(useExtraTensorData)
 	{
 		using namespace torch;
-		fully1 = register_module("fully1", nn::Linear(_inChannelCount, 1));
+		u32 tensorSize = sevenWD::GameState::TensorSize + (useExtraTensorData ? sevenWD::GameState::ExtraTensorSize : 0);
+		fully1 = register_module("fully1", nn::Linear(tensorSize, 1));
 	}
 
 	// Implement the Net's algorithm.
@@ -117,6 +125,7 @@ struct BaseLine : torch::nn::Module
 	}
 
 	torch::nn::Linear fully1 = nullptr;
+	bool m_extraTensorData;
 };
 
 template<typename T>
@@ -135,9 +144,15 @@ struct NetworkAI : sevenWD::AIInterface
 				u32 winner = (tmpController.m_state == sevenWD::GameController::State::WinPlayer0) ? 0 : 1;
 				scores[i] = (controller.m_gameState.getCurrentPlayerTurn() == winner) ? 1.0f : 0.0f;
 			} else {
-				float buffer[sevenWD::GameState::TensorSize];
-				tmpController.m_gameState.fillTensorData(buffer, controller.m_gameState.getCurrentPlayerTurn());
-				torch::Tensor result = m_network[tmpController.m_gameState.getCurrentAge()]->forward(torch::from_blob(buffer, {1, sevenWD::GameState::TensorSize}, torch::kFloat));
+				auto& network = m_network[tmpController.m_gameState.getCurrentAge()];
+
+				const u32 tensorSize = sevenWD::GameState::TensorSize + (network->m_extraTensorData ? sevenWD::GameState::ExtraTensorSize : 0);
+				std::unique_ptr<float[]> buffer = std::make_unique<float[]>(tensorSize);
+				tmpController.m_gameState.fillTensorData(buffer.get(), controller.m_gameState.getCurrentPlayerTurn());
+				if (network->m_extraTensorData)
+					tmpController.m_gameState.fillExtraTensorData(buffer.get() + sevenWD::GameState::TensorSize);
+
+				torch::Tensor result = m_network[tmpController.m_gameState.getCurrentAge()]->forward(torch::from_blob(buffer.get(), {1, tensorSize}, torch::kFloat));
 				scores[i] = result[0].item<float>();
 			}
 		}
@@ -153,3 +168,4 @@ struct NetworkAI : sevenWD::AIInterface
 	std::string m_name;
 	std::shared_ptr<T> m_network[3];
 };
+

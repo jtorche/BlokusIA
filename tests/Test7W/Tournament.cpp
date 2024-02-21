@@ -56,7 +56,7 @@ void Tournament::generateDatasetFromAI(sevenWD::GameContext& context, sevenWD::A
 
 	addAI(pAI);
 
-	std::atomic_uint numGameInDataset = m_dataset[0].m_data.size();
+	std::atomic_uint numGameInDataset = (u32)m_dataset[0].m_data.size();
 	std::vector<std::array<ML_Toolbox::Dataset, 3>> perThreadDataset(16); // 16 threads
 
 	std::for_each(std::execution::par, perThreadDataset.begin(), perThreadDataset.end(), [&](auto& threadSafeDataset)
