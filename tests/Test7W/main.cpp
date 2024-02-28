@@ -56,7 +56,7 @@ int main()
 	using namespace sevenWD;
 	GameContext sevenWDContext(u32(time(nullptr)));
 
-	using NetworkAIType = TwoLayers;
+	using NetworkAIType = TwoLayers16;
 
 	u32 generation;
 	Tournament tournament;
@@ -64,7 +64,7 @@ int main()
 
 	{
 		// Load a previous trained AI as an oppponent
-		auto [pAI, gen] = ML_Toolbox::loadAIFromFile<BaseLine>(true);
+		auto [pAI, gen] = ML_Toolbox::loadAIFromFile<TwoLayers>(true);
 		if(pAI)
 			tournament.addAI(pAI);
 	}

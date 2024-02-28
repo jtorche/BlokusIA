@@ -148,6 +148,7 @@ void ML_Toolbox::trainNet(u32 age, u32 epoch, const std::vector<Batch>& batches,
 
 template void ML_Toolbox::trainNet<BaseLine>(u32 age, u32 epoch, const std::vector<Batch>& batches, BaseLine* pNet);
 template void ML_Toolbox::trainNet<TwoLayers>(u32 age, u32 epoch, const std::vector<Batch>& batches, TwoLayers* pNet);
+template void ML_Toolbox::trainNet<TwoLayers16>(u32 age, u32 epoch, const std::vector<Batch>& batches, TwoLayers16* pNet);
 
 template<typename T>
 void ML_Toolbox::saveNet(u32 generation, std::shared_ptr<T>(&net)[3])
@@ -161,6 +162,7 @@ void ML_Toolbox::saveNet(u32 generation, std::shared_ptr<T>(&net)[3])
 
 template void ML_Toolbox::saveNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3]);
 template void ML_Toolbox::saveNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3]);
+template void ML_Toolbox::saveNet<TwoLayers16>(u32 generation, std::shared_ptr<TwoLayers16>(&net)[3]);
 
 template<typename T>
 bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3], bool useExtraTensorData)
@@ -181,6 +183,7 @@ bool ML_Toolbox::loadNet(u32 generation, std::shared_ptr<T>(&net)[3], bool useEx
 
 template bool ML_Toolbox::loadNet<BaseLine>(u32 generation, std::shared_ptr<BaseLine>(&net)[3], bool useExtraTensorData);
 template bool ML_Toolbox::loadNet<TwoLayers>(u32 generation, std::shared_ptr<TwoLayers>(&net)[3], bool useExtraTensorData);
+template bool ML_Toolbox::loadNet<TwoLayers16>(u32 generation, std::shared_ptr<TwoLayers16>(&net)[3], bool useExtraTensorData);
 
 template<typename T>
 std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile(bool useExtraTensorData)
@@ -208,3 +211,4 @@ std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile(bool useExtraTe
 
 template std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile<BaseLine>(bool useExtraTensorData);
 template std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile<TwoLayers>(bool useExtraTensorData);
+template std::pair<sevenWD::AIInterface*, u32> ML_Toolbox::loadAIFromFile<TwoLayers16>(bool useExtraTensorData);

@@ -78,6 +78,32 @@ struct TwoLayers : torch::nn::Module
 	bool m_extraTensorData;
 };
 
+struct TwoLayers16 : torch::nn::Module
+{
+	static const char* getNetName() { return "TwoLayers16"; }
+
+	TwoLayers16(bool useExtraTensorData) : m_extraTensorData(useExtraTensorData)
+	{
+		using namespace torch;
+		u32 tensorSize = sevenWD::GameState::TensorSize + (useExtraTensorData ? sevenWD::GameState::ExtraTensorSize : 0);
+		fully1 = register_module("fully1", nn::Linear(tensorSize, 16));
+		fully2 = register_module("fully2", nn::Linear(16, 1));
+	}
+
+	// Implement the Net's algorithm.
+	torch::Tensor forward(torch::Tensor x)
+	{
+		using namespace torch::indexing;
+
+		//x = x.reshape({ x.sizes()[0], channelCount * Board::BoardSize * Board::BoardSize });
+		x = torch::relu(fully1->forward(x));
+		return torch::sigmoid(fully2->forward(x));
+	}
+
+	torch::nn::Linear fully1 = nullptr, fully2 = nullptr;
+	bool m_extraTensorData;
+};
+
 struct ThreeLayers : torch::nn::Module
 {
 	static const char* getNetName() { return "ThreeLayers"; }
